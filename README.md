@@ -7,7 +7,6 @@ minifyp project (This branch is to test prototype functions!)
 4. static --> for user uploads and .css files 
 
 - Functions to be added:
-  -----USER PROFILES-----
   1. edit registration page so users can register as designer
   2. configure profiles page
 
