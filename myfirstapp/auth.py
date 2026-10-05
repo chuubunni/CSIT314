@@ -17,84 +17,6 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 #user submit form --> validation 
 
 
-@bp.route('/register', methods=('GET','POST')) 
-#associates the url '/register' with the 'register' view function
-#when Flask recieves a request to /auth/register it will call register view and use return value as response 
-#MUST BE PAIRED ALONG WITH def register()....
-def register():
-    if request.method == 'POST':
-    #if user has submitted form, request.method will be 'POST'
-    #starts validating the output
-        username = request.form['username']
-        #request.form = special type of dict mapping submmited form keys and values 
-        password = request.form['password']
-        db = get_db() #from db.py
-        error = None
-
-        if not username:
-            error = 'username is required'
-        elif not password:
-            error = 'password is required'
-        #ensure that username and password are not empty
-
-        if error is None: 
-        #validation succeeds 
-            try: 
-                db.execute(
-                    "INSERT INTO user (username, password) VALUES (?,?)", 
-                    #takes SQL query with ? as placeholders for user input 
-                    #DB will escape values --> no SQL inject
-                    (username, generate_password_hash(password)), #add comma after every item in biggest bracket!
-                    #for security, store passwords as hash using generate_password_hash
-                )
-                db.commit()
-            except db.IntegrityError:
-            #db.IntegrityError --> occurs if username already exists 
-                error = f"User {username} is already registered."
-            else: 
-                return redirect(url_for("auth.login"))
-                #after storing user, redirected to login page 
-
-        flash(error)
-        #if validation fails, error shown to user 
-        #flash() stores messages that can be retrieved when rendering template 
-
-    return render_template('auth/register.html')
-    #when user initially navigates to auth/register or there was validation error, HTML page with registration form is shown
-
-@bp.route('/login', methods=('GET','POST'))
-def login():
-    if request.method == 'POST': #not GET but POST!
-        username = request.form['username']
-        password = request.form['password'] #prompt user to enter password and username 
-        db = get_db()
-        error = None 
-        user = db.execute (
-        #start fetching results from database after user has entered (if user enters nothing will show generic error message)
-            'SELECT * FROM user WHERE username = ?', (username,)
-        ).fetchone()
-        #.fetchone() returns one row from query
-        #if query returns no results, returns None 
-        #.fetchall() returns a list of all results 
-
-        if user is None:
-            error = 'Incorrect username'
-        elif not check_password_hash(user['password'],password):
-        #check_password_hash = hashes the submitted password and compares them
-            error = 'Incorrect password'
-        #wrong!!!!
-        # else: <-- this is for USER not ERROR!
-        #     return render_template('homepage') 
-
-        #redirect user when login success
-        if error is None: 
-            session.clear()
-            #session = dict that stores data across requests 
-            #when validation succeeds, user's id stored in new session 
-            session['user_id'] = user['id']
-            return redirect(url_for('index'))
-        flash(error)
-    return render_template('/auth/login.html') #always send user to login.html after error!
 
 @bp.before_app_request 
 #before_app_request registers a function that runs before the view function, no matter what URL is requested!
@@ -141,3 +63,80 @@ class Users():
             'SELECT username FROM user WHERE id = ?', (id,)
         )
         return username
+    @bp.route('/register', methods=('GET','POST')) 
+#associates the url '/register' with the 'register' view function
+#when Flask recieves a request to /auth/register it will call register view and use return value as response 
+#MUST BE PAIRED ALONG WITH def register()....
+    def register():
+        if request.method == 'POST':
+        #if user has submitted form, request.method will be 'POST'
+        #starts validating the output
+            username = request.form['username']
+            #request.form = special type of dict mapping submmited form keys and values 
+            password = request.form['password']
+            db = get_db() #from db.py
+            error = None
+
+            if not username:
+                error = 'username is required'
+            elif not password:
+                error = 'password is required'
+            #ensure that username and password are not empty
+
+            if error is None: 
+            #validation succeeds 
+                try: 
+                    db.execute(
+                        "INSERT INTO user (username, password) VALUES (?,?)", 
+                        #takes SQL query with ? as placeholders for user input 
+                        #DB will escape values --> no SQL inject
+                        (username, generate_password_hash(password)), #add comma after every item in biggest bracket!
+                        #for security, store passwords as hash using generate_password_hash
+                    )
+                    db.commit()
+                except db.IntegrityError:
+                #db.IntegrityError --> occurs if username already exists 
+                    error = f"User {username} is already registered."
+                else: 
+                    return redirect(url_for("auth.login"))
+                    #after storing user, redirected to login page 
+
+            flash(error)
+            #if validation fails, error shown to user 
+            #flash() stores messages that can be retrieved when rendering template 
+
+        return render_template('auth/register.html')
+        #when user initially navigates to auth/register or there was validation error, HTML page with registration form is shown
+    @bp.route('/login', methods=('GET','POST'))
+    def login():
+        if request.method == 'POST': #not GET but POST!
+            username = request.form['username']
+            password = request.form['password'] #prompt user to enter password and username 
+            db = get_db()
+            error = None 
+            user = db.execute (
+            #start fetching results from database after user has entered (if user enters nothing will show generic error message)
+                'SELECT * FROM user WHERE username = ?', (username,)
+            ).fetchone()
+            #.fetchone() returns one row from query
+            #if query returns no results, returns None 
+            #.fetchall() returns a list of all results 
+
+            if user is None:
+                error = 'Incorrect username'
+            elif not check_password_hash(user['password'],password):
+            #check_password_hash = hashes the submitted password and compares them
+                error = 'Incorrect password'
+            #wrong!!!!
+            # else: <-- this is for USER not ERROR!
+            #     return render_template('homepage') 
+
+            #redirect user when login success
+            if error is None: 
+                session.clear()
+                #session = dict that stores data across requests 
+                #when validation succeeds, user's id stored in new session 
+                session['user_id'] = user['id']
+                return redirect(url_for('index'))
+            flash(error)
+        return render_template('/auth/login.html') #always send user to login.html after error!
