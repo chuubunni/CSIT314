@@ -25,128 +25,13 @@ def allowed_file(filename, allowed):
 @bp.route('/')
 def index():
     db = get_db()
-    posts = db.execute(
-        'SELECT p.id, title, body, created, author_id, name'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' ORDER BY created DESC'
-    ).fetchall()
     images = db.execute(
         'SELECT i.id, i.imagelink, i.caption, i.author_id, i.created, u.name'
         ' FROM images i JOIN user u ON i.author_id = u.id' #MUST PUT SPACING!!!!!!!!!
         ' ORDER BY created DESC'
     ).fetchall()
     files = Files.show_files()
-    return render_template('blog/index.html', posts=posts, images=images, files=files)
-
-class Posts():
-    @bp.route("/create", methods=("GET", "POST"))
-    @login_required
-    def create():
-        """Create a new post for the current user."""
-        if request.method == "POST":
-            title = request.form["title"]
-            body = request.form["body"]
-            error = None
-
-            if not title:
-                error = "Title is required."
-
-            if error is not None:
-                flash(error)
-            else:
-                db = get_db()
-                db.execute(
-                    "INSERT INTO post (title, body, author_id) VALUES (?, ?, ?)",
-                    (title, body, g.user["id"]),
-                )
-                db.commit()
-                return redirect(url_for("blog.index"))
-
-        return render_template("blog/create.html")
-
-    @bp.route("/upload", methods=("GET", "POST"))
-    @login_required
-    def upload():
-        if request.method == "POST":
-            fileobj = request.files.get("file")
-            caption = request.form.get("caption", "").strip()
-            error = None
-
-            if fileobj is None or fileobj.filename == "":
-                error = "No file selected."
-            elif not allowed_file(fileobj.filename, IMAGE_EXTENSIONS):
-                error = "Wrong file extension! Allowed: jpg, jpeg, png, gif."
-
-            if error is not None:
-                flash(error)
-            else:
-                ext = fileobj.filename.rsplit(".", 1)[1].lower()
-                # random name: avoids overwriting other uploads and unsafe filenames
-                saved_name = f"{uuid.uuid4().hex}.{ext}"
-                fileobj.save(os.path.join(current_app.config['UPLOAD_FOLDER'], saved_name))
-
-                db = get_db()
-                db.execute(
-                    "INSERT INTO images (imagelink, caption, author_id) VALUES (?, ?, ?)",
-                    (saved_name, caption, g.user["id"]),
-                )
-                db.commit()
-                return redirect(url_for("blog.index"))
-
-        return render_template("blog/upload.html")
-
-    def get_post(id, check_author=True):
-        post = get_db().execute(
-            'SELECT p.id, title, body, created, author_id, name'
-            ' FROM post p JOIN user u ON p.author_id = u.id'
-            ' WHERE p.id = ?',
-            (id,)
-        ).fetchone()
-
-        if post is None:
-            abort(404, f"Post id {id} doesn't exist.")
-
-        if check_author and post['author_id'] != g.user['id']:
-            abort(403)
-
-        return post
-
-    @bp.route('/<int:id>/update', methods=('GET', 'POST'))
-    @login_required
-    def update(id):
-        post = Posts.get_post(id)
-
-        if request.method == 'POST':
-            title = request.form['title']
-            body = request.form['body']
-            error = None
-
-            if not title:
-                error = 'Title is required.'
-
-            if error is not None:
-                flash(error)
-            else:
-                db = get_db()
-                db.execute(
-                    'UPDATE post SET title = ?, body = ?'
-                    ' WHERE id = ?',
-                    (title, body, id)
-                )
-                db.commit()
-                return redirect(url_for('blog.index'))
-
-        return render_template('blog/update.html', post=post)
-
-    @bp.route('/<int:id>/delete', methods=('POST',))
-    @login_required
-    def delete(id):
-        Posts.get_post(id)
-        db = get_db()
-        db.execute('DELETE FROM post WHERE id = ?', (id,))
-        db.commit()
-        return redirect(url_for('blog.index'))
-
+    return render_template('blog/index.html', images=images, files=files)
 
 @bp.route('/profile',methods=("GET","POST"))
 @login_required
@@ -184,6 +69,36 @@ class Image():
             pass  # row is already gone; nothing left to clean up
 
         return redirect(url_for('blog.index'))
+    
+    @bp.route("/upload", methods=("GET", "POST"))
+    @login_required
+    def upload():
+        if request.method == "POST":
+            fileobj = request.files.get("file")
+            caption = request.form.get("caption", "").strip()
+            error = None
+    
+            if fileobj is None or fileobj.filename == "":
+                error = "No file selected."
+            elif not allowed_file(fileobj.filename, IMAGE_EXTENSIONS):
+                error = "Wrong file extension! Allowed: jpg, jpeg, png, gif."
+    
+            if error is not None:
+                flash(error)
+            else:
+                ext = fileobj.filename.rsplit(".", 1)[1].lower()
+                    # random name: avoids overwriting other uploads and unsafe filenames
+                saved_name = f"{uuid.uuid4().hex}.{ext}"
+                fileobj.save(os.path.join(current_app.config['UPLOAD_FOLDER'], saved_name))
+    
+                db = get_db()
+                db.execute(
+                    "INSERT INTO images (imagelink, caption, author_id) VALUES (?, ?, ?)",
+                    (saved_name, caption, g.user["id"]),
+                )
+                db.commit()
+                return redirect(url_for("blog.index"))
+        return render_template("blog/upload.html")
 
 class Files():
     def show_files():

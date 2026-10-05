@@ -76,6 +76,7 @@ class Users():
             password = request.form['password']
             email = request.form['email']
             phoneNo = request.form['phone']
+            Usertype = request.form['type']
             db = get_db() #from db.py
             error = None
 
@@ -89,10 +90,10 @@ class Users():
             #validation succeeds 
                 try: 
                     db.execute(
-                        "INSERT INTO user (name, password, email, phone) VALUES (?,?,?,?)", 
+                        "INSERT INTO user (name, password, email, phone, Usertype) VALUES (?,?,?,?,?)", 
                         #takes SQL query with ? as placeholders for user input 
                         #DB will escape values --> no SQL inject
-                        (username, generate_password_hash(password),email, phoneNo), #add comma after every item in biggest bracket!
+                        (username, generate_password_hash(password),email, phoneNo, Usertype), #add comma after every item in biggest bracket!
                         #for security, store passwords as hash using generate_password_hash
                     )
                     db.commit()
@@ -125,7 +126,7 @@ class Users():
             #.fetchall() returns a list of all results 
 
             if user is None:
-                error = 'Incorrect username'
+                error = 'Incorrect email address'
             elif not check_password_hash(user['password'],password):
             #check_password_hash = hashes the submitted password and compares them
                 error = 'Incorrect password'

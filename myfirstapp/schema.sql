@@ -7,33 +7,25 @@ drop table if exists adminUsers;
 
 create table user(
     id integer primary key autoincrement, 
-    name text unique not null, 
+    name text not null, 
     password text not null,
     email text unique not null,
-    phone integer unique not null
+    phone integer not null,
+    Usertype text not null
 );
 
 create table designer(
     designerID integer primary key autoincrement, 
     companyName text not null,
-    companyLine integer unique not null, 
+    companyLine integer unique not null,
     userID integer not null,
     foreign key (userID) references user (id)
 );
 
 create table adminUsers(
-    adminID integer primary key autoincrement, 
-    userID integer not null, 
+    adminID integer primary key autoincrement,
+    userID integer not null,
     foreign key (userID) references user (id)
-);
-
-create table post(
-    id integer primary key autoincrement, 
-    author_id integer not null, 
-    created timestamp not null default current_timestamp, 
-    title text not null, 
-    body text not null, 
-    foreign key (author_id) references user (id)
 );
 
 -- create table uploads(
