@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Posts{% endblock %}</h1>
+  {% if g.user %}
+    <a class="action" href="{{ url_for('blog.create') }}">New</a>
+    <a class="action" href="{{ url_for('blog.upload') }}">Upload Image</a>
+    <a class="action" href="{{ url_for('blog.upload_file') }}">Upload PDF</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% for post in posts %}
+    <article class="post">
+      <header>
+        <div>
+          <h1>{{ post['title'] }}</h1>
+          <div class="about">by {{ post['username'] }} on {{ post['created'].strftime('%Y-%m-%d') }}</div>
+        </div>
+        {% if g.user['id'] == post['author_id'] %}
+          <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
+        {% endif %}
+      </header>
+      <p class="body">{{ post['body'] }}</p>
+    </article>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+
+  {% for item in images %}
+    <article class="item">
+      <figure>
+        <img src="{{ url_for('static', filename='uploads/' + item['imagelink']) }}"
+             alt="{{ item['caption'] }}" style="max-width:400px; height:auto;">
+        {% if item['caption'] %}<figcaption>{{ item['caption'] }}</figcaption>{% endif %}
+      </figure>
+      <div class="about_item">by {{ item['username'] }} on {{ item['created'].strftime('%Y-%m-%d') }}</div>
+      {% if g.user and g.user['id'] == item['author_id'] %}
+        <form method="post" action="{{ url_for('blog.remove_img', id=item['id']) }}"
+              onsubmit="return confirm('Delete this image?');">
+          <input class="danger" type="submit" value="Remove image">
+        </form>
+      {% endif %}
+    </article>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+
+  {% if files %}
+    <hr>
+    <h2>Files</h2>
+    {% for file in files %}
+      <article class="item">
+        <a href="{{ url_for('static', filename='files/' + file['filelink']) }}"
+           target="_blank" rel="noopener">{{ file['filename'] }}</a>
+        <div class="about_item">by {{ file['username'] }} on {{ file['created'].strftime('%Y-%m-%d') }}</div>
+      </article>
+    {% endfor %}
+  {% endif %}
+{% endblock %}

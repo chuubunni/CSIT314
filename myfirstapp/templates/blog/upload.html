@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Upload Image{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post" enctype="multipart/form-data">
+    <label for="file">Image (jpg, jpeg, png, gif)</label>
+    <input type="file" name="file" id="file" accept=".jpg,.jpeg,.png,.gif" required>
+    <label for="caption">Caption</label>
+    <input type="text" name="caption" id="caption" value="{{ request.form['caption'] }}">
+    <input type="submit" value="Upload">
+  </form>
+{% endblock %}

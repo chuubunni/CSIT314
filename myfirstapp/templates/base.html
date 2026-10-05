@@ -1,0 +1,36 @@
+<!--g is automatically available in templates-->
+<!--if g.user is set from load_logged_in_user, either the username and log out link is displayed-->
+
+
+<!DOCTYPE html>
+<title>{%block title %}{%endblock%} -  Blogging App</title>
+<!--will change the title displayed in the browser's tab and window title-->
+<link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+<!--url_for() is automatically available-->
+
+<!--after page title and before content, template loops over each message returned by get_flashed_messages()-->
+<nav>
+    <h1>Blog app</h1>
+    <ul>
+        {% if g.user %}
+            <li><span>{{g.user['username']}}</span></li>
+            <li><a href="{{url_for('auth.log_out_user')}}">log out</a></li>
+            <li><a href="{{url_for('blog.profile')}}">profile</a></li>
+        {% else %}
+            <li><a href="{{url_for('auth.register')}}">register</a></li>
+            <li><a href="{{url_for('auth.login')}}">log in</a></li>
+        {% endif %}
+    </ul>
+</nav>
+<section class="content">
+    <header>
+        {% block header %}{% endblock %}
+        <!--similar to title but will change the title displayed on the page-->
+    </header>
+    {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+        <!--use flash class to show error messages from flash() in auth.py-->
+    {% endfor %}
+    {% block content %}{% endblock %}
+    <!--content of each page-->
+</section>
