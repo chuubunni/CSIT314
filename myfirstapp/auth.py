@@ -60,7 +60,7 @@ class Users():
     def get_username(id):
         db = get_db()
         username = db.execute(
-            'SELECT username FROM user WHERE id = ?', (id,)
+            'SELECT name FROM user WHERE id = ?', (id,)
         )
         return username
     @bp.route('/register', methods=('GET','POST')) 
@@ -71,14 +71,16 @@ class Users():
         if request.method == 'POST':
         #if user has submitted form, request.method will be 'POST'
         #starts validating the output
-            username = request.form['username']
+            username = request.form['name']
             #request.form = special type of dict mapping submmited form keys and values 
             password = request.form['password']
+            email = request.form['email']
+            phoneNo = request.form['phone']
             db = get_db() #from db.py
             error = None
 
             if not username:
-                error = 'username is required'
+                error = 'name is required'
             elif not password:
                 error = 'password is required'
             #ensure that username and password are not empty
@@ -87,10 +89,10 @@ class Users():
             #validation succeeds 
                 try: 
                     db.execute(
-                        "INSERT INTO user (username, password) VALUES (?,?)", 
+                        "INSERT INTO user (name, password, email, phone) VALUES (?,?,?,?)", 
                         #takes SQL query with ? as placeholders for user input 
                         #DB will escape values --> no SQL inject
-                        (username, generate_password_hash(password)), #add comma after every item in biggest bracket!
+                        (username, generate_password_hash(password),email, phoneNo), #add comma after every item in biggest bracket!
                         #for security, store passwords as hash using generate_password_hash
                     )
                     db.commit()
@@ -110,13 +112,13 @@ class Users():
     @bp.route('/login', methods=('GET','POST'))
     def login():
         if request.method == 'POST': #not GET but POST!
-            username = request.form['username']
+            email = request.form['email']
             password = request.form['password'] #prompt user to enter password and username 
             db = get_db()
             error = None 
             user = db.execute (
             #start fetching results from database after user has entered (if user enters nothing will show generic error message)
-                'SELECT * FROM user WHERE username = ?', (username,)
+                'SELECT * FROM user WHERE email = ?', (email,)
             ).fetchone()
             #.fetchone() returns one row from query
             #if query returns no results, returns None 

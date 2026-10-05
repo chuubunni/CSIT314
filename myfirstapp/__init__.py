@@ -11,7 +11,7 @@ def create_app(test_config=None):
         # folder INSIDE myfirstapp/static so Flask can serve the files
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
         FILES_FOLDER=os.path.join(app.root_path, 'static', 'files'),
-        MAX_CONTENT_LENGTH=5 * 1024 * 1024,  # reject uploads over 5 MB
+        MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # reject uploads over 5 MB
         #DO NOT REPEAT
     )
 

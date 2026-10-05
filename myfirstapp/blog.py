@@ -26,12 +26,12 @@ def allowed_file(filename, allowed):
 def index():
     db = get_db()
     posts = db.execute(
-        'SELECT p.id, title, body, created, author_id, username'
+        'SELECT p.id, title, body, created, author_id, name'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' ORDER BY created DESC'
     ).fetchall()
     images = db.execute(
-        'SELECT i.id, i.imagelink, i.caption, i.author_id, i.created, u.username'
+        'SELECT i.id, i.imagelink, i.caption, i.author_id, i.created, u.name'
         ' FROM images i JOIN user u ON i.author_id = u.id' #MUST PUT SPACING!!!!!!!!!
         ' ORDER BY created DESC'
     ).fetchall()
@@ -97,7 +97,7 @@ class Posts():
 
     def get_post(id, check_author=True):
         post = get_db().execute(
-            'SELECT p.id, title, body, created, author_id, username'
+            'SELECT p.id, title, body, created, author_id, name'
             ' FROM post p JOIN user u ON p.author_id = u.id'
             ' WHERE p.id = ?',
             (id,)
@@ -189,7 +189,7 @@ class Files():
     def show_files():
         """All uploaded files (newest first) for the index page."""
         return get_db().execute(
-            'SELECT f.id, f.filelink, f.filename, f.author_id, f.created, u.username'
+            'SELECT f.id, f.filelink, f.filename, f.author_id, f.created, u.name'
             ' FROM files f JOIN user u ON f.author_id = u.id'
             ' ORDER BY f.created DESC'
         ).fetchall()
@@ -197,7 +197,7 @@ class Files():
     @bp.route("/upload_file", methods=("GET", "POST"))
     @login_required
     def upload_file():
-        """Upload a PDF to static/files and record it in the files table."""
+        """Upload a PDF and record it in the files table."""
         if request.method == "POST":
             fileobj = request.files.get("file")
             error = None

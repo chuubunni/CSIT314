@@ -1,14 +1,30 @@
 drop table if exists user; 
 drop table if exists post; 
-drop table if exists usercontent;
-drop table if exists uploads;
 drop table if exists images;
 drop table if exists files;
+drop table if exists designer;
+drop table if exists adminUsers;
 
 create table user(
     id integer primary key autoincrement, 
-    username text unique not null, 
-    password text not null
+    name text unique not null, 
+    password text not null,
+    email text unique not null,
+    phone integer unique not null
+);
+
+create table designer(
+    designerID integer primary key autoincrement, 
+    companyName text not null,
+    companyLine integer unique not null, 
+    userID integer not null,
+    foreign key (userID) references user (id)
+);
+
+create table adminUsers(
+    adminID integer primary key autoincrement, 
+    userID integer not null, 
+    foreign key (userID) references user (id)
 );
 
 create table post(
