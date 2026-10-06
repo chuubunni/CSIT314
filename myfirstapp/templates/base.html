@@ -15,7 +15,6 @@
         {% if g.user %}
             <li><span>{{g.user['name']}}</span></li>
             <li><a href="{{url_for('auth.log_out_user')}}">log out</a></li>
-            <li><a href="{{url_for('blog.profile')}}">profile</a></li>
         {% else %}
             <li><a href="{{url_for('auth.register')}}">register</a></li>
             <li><a href="{{url_for('auth.login')}}">log in</a></li>
