@@ -33,11 +33,6 @@ def index():
     files = Files.show_files()
     return render_template('blog/index.html', images=images, files=files)
 
-@bp.route('/profile',methods=("GET","POST"))
-@login_required
-def profile(id):
-    return render_template('blog/profile.html')
-
 class Image():
     def get_image(id, check_author=True):
         image = get_db().execute(
