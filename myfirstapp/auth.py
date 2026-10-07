@@ -1,7 +1,7 @@
 import functools 
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, g, redirect, render_template, request, session, url_for,current_app
 )
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -140,6 +140,8 @@ class Users():
                 #session = dict that stores data across requests 
                 #when validation succeeds, user's id stored in new session 
                 session['user_id'] = user['id']
+                #set user type 
+                current_app.config['type'] = user['Usertype']
                 return redirect(url_for('index'))
             flash(error)
         return render_template('/auth/login.html') #always send user to login.html after error!

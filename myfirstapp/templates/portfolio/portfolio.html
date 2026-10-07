@@ -1,14 +1,19 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Home page{% endblock %}</h1>
-  {% if g.user %}
-    <a class="action" href="{{ url_for('blog.upload') }}">Upload Image</a>
-    <a class="action" href="{{ url_for('blog.upload_file') }}">Upload file</a>
-  {% endif %}
+  <h1>{% block title %}Profile page{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+  <p>
+    <a class="action" href="{{ url_for('portfolio.upload') }}">Upload Image</a>
+    <a class="action" href="{{ url_for('portfolio.upload_file') }}">Upload PDF</a>
+  </p>
+
+  {% if not images and not files %}
+    <p>Nothing uploaded yet.</p>
+  {% endif %}
+
   {% for item in images %}
     <article class="item">
       <figure>
@@ -18,7 +23,7 @@
       </figure>
       <div class="about_item">by {{ item['name'] }} on {{ item['created'].strftime('%Y-%m-%d') }}</div>
       {% if g.user and g.user['id'] == item['author_id'] %}
-        <form method="post" action="{{ url_for('blog.remove_img', id=item['id']) }}"
+        <form method="post" action="{{ url_for('portfolio.remove_img', id=item['id']) }}"
               onsubmit="return confirm('Delete this image?');">
           <input class="danger" type="submit" value="Remove image">
         </form>
