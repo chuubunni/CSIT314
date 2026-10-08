@@ -1,6 +1,4 @@
 
-
-
 # controller/portfolio_controller.py
 class PortfolioController:
     IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}

@@ -28,11 +28,6 @@ create table adminUsers(
     foreign key (userID) references user (id)
 );
 
--- create table uploads(
---     id integer primary key autoincrement,
---     author_id integer not null,
---     picture 
--- )
 create table images(
     id integer primary key autoincrement,
     imagelink text, caption text,
