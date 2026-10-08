@@ -1,6 +1,3 @@
-import os
-import uuid
-
 from flask import (
     Blueprint, render_template
 )
@@ -8,9 +5,10 @@ from flask import (
 from myfirstapp.db import get_db
 
 bp = Blueprint('home', __name__)
-
+#blueprint for home page. 
 
 @bp.route('/')
+#shows all the files and images uploaded by designers in the home page, before page loads
 def index():
     db = get_db()
     images = db.execute(

@@ -13,18 +13,18 @@ from myfirstapp.db import get_db
 bp = Blueprint('portfolio', __name__)
 
 def allowed_file(filename, allowed):
-    """True if the filename's LAST extension is in the `allowed` set."""
+    #True if the filename's LAST extension is in the `allowed` set.
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed
 
 # Each upload type has its own whitelist so a PDF can't end up in the images table
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
-FILE_EXTENSIONS = {"pdf"}
+FILE_EXTENSIONS = {"pdf"} #edit here to allow different types of files to be uploaded
 
 
 @bp.route('/portfolio')
 @login_required
 def show_stuff():
-    """Portfolio page: the logged-in user's uploaded images and PDFs."""
+    #Portfolio page: the logged-in user's uploaded images and PDFs.
     images = Image.show_images()
     files = Files.show_files()
     return render_template('portfolio/portfolio.html', images=images, files=files)
@@ -32,12 +32,12 @@ def show_stuff():
 
 class Image():
     def show_images():
-        """The current user's images, newest first."""
+        #The current user's images, newest first.
         return get_db().execute(
             'SELECT i.id, i.imagelink, i.caption, i.author_id, i.created, u.name'
             ' FROM images i JOIN user u ON i.author_id = u.id'
             ' WHERE i.author_id = ?'
-            ' ORDER BY i.created DESC',
+            ' ORDER BY i.created DESC', #refer to schema.sql for actual database config
             (g.user['id'],)
         ).fetchall()
 
@@ -106,7 +106,7 @@ class Image():
 
 class Files():
     def show_files():
-        """The current user's files, newest first."""
+        #The current user's files, newest first.
         return get_db().execute(
             'SELECT f.id, f.filelink, f.filename, f.author_id, f.created, u.name'
             ' FROM files f JOIN user u ON f.author_id = u.id'
@@ -131,7 +131,7 @@ class Files():
     @bp.route("/portfolio/upload_file", methods=("GET", "POST"))
     @login_required
     def upload_file():
-        """Upload a PDF and record it in the files table."""
+        #Upload a PDF and record it in the files table.
         if request.method == "POST":
             fileobj = request.files.get("file")
             error = None
@@ -145,11 +145,13 @@ class Files():
                 header = fileobj.stream.read(5)
                 fileobj.stream.seek(0)
                 if header != b"%PDF-":
+                    #honestly i already tried this with .docx but i kept recieving the below error message after modifying the above line of code - chu wen
                     error = "That file doesn't look like a valid PDF."
 
             if error is not None:
                 flash(error)
             else:
+                #ensure that filename is safe
                 original_name = secure_filename(fileobj.filename) or "document.pdf"
                 saved_name = f"{uuid.uuid4().hex}.pdf"  # random name on disk
                 fileobj.save(os.path.join(current_app.config['FILES_FOLDER'], saved_name))
@@ -160,6 +162,6 @@ class Files():
                     (saved_name, original_name, g.user["id"]),
                 )
                 db.commit()
-                return redirect(url_for("portfolio.show_stuff"))
+                return redirect(url_for("portfolio.show_stuff")) #use redirect for POST requests
 
-        return render_template("portfolio/upload_file.html")
+        return render_template("portfolio/upload_file.html") #use for GET 

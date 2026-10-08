@@ -9,6 +9,7 @@
 
 {% block content %}
   {% for item in images %}
+  <!--edit here to change image layout-->
     <article class="item">
       <figure>
         <img src="{{ url_for('static', filename='uploads/' + item['imagelink']) }}"

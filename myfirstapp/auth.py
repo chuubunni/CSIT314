@@ -57,10 +57,11 @@ def login_required(view):
 #if user is loaded original view continues 
 
 class Users(): 
-    def get_username(id):
+    def get_username():
         db = get_db()
         username = db.execute(
-            'SELECT name FROM user WHERE id = ?', (id,)
+            'SELECT name FROM user WHERE id = ?', (id, )
+            #'SQL STATEMENT = ? ',(variable_that_replaces_?,)
         )
         return username
     @bp.route('/register', methods=('GET','POST')) 

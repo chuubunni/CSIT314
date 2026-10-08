@@ -38,10 +38,10 @@ def create_app(test_config=None):
     from . import home
     app.register_blueprint(home.bp)
     app.add_url_rule('/', endpoint='index')
-    
+    #means that when user goes to localhost:5000/ --> brings them to home/index.html 
 
     from . import portfolio
     app.register_blueprint(portfolio.bp)
-    app.add_url_rule('/portfolio', endpoint='portfolio')
+    app.add_url_rule('/portfolio', endpoint='portfolio') #this is probably wrong....
 
     return app
