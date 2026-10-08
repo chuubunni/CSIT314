@@ -1,4 +1,4 @@
-# CSIT314 / idp-implementati
+# CSIT314 / idp-implementation
 this branch is strictly to initialize the entity, boundary and controllers associated with the portfolio of the ID. 
 
 Goals: 
