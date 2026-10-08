@@ -6,8 +6,7 @@
 
 {% block content %}
   <p>
-    <a class="action" href="{{ url_for('portfolio.upload') }}">Upload Image</a>
-    <a class="action" href="{{ url_for('portfolio.upload_file') }}">Upload PDF</a>
+    <a class="action" href="{{ url_for('designer.create') }}">Create New Portfolio</a>
   </p>
 
   {% if not images and not files %}
