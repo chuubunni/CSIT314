@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}{{ idp['title'] }}{% endblock %}</h1>
+  <a class="action" href="{{ url_for('designer.edit_idp', idp_id=idp['id']) }}">Edit</a>
+  <a class="action" href="{{ url_for('designer.portfolio') }}">Back</a>
+{% endblock %}
+
+{% block content %}
+  <div class="about">
+    {{ idp['status'] }}{% if idp['category_name'] %} &middot; {{ idp['category_name'] }}{% endif %}
+    &middot; {{ (idp['created']|string)[:10] }}
+  </div>
+  <p class="body">{{ idp['description'] }}</p>
+
+  <h2>Images</h2>
+  {% for item in images %}
+    <article class="item">
+      <figure>
+        <img src="{{ url_for('static', filename='uploads/' + item['link']) }}"
+             alt="{{ item['caption'] or '' }}" style="max-width:400px; height:auto;">
+        {% if item['caption'] %}<figcaption>{{ item['caption'] }}</figcaption>{% endif %}
+      </figure>
+      <form method="post" action="{{ url_for('designer.remove_media', media_id=item['id']) }}"
+            onsubmit="return confirm('Delete this image?');">
+        <input class="danger" type="submit" value="Remove image">
+      </form>
+    </article>
+  {% else %}
+    <p>No images yet.</p>
+  {% endfor %}
+
+  <form method="post" enctype="multipart/form-data"
+        action="{{ url_for('designer.upload_image', idp_id=idp['id']) }}">
+    <label for="image">Add image (jpg, jpeg, png, gif)</label>
+    <input type="file" name="file" id="image" accept=".jpg,.jpeg,.png,.gif" required>
+    <label for="caption">Caption</label>
+    <input type="text" name="caption" id="caption">
+    <input type="submit" value="Upload image">
+  </form>
+
+  <hr>
+  <h2>Files</h2>
+  {% for item in files %}
+    <article class="item">
+      <a href="{{ url_for('static', filename='files/' + item['link']) }}"
+         target="_blank" rel="noopener">{{ item['filename'] }}</a>
+      <form method="post" action="{{ url_for('designer.remove_media', media_id=item['id']) }}"
+            onsubmit="return confirm('Delete this file?');">
+        <input class="danger" type="submit" value="Remove file">
+      </form>
+    </article>
+  {% else %}
+    <p>No files yet.</p>
+  {% endfor %}
+
+  <form method="post" enctype="multipart/form-data"
+        action="{{ url_for('designer.upload_file', idp_id=idp['id']) }}">
+    <label for="pdf">Add PDF</label>
+    <input type="file" name="file" id="pdf" accept=".pdf,application/pdf" required>
+    <input type="submit" value="Upload PDF">
+  </form>
+
+  <hr>
+  <form method="post" action="{{ url_for('designer.delete_idp', idp_id=idp['id']) }}"
+        onsubmit="return confirm('Delete this project and all its images and files?');">
+    <input class="danger" type="submit" value="Delete project">
+  </form>
+{% endblock %}
