@@ -1,8 +1,10 @@
-# CSIT314 / idp-implementation
-this branch is strictly to initialize the entity, boundary and controllers associated with the portfolio of the ID. 
+# CSIT314 / create-diff-users
+this branch is strictly to initialize the entity, boundary and controllers associated with the profiles for admins and customers
 
 Goals: 
 
-Designers can choose to upload portfolio --> allows for upload of files and/or images --> allows for portfolio to be updated --> allows for images/files to be deleted WITHOUT DELETING PORTFOLIO --> portfolio deletion 
+1. System knows what type of user is logged in at the moment
+2. admin user logs in --> admin user brought to admin interface --> admin can suspend users
+3. customers log in --> home page --> can go to profile --> can see favourites tab
 
 Due by: 12/10/2026
