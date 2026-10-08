@@ -9,6 +9,7 @@ Goals:
 
 
 ------LATER IMPLEMENTATION----------
+
 4. platform manager logs in --> can go to dashboard (how many IDPs are in a category, top IDPs etc) --> can also see IDP categories (aesthetic types), can delete, update or add them 
 
 Due by: 13/10/2026
