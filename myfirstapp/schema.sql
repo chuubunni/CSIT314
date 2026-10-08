@@ -1,9 +1,10 @@
 drop table if exists user; 
 drop table if exists post; 
+drop table if exists adminUsers;
 drop table if exists images;
 drop table if exists files;
 drop table if exists designer;
-drop table if exists adminUsers;
+drop table if exists platManage;
 
 create table user(
     id integer primary key autoincrement, 
@@ -22,8 +23,8 @@ create table designer(
     foreign key (userID) references user (id)
 );
 
-create table adminUsers(
-    adminID integer primary key autoincrement,
+create table platManage(
+    manageID integer primary key autoincrement,
     userID integer not null,
     foreign key (userID) references user (id)
 );
