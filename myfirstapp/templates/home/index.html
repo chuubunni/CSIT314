@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Interior Design Projects{% endblock %}</h1>
+  {% if g.user and g.user['Usertype'] == 'designer' %}
+    <a class="action" href="{{ url_for('designer.portfolio') }}">My Portfolio</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% for idp in idps %}
+    <article class="post">
+      <header>
+        <div>
+          <h1>{{ idp['title'] }}</h1>
+          <div class="about">
+            by {{ idp['company_name'] or idp['designer_name'] }}
+            &middot; {{ idp['status'] }}{% if idp['category_name'] %} &middot; {{ idp['category_name'] }}{% endif %}
+            &middot; {{ (idp['created']|string)[:10] }}
+          </div>
+        </div>
+      </header>
+      {% if idp['cover'] %}
+        <img src="{{ url_for('static', filename='uploads/' + idp['cover']) }}"
+             alt="{{ idp['title'] }}" style="max-width:400px; height:auto;">
+      {% endif %}
+      <p class="body">{{ idp['description'] }}</p>
+    </article>
+    {% if not loop.last %}<hr>{% endif %}
+  {% else %}
+    <p>No projects yet.</p>
+  {% endfor %}
+{% endblock %}
