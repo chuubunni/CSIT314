@@ -4,7 +4,8 @@ this branch is strictly to initialize the entity, boundary and controllers assoc
 Goals: 
 
 1. System knows what type of user is logged in at the moment
-2. admin user logs in --> admin user brought to admin interface --> admin can suspend users
+2. platform manager logs in --> sees dashboard (WHICH SHOULD BE EMPTY FOR NOW)
 3. customers log in --> home page --> can go to profile --> can see favourites tab
+4. create basic profile for designers to see their current and past projects
 
-Due by: 13/10/2026
+Due by: 15/10/2026
