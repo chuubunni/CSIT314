@@ -3,6 +3,6 @@ this branch is strictly to initialize the entity, boundary and controllers assoc
 
 Goals: 
 
-Designers go to portfolio page --> create new IDP entity --> allows for upload of files and/or images --> allows for portfolio to be updated --> allows for images/files to be deleted WITHOUT DELETING PORTFOLIO AND/OR IDP --> portfolio deletion 
+Designers go to portfolio page --> create new IDP entity --> categorize IDP entity --> allows for upload of files and/or images --> allows for IDP to be updated (category change) --> allows for images/files to be deleted WITHOUT DELETING PORTFOLIO AND/OR IDP --> portfolio deletion 
 
 Due by: 12/10/2026
