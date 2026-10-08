@@ -1,17 +1,19 @@
-# CSIT314 / idp-implementation
-this branch is strictly to initialize the entity, boundary and controllers associated with the portfolio of the ID. 
+# CSIT314 / create-diff-users
+this branch is strictly to initialize the entity, boundary and controllers associated with the profiles for admins and customers
 
 Goals: 
+1. System knows what type of user is logged in at the moment (partially done, need check + editing)
+2. customers log in --> home page --> can go to profile --> can see favorites tab
+3. create basic profile for designers to see their current and past projects
+4. platform manager --> sees IDP categories (aesthetic types), can delete, update or add them
 
-----PLEASE TEST THE FOLLOWING WORKFLOW-------
+------INTEGRATION WITH IDP----------------
+- platform manager creates IDP category
+- IDP is uploaded and tagged with specific category
+- IDP will appear if users filter by certain category 
 
-Designers go to portfolio page --> create new IDP entity --> allows for upload of files and/or images --> allows for IDP to be updated (category change) --> allows for images/files to be deleted WITHOUT DELETING PORTFOLIO AND/OR IDP --> portfolio deletion 
+------LATER IMPLEMENTATION----------
 
-*IDP CATEGORIZATION IS LAST* 
+5. platform manager logs in --> can go to dashboard (how many IDPs are in a category, top IDPs etc)
 
-----TO BE WORKED ON-------
-
-1. fix multiple images UI
-2. fix files not showing up for a specific IDP on portfolio page
-
-Due by: ASAP
+Due by: 13/10/2026
