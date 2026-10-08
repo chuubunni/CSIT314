@@ -1,16 +1,8 @@
-# CSIT314 / Test
-minifyp project (This branch is to test prototype functions!)
+# CSIT314 / idp-implementation
+this branch is strictly to initialize the entity, boundary and controllers associated with the portfolio of the ID. 
 
-1. templates --> all html files go here
-2. templates/blog --> all html files for the blog go here
-3. templates/auth --> all html files for login and register purposes go here
-4. static --> for user uploads and .css files 
+Goals: 
 
-- Functions to be added:
-  1. edit registration page so users can register as designer
-  2. configure profiles page
+Designers can choose to upload portfolio --> allows for upload of files and/or images --> allows for portfolio to be updated --> allows for images/files to be deleted WITHOUT DELETING PORTFOLIO --> portfolio deletion 
 
-- Currently working on:
-
-
-- Issues: 
+Due by: 12/10/2026
