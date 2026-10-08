@@ -1,16 +1,11 @@
 # CSIT314 / Test
-minifyp project (This branch is to test prototype functions!)
+minifyp project 
 
-1. templates --> all html files go here
-2. templates/blog --> all html files for the blog go here
-3. templates/auth --> all html files for login and register purposes go here
-4. static --> for user uploads and .css files 
+  this branch is to test integration and ensure all parts work well 
 
-- Functions to be added:
-  1. edit registration page so users can register as designer
-  2. configure profiles page
-
-- Currently working on:
-
-
-- Issues: 
+  update the README and your branch and add comments every time you commit
+    1. Go to GitHub Desktop and click on current branch 
+    2. Click on New Branch 
+    3. Either select the source based off of test or the latest branch that has had commits 
+    4. Work on your branch until functionality is complete 
+    5. Push to your branch origin 
