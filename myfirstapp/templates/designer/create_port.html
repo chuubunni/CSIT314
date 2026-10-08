@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}{{ 'Edit project' if idp else 'New project' }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  {% set v_title = form.get('title', idp['title'] if idp else '') %}
+  {% set v_desc = form.get('description', idp['description'] if idp else '') %}
+  {% set v_status = form.get('status', idp['status'] if idp else 'completed') %}
+  {% set v_cat = form.get('category_id', (idp['category_id'] if idp and idp['category_id'] else '')|string) %}
+  <form method="post">
+    <label for="title">Title</label>
+    <input name="title" id="title" value="{{ v_title }}" required>
+
+    <label for="description">Description</label>
+    <textarea name="description" id="description">{{ v_desc }}</textarea>
+
+    <label for="category_id">Category</label>
+    <select name="category_id" id="category_id">
+      <option value="">(none)</option>
+      {% for c in categories %}
+        <option value="{{ c['id'] }}" {{ 'selected' if v_cat|string == c['id']|string else '' }}>{{ c['name'] }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="status">Status</label>
+    <select name="status" id="status">
+      <option value="ongoing" {{ 'selected' if v_status == 'ongoing' else '' }}>Ongoing</option>
+      <option value="completed" {{ 'selected' if v_status == 'completed' else '' }}>Completed</option>
+    </select>
+
+    <input type="submit" value="Save">
+  </form>
+  <p><a class="action" href="{{ url_for('designer.portfolio') }}">Back to portfolio</a></p>
+{% endblock %}

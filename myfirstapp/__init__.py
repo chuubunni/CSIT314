@@ -11,7 +11,7 @@ def create_app(test_config=None):
         # folder INSIDE myfirstapp/static so Flask can serve the files
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
         FILES_FOLDER=os.path.join(app.root_path, 'static', 'files'),
-        MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # reject uploads over 5 MB
+        MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # reject uploads over 15 MB
         #DO NOT REPEAT
     )
 
@@ -32,16 +32,16 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    from . import auth
+    from .boundaries import auth
     app.register_blueprint(auth.bp)
 
-    from . import home
+    from .boundaries import home
     app.register_blueprint(home.bp)
     app.add_url_rule('/', endpoint='index')
     #means that when user goes to localhost:5000/ --> brings them to home/index.html 
 
-    from . import portfolio
-    app.register_blueprint(portfolio.bp)
-    app.add_url_rule('/portfolio', endpoint='portfolio') #this is probably wrong....
+    from .boundaries import designer
+    app.register_blueprint(designer.bp)
+    # the designer blueprint already serves /portfolio as endpoint 'designer.portfolio'
 
-    return app
+    return app 
