@@ -7,4 +7,4 @@ Goals:
 2. admin user logs in --> admin user brought to admin interface --> admin can suspend users
 3. customers log in --> home page --> can go to profile --> can see favourites tab
 
-Due by: 12/10/2026
+Due by: 13/10/2026
