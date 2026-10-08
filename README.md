@@ -9,9 +9,9 @@ Goals:
 4. platform manager --> sees IDP categories (aesthetic types), can delete, update or add them
 
 ------INTEGRATION WITH IDP----------------
-> platform manager creates IDP category
-> IDP is uploaded and tagged with specific category
-> IDP will appear if users filter by certain category 
+- platform manager creates IDP category
+- IDP is uploaded and tagged with specific category
+- IDP will appear if users filter by certain category 
 
 ------LATER IMPLEMENTATION----------
 
