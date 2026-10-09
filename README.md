@@ -10,6 +10,7 @@ Currently done and waiting for testing:
 IN PROGRESS (await discussion) 
 - house type, size 
 - price
+
 *(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
 
 NOT DONE (waiting for customer entity to be done)
