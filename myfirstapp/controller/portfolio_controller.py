@@ -10,7 +10,6 @@ from myfirstapp.entities.idp_media import IDPMedia
 
 # Each upload type has its own whitelist so a PDF can't end up as an image
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
-FILE_EXTENSIONS = {"pdf"}  # edit here to allow other document types
 IDP_STATUSES = ("ongoing", "completed")
 
 
@@ -27,8 +26,8 @@ class PortfolioController:
     classes for all database access. That makes it easy to unit test.
     """
 
-    def __init__(self, upload_folder, files_folder):
-        self.folders = {"image": upload_folder, "file": files_folder}
+    def __init__(self, upload_folder):
+        self.folders = {"image": upload_folder}
 
     # ----- IDP -----
     def list_portfolio(self, designer_id):
@@ -49,8 +48,7 @@ class PortfolioController:
         """Returns (idp, images, files) for the detail page."""
         idp = self._owned_idp(idp_id, designer_id)
         return (idp,
-                IDPMedia.find_by_idp(idp_id, "image"),
-                IDPMedia.find_by_idp(idp_id, "file"))
+                IDPMedia.find_by_idp(idp_id, "image"))
 
     def update_idp(self, idp_id, designer_id, title, description, category_id, status):
         self._owned_idp(idp_id, designer_id)
@@ -78,25 +76,7 @@ class PortfolioController:
         # random name: avoids overwriting other uploads and unsafe filenames
         saved_name = f"{uuid.uuid4().hex}.{ext}"
         fileobj.save(os.path.join(self.folders["image"], saved_name))
-        return IDPMedia.create(idp_id, "image", saved_name, None, (caption or "").strip())
-
-    def add_file(self, idp_id, designer_id, fileobj):
-        self._owned_idp(idp_id, designer_id)
-        if fileobj is None or fileobj.filename == "":
-            raise ValidationError("No file selected.")
-        if not allowed_file(fileobj.filename, FILE_EXTENSIONS):
-            raise ValidationError("Wrong file extension! Only .pdf files are allowed.")
-
-        # the extension can be faked, so also check the PDF magic bytes
-        header = fileobj.stream.read(5)
-        fileobj.stream.seek(0)
-        if header != b"%PDF-":
-            raise ValidationError("That file doesn't look like a valid PDF.")
-
-        original_name = secure_filename(fileobj.filename) or "document.pdf"
-        saved_name = f"{uuid.uuid4().hex}.pdf"
-        fileobj.save(os.path.join(self.folders["file"], saved_name))
-        return IDPMedia.create(idp_id, "file", saved_name, original_name, None)
+        return IDPMedia.create(idp_id, "image", saved_name, (caption or "").strip())
 
     def remove_media(self, media_id, designer_id):
         """Delete one image/PDF. Returns the idp_id so the boundary can redirect back."""
@@ -143,4 +123,4 @@ class PortfolioController:
         try:
             os.remove(path)
         except FileNotFoundError:
-            pass  # row is already gone; nothing left to clean up
+            pass  # row is already gone; nothing left to clean up   

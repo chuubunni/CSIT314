@@ -49,13 +49,11 @@ create table idp(
     foreign key (category_id) references category (id)
 );
 
--- Many images/PDFs per IDP (replaces the images + files tables)
+-- Many images per IDP
 create table idp_media(
-    id integer primary key autoincrement,
+    mediaID integer primary key autoincrement,
     idp_id integer not null,
-    kind text not null check (kind in ('image', 'file')),
     link text not null,        -- random name on disk
-    filename text,             -- original name (files)
     caption text,              -- (images)
     created timestamp not null default current_timestamp,
     foreign key (idp_id) references idp (id) on delete cascade

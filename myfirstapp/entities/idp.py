@@ -31,8 +31,8 @@ class IDP:
         return get_db().execute(
             'SELECT p.id, p.title, p.description, p.status, p.created,'
             ' c.name AS category_name,'
-            ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id AND m.kind = \'image\''
-            '  ORDER BY m.id LIMIT 1) AS cover'
+            ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
+            '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p LEFT JOIN category c ON p.category_id = c.id'
             ' WHERE p.designer_id = ?'
             ' ORDER BY p.created DESC, p.id DESC',
@@ -46,8 +46,8 @@ class IDP:
             'SELECT p.id, p.title, p.description, p.status, p.created,'
             ' u.name AS designer_name, d.companyName AS company_name,'
             ' c.name AS category_name,'
-            ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id AND m.kind = \'image\''
-            '  ORDER BY m.id LIMIT 1) AS cover'
+            ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
+            '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p JOIN user u ON p.designer_id = u.id'
             ' LEFT JOIN designer d ON d.userID = p.designer_id'
             ' LEFT JOIN category c ON p.category_id = c.id'

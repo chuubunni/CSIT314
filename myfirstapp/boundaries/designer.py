@@ -23,8 +23,7 @@ def designer_required(view):
 
 
 def controller():
-    return PortfolioController(current_app.config['UPLOAD_FOLDER'],
-                               current_app.config['FILES_FOLDER'])
+    return PortfolioController(current_app.config['UPLOAD_FOLDER'])
 
 
 @bp.errorhandler(NotFoundError)
@@ -67,8 +66,8 @@ def create_idp():
 @login_required
 @designer_required
 def view_idp(idp_id):
-    idp, images, files = controller().get_idp_with_media(idp_id, g.user['id'])
-    return render_template('designer/idp_detail.html', idp=idp, images=images, files=files)
+    idp, images = controller().get_idp_with_media(idp_id, g.user['id'])
+    return render_template('designer/idp_detail.html', idp=idp, images=images)
 
 
 @bp.route('/portfolio/<int:idp_id>/edit', methods=('GET', 'POST'))
@@ -105,17 +104,6 @@ def upload_image(idp_id):
     try:
         controller().add_image(idp_id, g.user['id'], request.files.get('file'),
                                request.form.get('caption', ''))
-    except ValidationError as error:
-        flash(str(error))
-    return redirect(url_for('designer.view_idp', idp_id=idp_id))
-
-
-@bp.route('/portfolio/<int:idp_id>/files', methods=('POST',))
-@login_required
-@designer_required
-def upload_file(idp_id):
-    try:
-        controller().add_file(idp_id, g.user['id'], request.files.get('file'))
     except ValidationError as error:
         flash(str(error))
     return redirect(url_for('designer.view_idp', idp_id=idp_id))

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template
 
 from myfirstapp.entities.idp import IDP
+from myfirstapp.entities.idp_media import IDPMedia
 
 bp = Blueprint('home', __name__)
 
