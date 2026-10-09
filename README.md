@@ -16,4 +16,12 @@ Goals:
 
 5. platform manager logs in --> can go to dashboard (how many IDPs are in a category, top IDPs etc)
 
+----------HOW TO RUN-----------
+
+1. Run: py -3 -m venv .venv in cmd
+2. Then run: .venv\Scripts\activate
+3. Install flask
+4. Run: flask --app myfirstapp init-db
+5. Then run: flask --app myfirstapp run
+
 Due by: 13/10/2026
