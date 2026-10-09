@@ -3,7 +3,7 @@ this branch is strictly to initialize the entity, boundary and controllers assoc
 
 Goals: 
 1. System knows what type of user is logged in at the moment (partially done, need check + editing)
-2. customers log in --> home page --> can go to profile --> can see favorites tab
+2. customers log in --> home page --> can go to profile --> can see favorites tab (create favourites tab)
 3. create basic profile for designers to see their current and past projects
 4. platform manager --> sees IDP categories (aesthetic types), can delete, update or add them
 
