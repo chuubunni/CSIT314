@@ -28,6 +28,6 @@ def upload():
             flash(str(e))
     return render_template("designer/upload.html") #use for GET
 
-# return redirect(url_for("portfolio.show_stuff")) use redirect for POST requests
+# return redirect(url_for("portfolio.show_stuff")) use redirect for POST requests AND if 'show_stuff' is a defined method!
 
 # return render_template("designer/upload_file.html") use for GET 

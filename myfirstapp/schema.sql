@@ -6,6 +6,8 @@ drop table if exists idp;
 drop table if exists category;
 drop table if exists designer;
 drop table if exists user;
+drop table if exists customer;
+drop table if exists platform; 
 
 -- One table for everyone: this is what login/register/sessions use.
 create table user(
@@ -26,7 +28,28 @@ create table designer(
     companyName text not null,
     companyLine text unique not null,
     companyDescription text,
+    companyEmail text,
     foreign key (userID) references user (id) on delete cascade
+);
+
+create table customer(
+    cust_id integer primary key,
+    foreign key (cust_id) references user (id) on delete cascade 
+);
+
+-- Customer's shortlist; the composite key stops duplicates
+create table favourite(
+    fav_id integer primary key autoincrement, 
+    customer_id integer not null,
+    idp_id integer not null,
+    created timestamp not null default current_timestamp,
+    foreign key (customer_id) references customer (cust_id) on delete cascade,
+    foreign key (idp_id) references idp (id) on delete cascade
+);
+
+create table platform(
+    managerID integer primary key, 
+    foreign key (managerID) references user (id) on delete cascade 
 );
 
 create table category(
@@ -57,16 +80,6 @@ create table idp_media(
     link text not null,        -- random name on disk
     caption text,              -- (images)
     created timestamp not null default current_timestamp,
-    foreign key (idp_id) references idp (id) on delete cascade
-);
-
--- Customer's shortlist; the composite key stops duplicates
-create table favourite(
-    customer_id integer not null,
-    idp_id integer not null,
-    created timestamp not null default current_timestamp,
-    primary key (customer_id, idp_id),
-    foreign key (customer_id) references user (id) on delete cascade,
     foreign key (idp_id) references idp (id) on delete cascade
 );
 

@@ -8,14 +8,10 @@ Currently done and waiting for testing:
 4. IDP viewing (for regular customers/users)
 
 IN PROGRESS (await discussion) 
-- house type, size 
+- house type (UPDATE FEATURE)
 - price
 
 *(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
 
 NOT DONE (waiting for customer entity to be done)
-- image slideshow for each IDP in customer home page
-
-OR 
-
 - customer clicks on IDP cover image --> brings customer to page on specific IDP 
