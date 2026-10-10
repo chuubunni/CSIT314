@@ -1,27 +1,16 @@
-# CSIT314 / create-diff-users
-this branch is strictly to initialize the entity, boundary and controllers associated with the profiles for admins and customers
+# CSIT314 / idp-changes
+this branch is strictly to initialize the entity, boundary and controllers associated with IDPs
 
-Goals: 
-1. System knows what type of user is logged in at the moment (partially done, need check + editing)
-2. customers log in --> home page --> can go to profile --> can see favorites tab (create favourites tab)
-3. create basic profile for designers to see their current and past projects
-4. platform manager --> sees IDP categories (aesthetic types), can delete, update or add them
+Currently done and waiting for testing: 
+1. IDP image upload
+2. IDP creation
 
-------INTEGRATION WITH IDP----------------
-- platform manager creates IDP category
-- IDP is uploaded and tagged with specific category
-- IDP will appear if users filter by certain category 
+NOT DONE(await discussion) 
+- house type (UPDATE FEATURE)
+- price
 
-------LATER IMPLEMENTATION----------
+*(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
 
-5. platform manager logs in --> can go to dashboard (how many IDPs are in a category, top IDPs etc)
-
-----------HOW TO RUN-----------
-
-1. Run: py -3 -m venv .venv in cmd
-2. Then run: .venv\Scripts\activate
-3. Install flask
-4. Run: flask --app myfirstapp init-db
-5. Then run: flask --app myfirstapp run
-
-Due by: 13/10/2026
+IN PROGRESS
+- customer clicks on IDP cover image --> brings customer to page on specific IDP (David)
+- image slideshow (fang ying)

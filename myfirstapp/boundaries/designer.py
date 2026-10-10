@@ -23,8 +23,7 @@ def designer_required(view):
 
 
 def controller():
-    return PortfolioController(current_app.config['UPLOAD_FOLDER'],
-                               current_app.config['FILES_FOLDER'])
+    return PortfolioController(current_app.config['UPLOAD_FOLDER'])
 
 
 @bp.errorhandler(NotFoundError)
@@ -54,7 +53,7 @@ def create_idp():
     if request.method == 'POST':
         try:
             idp_id = ctrl.create_idp(
-                g.user['id'], request.form.get('title'), request.form.get('description'),
+                g.user['id'], request.form.get('title'), request.form.get('description'), request.form.get('houseType'),
                 request.form.get('category_id'), request.form.get('status'))
             return redirect(url_for('designer.view_idp', idp_id=idp_id))
         except ValidationError as error:
@@ -67,8 +66,8 @@ def create_idp():
 @login_required
 @designer_required
 def view_idp(idp_id):
-    idp, images, files = controller().get_idp_with_media(idp_id, g.user['id'])
-    return render_template('designer/idp_detail.html', idp=idp, images=images, files=files)
+    idp, images = controller().get_idp_with_media(idp_id, g.user['id'])
+    return render_template('designer/idp_detail.html', idp=idp, images=images)
 
 
 @bp.route('/portfolio/<int:idp_id>/edit', methods=('GET', 'POST'))
@@ -81,7 +80,7 @@ def edit_idp(idp_id):
         try:
             ctrl.update_idp(
                 idp_id, g.user['id'], request.form.get('title'),
-                request.form.get('description'), request.form.get('category_id'),
+                request.form.get('description'), request.form.get('houseType'), request.form.get('category_id'),
                 request.form.get('status'))
             return redirect(url_for('designer.view_idp', idp_id=idp_id))
         except ValidationError as error:
@@ -110,20 +109,9 @@ def upload_image(idp_id):
     return redirect(url_for('designer.view_idp', idp_id=idp_id))
 
 
-@bp.route('/portfolio/<int:idp_id>/files', methods=('POST',))
+@bp.route('/portfolio/media/<int:mediaID>/remove', methods=('POST',))
 @login_required
 @designer_required
-def upload_file(idp_id):
-    try:
-        controller().add_file(idp_id, g.user['id'], request.files.get('file'))
-    except ValidationError as error:
-        flash(str(error))
-    return redirect(url_for('designer.view_idp', idp_id=idp_id))
-
-
-@bp.route('/portfolio/media/<int:media_id>/remove', methods=('POST',))
-@login_required
-@designer_required
-def remove_media(media_id):
-    idp_id = controller().remove_media(media_id, g.user['id'])
+def remove_media(mediaID):
+    idp_id = controller().remove_media(mediaID, g.user['id'])
     return redirect(url_for('designer.view_idp', idp_id=idp_id))

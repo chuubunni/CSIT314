@@ -7,6 +7,8 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from myfirstapp.db import get_db #MUST match the name of the app folder!!!!!! 
+from myfirstapp.entities.user import Users
+
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 #creates a blueprint named auth 
@@ -28,9 +30,7 @@ def load_logged_in_user():
         g.user = None
         #if user does not exist, g.user will be None
     else: 
-        g.user = get_db().execute(
-            'SELECT * FROM user WHERE id = ?', (user_id,)
-        ).fetchone() #query to store data in g.user
+        g.user = Users.get_info(user_id) #query to store data in g.user
         #g.user lasts for the length of the request
 
 @bp.route('/logout')
@@ -61,15 +61,9 @@ def login():
     if request.method == 'POST': #not GET but POST!
         email = request.form['email']
         password = request.form['password'] #prompt user to enter password and username 
-        db = get_db()
         error = None 
-        user = db.execute (
+        user = Users.check_email(email)
         #start fetching results from database after user has entered (if user enters nothing will show generic error message)
-            'SELECT * FROM user WHERE email = ?', (email,)
-        ).fetchone()
-        #.fetchone() returns one row from query
-        #if query returns no results, returns None 
-        #.fetchall() returns a list of all results 
 
         if user is None:
             error = 'Incorrect email address'
@@ -100,7 +94,7 @@ def register():
     if request.method == 'POST':
         #if user has submitted form, request.method will be 'POST'
         #starts validating the output
-        username = request.form['name']
+        name = request.form['name']
         #request.form = special type of dict mapping submmited form keys and values 
         password = request.form['password']
         email = request.form['email']
@@ -109,7 +103,7 @@ def register():
         db = get_db() #from db.py
         error = None
 
-        if not username:
+        if not name:
             error = 'name is required'
         elif not password:
             error = 'password is required'
@@ -117,25 +111,46 @@ def register():
 
         if error is None: 
         #validation succeeds 
-            try: 
-                db.execute(
-                    "INSERT INTO user (name, password, email, phone, Usertype) VALUES (?,?,?,?,?)", 
-                    #takes SQL query with ? as placeholders for user input 
-                    #DB will escape values --> no SQL inject
-                    (username, generate_password_hash(password),email, phoneNo, Usertype), #add comma after every item in biggest bracket!
-                    #for security, store passwords as hash using generate_password_hash
-                )
-                db.commit()
+            try:
+                user_id = Users.create_user(name, password, email, phoneNo, Usertype)
             except db.IntegrityError:
-            #db.IntegrityError --> occurs if username already exists 
-                error = f"User {username} is already registered."
-            else: 
-                return redirect(url_for("auth.login"))
-                #after storing user, redirected to login page 
-
+                error = f"This email {email} has already registered."
+            else:
+                if Usertype == 'designer':
+                    session['pending_designer_id'] = user_id
+                    return redirect(url_for('auth.designer_register'))
+                if Usertype == 'customer':
+                    Users.create_customer(user_id)   # fills the customer table too
+                return redirect(url_for('auth.login'))
+            
         flash(error)
         #if validation fails, error shown to user 
         #flash() stores messages that can be retrieved when rendering template 
 
     return render_template('auth/register.html')
     #when user initially navigates to auth/register or there was validation error, HTML page with registration form is shown
+
+@bp.route('/designer_register', methods=('GET', 'POST'))
+def designer_register():
+    user_id = session.get('pending_designer_id')
+    if user_id is None:                       # nobody is mid-registration
+        return redirect(url_for('auth.register'))
+
+    if request.method == 'POST':
+        error = None
+        try:
+            Users.create_designer(
+                user_id,
+                request.form['companyName'],
+                request.form['companyLine'],
+                request.form['companyDescription'],
+                request.form['companyEmail'],
+            )
+        except get_db().IntegrityError:
+            error = "A designer profile with this company phone number already exists."
+        else:
+            session.pop('pending_designer_id')
+            return redirect(url_for('auth.login'))
+        flash(error)                          # your version built `error` but never showed it
+
+    return render_template('auth/designer_register.html')
