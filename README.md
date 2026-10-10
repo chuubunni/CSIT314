@@ -1,16 +1,7 @@
-# CSIT314 / idp-changes
-this branch is strictly to initialize the entity, boundary and controllers associated with IDPs
+# CSIT314 / diff-user-profiles
+this branch is strictly to initialize the entity, boundary and controllers associated with different user profiles
 
-Currently done and waiting for testing: 
-1. IDP image upload
-2. IDP creation
-
-NOT DONE(await discussion) 
-- house type (UPDATE FEATURE)
-- price
-
-*(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
-
-IN PROGRESS
-- customer clicks on IDP cover image --> brings customer to page on specific IDP (David)
-- image slideshow (fang ying)
+1. System is aware of user's type (partially done)
+2. Customers can access and edit info on their profile page
+4. Customers access favourites tab from home
+5. Platform managers can add categories
