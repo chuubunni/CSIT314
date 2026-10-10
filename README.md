@@ -1,19 +1,21 @@
-# CSIT314 / create-diff-users
-this branch is strictly to initialize the entity, boundary and controllers associated with the profiles for admins and customers
+# CSIT314 / idp-implementation
+this branch is strictly to initialize the entity, boundary and controllers associated with IDPs
 
-Goals: 
-1. System knows what type of user is logged in at the moment (partially done, need check + editing)
-2. customers log in --> home page --> can go to profile --> can see favorites tab
-3. create basic profile for designers to see their current and past projects
-4. platform manager --> sees IDP categories (aesthetic types), can delete, update or add them
+Currently done and waiting for testing: 
+1. IDP image upload
+2. IDP creation
+3. IDP viewing (for designers)
+4. IDP viewing (for regular customers/users)
 
-------INTEGRATION WITH IDP----------------
-- platform manager creates IDP category
-- IDP is uploaded and tagged with specific category
-- IDP will appear if users filter by certain category 
+IN PROGRESS (await discussion) 
+- house type, size 
+- price
 
-------LATER IMPLEMENTATION----------
+*(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
 
-5. platform manager logs in --> can go to dashboard (how many IDPs are in a category, top IDPs etc)
+NOT DONE (waiting for customer entity to be done)
+- image slideshow for each IDP in customer home page
 
-Due by: 13/10/2026
+OR 
+
+- customer clicks on IDP cover image --> brings customer to page on specific IDP 
