@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}Customer Profile{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    {% if customer %}
+        <article class="post">
+            <header>
+                <div>
+                    <h1>{{ customer['customerName'] }}</h1>
+                    <div class="about">Customer</div>
+                </div>
+            </header>
+
+            <p>
+                <strong>Email:</strong>
+                {{ customer['customerEmail'] }}
+            </p>
+
+            <p>
+                <strong>Phone:</strong>
+                {{ customer['customerPhone'] }}
+            </p>
+
+            <p><strong>Description:</strong></p>
+            <p class="body">{{ customer['customerDescription'] or 'No description provided.' }}</p>
+        </article>
+    {% else %}
+        <p>No customer profile found.</p>
+    {% endif %}
+{% endblock %}
