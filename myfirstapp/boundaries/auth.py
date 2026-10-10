@@ -111,21 +111,18 @@ def register():
 
         if error is None: 
         #validation succeeds 
-            try: 
-                Users.create_user(name, password, email, phoneNo, Usertype)
-                    #takes SQL query with ? as placeholders for user input 
-                    #DB will escape values --> no SQL inject
-                    #add comma after every item in biggest bracket!
-                    #for security, store passwords as hash using generate_password_hash
+            try:
+                user_id = Users.create_user(name, password, email, phoneNo, Usertype)
             except db.IntegrityError:
-            #db.IntegrityError --> occurs if email already exists 
                 error = f"This email {email} has already registered."
             else:
                 if Usertype == 'designer':
-                    return redirect(url_for("auth.designer_register", email=email))
-                return redirect(url_for("auth.login"))
-                #after storing user, redirected to login page 
-
+                    session['pending_designer_id'] = user_id
+                    return redirect(url_for('auth.designer_register'))
+                if Usertype == 'customer':
+                    Users.create_customer(user_id)   # fills the customer table too
+                return redirect(url_for('auth.login'))
+            
         flash(error)
         #if validation fails, error shown to user 
         #flash() stores messages that can be retrieved when rendering template 
@@ -133,19 +130,27 @@ def register():
     return render_template('auth/register.html')
     #when user initially navigates to auth/register or there was validation error, HTML page with registration form is shown
 
-@bp.route('/<string:email>/designer_register', methods=('GET','POST'))
-def designer_register(email):
-    if request.method == "POST":
-        db = get_db()
-        companyName = request.form['companyName']
-        companyLine = request.form['companyLine']
-        companyDescription = request.form['companyDescription']
-        companyEmail = request.form['companyEmail']
-        designerid = Users.get_id(email)
-        try: 
-            Users.create_designer(designerid, companyName, companyLine, companyDescription, companyEmail)
-        except db.IntegrityError: 
-            error = f"You have already registered as a designer."
-        else: 
-            return redirect(url_for("auth.login"))
+@bp.route('/designer_register', methods=('GET', 'POST'))
+def designer_register():
+    user_id = session.get('pending_designer_id')
+    if user_id is None:                       # nobody is mid-registration
+        return redirect(url_for('auth.register'))
+
+    if request.method == 'POST':
+        error = None
+        try:
+            Users.create_designer(
+                user_id,
+                request.form['companyName'],
+                request.form['companyLine'],
+                request.form['companyDescription'],
+                request.form['companyEmail'],
+            )
+        except get_db().IntegrityError:
+            error = "A designer profile with this company phone number already exists."
+        else:
+            session.pop('pending_designer_id')
+            return redirect(url_for('auth.login'))
+        flash(error)                          # your version built `error` but never showed it
+
     return render_template('auth/designer_register.html')

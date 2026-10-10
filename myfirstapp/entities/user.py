@@ -40,15 +40,6 @@ class Users():
                             ' VALUES (?, ?, ?, ?, ?)', (id, companyName, comapnyLine, companyDescription, companyEmail))
         db.commit()
         return cursor.lastrowid
-    
-    @staticmethod 
-    def get_username(id):
-        db = get_db()
-        username = db.execute(
-            'SELECT name FROM user WHERE id = ?', (id, )
-            #'SQL STATEMENT = ? ',(variable_that_replaces_?,)
-        )
-        return username
 
     @staticmethod
     def get_info(id):
@@ -62,12 +53,16 @@ class Users():
         #if query returns no results, returns None 
         #.fetchall() returns a list of all results
         return isMailIn
+    
+    @staticmethod
+    def get_username(id):
+        row = get_db().execute('SELECT name FROM user WHERE id = ?', (id,)).fetchone()
+        return row['name'] if row else None
 
-    @staticmethod 
+    @staticmethod
     def get_id(email):
-        db = get_db()
-        id = db.execute('SELECT id FROM user WHERE email = ?', (email,))
-        return id
+        row = get_db().execute('SELECT id FROM user WHERE email = ?', (email,)).fetchone()
+        return row['id'] if row else None
 
 class customers(Users):
     pass 
