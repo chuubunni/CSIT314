@@ -36,25 +36,25 @@ class PortfolioController:
     def categories(self):
         return Category.find_all_active()
 
-    def create_idp(self, designer_id, title, description, category_id, status):
-        title, description, category_id, status = self._clean_idp(
-            title, description, category_id, status)
-        return IDP.create(designer_id, title, description, category_id, status)
+    def create_idp(self, designer_id, title, description, houseType, category_id, status):
+        title, description, houseType, category_id, status = self._clean_idp(
+            title, description, houseType, category_id, status)
+        return IDP.create(designer_id, title, description, houseType, category_id, status)
 
     def get_idp(self, idp_id, designer_id):
         return self._owned_idp(idp_id, designer_id)
 
     def get_idp_with_media(self, idp_id, designer_id):
-        """Returns (idp, images, files) for the detail page."""
+        """Returns (idp, images) for the detail page."""
         idp = self._owned_idp(idp_id, designer_id)
         return (idp,
-                IDPMedia.find_by_idp(idp_id, "image"))
+                IDPMedia.find_by_idp(idp_id))
 
-    def update_idp(self, idp_id, designer_id, title, description, category_id, status):
+    def update_idp(self, idp_id, designer_id, title, description, houseType, category_id, status):
         self._owned_idp(idp_id, designer_id)
-        title, description, category_id, status = self._clean_idp(
-            title, description, category_id, status)
-        IDP.update(idp_id, title, description, category_id, status)
+        title, description, houseType, category_id, status = self._clean_idp(
+            title, description, houseType, category_id, status)
+        IDP.update(idp_id, title, description, houseType, category_id, status)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)
@@ -76,15 +76,15 @@ class PortfolioController:
         # random name: avoids overwriting other uploads and unsafe filenames
         saved_name = f"{uuid.uuid4().hex}.{ext}"
         fileobj.save(os.path.join(self.folders["image"], saved_name))
-        return IDPMedia.create(idp_id, "image", saved_name, (caption or "").strip())
+        return IDPMedia.create(idp_id, saved_name, (caption or "").strip())
 
-    def remove_media(self, media_id, designer_id):
+    def remove_media(self, mediaID, designer_id):
         """Delete one image/PDF. Returns the idp_id so the boundary can redirect back."""
-        media = IDPMedia.find(media_id)
+        media = IDPMedia.find(mediaID)
         if media is None:
-            raise NotFoundError(f"Media id {media_id} doesn't exist.")
+            raise NotFoundError(f"Media id {mediaID} doesn't exist.")
         self._owned_idp(media["idp_id"], designer_id)
-        IDPMedia.delete(media_id)
+        IDPMedia.delete(mediaID)
         self._remove_from_disk(media)
         return media["idp_id"]
 
@@ -97,13 +97,15 @@ class PortfolioController:
             raise PermissionDenied("You can only manage your own projects.")
         return idp
 
-    def _clean_idp(self, title, description, category_id, status):
+    def _clean_idp(self, title, description, houseType, category_id, status):
         title = (title or "").strip()
         description = (description or "").strip()
         if not title:
             raise ValidationError("Title is required.")
         if status not in IDP_STATUSES:
             raise ValidationError("Status must be 'ongoing' or 'completed'.")
+
+        houseType = houseType
 
         if category_id in (None, ""):
             category_id = None
@@ -115,11 +117,11 @@ class PortfolioController:
             category = Category.find(category_id)
             if category is None or not category["active"]:
                 raise ValidationError("Unknown category.")
-        return title, description, category_id, status
+        return title, description, houseType, category_id, status
 
     def _remove_from_disk(self, media):
         # basename guards against path tricks
-        path = os.path.join(self.folders[media["kind"]], os.path.basename(media["link"]))
+        path = os.path.join(self.folders["image"], os.path.basename(media["link"]))
         try:
             os.remove(path)
         except FileNotFoundError:

@@ -24,7 +24,8 @@
         <img src="{{ url_for('static', filename='uploads/' + idp['cover']) }}"
              alt="{{ idp['title'] }}" style="max-width:400px; height:auto;">
       {% endif %}
-      <p class="body">{{ idp['description'] }}</p>
+      <p class="desc">{{ idp['description'] }}</p>
+      <p class="houseType"> Housing type: {{ idp['houseType']}} </p>
     </article>
     {% if not loop.last %}<hr>{% endif %}
   {% else %}

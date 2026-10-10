@@ -5,12 +5,12 @@ class IDP:
     """Entity: an interior design project. Only this class writes SQL for the idp table."""
 
     @staticmethod
-    def create(designer_id, title, description, category_id, status):
+    def create(designer_id, title, description, houseType, category_id, status):
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO idp (designer_id, category_id, title, description, status)'
-            ' VALUES (?, ?, ?, ?, ?)',
-            (designer_id, category_id, title, description, status),
+            'INSERT INTO idp (designer_id, title, description, houseType, category_id, status)'
+            ' VALUES (?, ?, ?, ?, ?, ?)',
+            (designer_id, title, description, houseType, category_id, status),
         )
         db.commit()
         return cursor.lastrowid
@@ -18,7 +18,7 @@ class IDP:
     @staticmethod
     def find(idp_id):
         return get_db().execute(
-            'SELECT p.id, p.designer_id, p.category_id, p.title, p.description,'
+            'SELECT p.id, p.designer_id, p.houseType, p.category_id, p.title, p.description,'
             ' p.status, p.created, c.name AS category_name'
             ' FROM idp p LEFT JOIN category c ON p.category_id = c.id'
             ' WHERE p.id = ?',
@@ -29,7 +29,7 @@ class IDP:
     def find_by_designer(designer_id):
         """A designer's IDPs, newest first, each with a cover image (first image, if any)."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.status, p.created,'
+            'SELECT p.id, p.title, p.description, p.houseType, p.status, p.created,'
             ' c.name AS category_name,'
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
@@ -43,7 +43,7 @@ class IDP:
     def find_all():
         """Every IDP (for the home page), newest first."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.status, p.created,'
+            'SELECT p.id, p.title, p.description, p.houseType, p.status, p.created,'
             ' u.name AS designer_name, d.companyName AS company_name,'
             ' c.name AS category_name,'
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
@@ -55,12 +55,12 @@ class IDP:
         ).fetchall()
 
     @staticmethod
-    def update(idp_id, title, description, category_id, status):
+    def update(idp_id, title, description, houseType, category_id, status):
         db = get_db()
         db.execute(
-            'UPDATE idp SET title = ?, description = ?, category_id = ?, status = ?'
+            'UPDATE idp SET title = ?, description = ?, houseType = ?, category_id = ?, status = ?'
             ' WHERE id = ?',
-            (title, description, category_id, status, idp_id),
+            (title, description, houseType, category_id, status, idp_id),
         )
         db.commit()
 

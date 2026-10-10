@@ -11,7 +11,8 @@
     {{ idp['status'] }}{% if idp['category_name'] %} &middot; {{ idp['category_name'] }}{% endif %}
     &middot; {{ (idp['created']|string)[:10] }}
   </div>
-  <p class="body">{{ idp['description'] }}</p>
+  <p class="desc">{{ idp['description'] }}</p>
+  <p class="houseType"> Housing type: {{ idp['houseType'] }} </p>
 
   <h2>Images</h2>
   {% for item in images %}
@@ -21,7 +22,7 @@
              alt="{{ item['caption'] or '' }}" style="max-width:400px; height:auto;">
         {% if item['caption'] %}<figcaption>{{ item['caption'] }}</figcaption>{% endif %}
       </figure>
-      <form method="post" action="{{ url_for('designer.remove_media', media_id=item['id']) }}"
+      <form method="post" action="{{ url_for('designer.remove_media', mediaID=item['mediaID']) }}"
             onsubmit="return confirm('Delete this image?');">
         <input class="danger" type="submit" value="Remove image">
       </form>

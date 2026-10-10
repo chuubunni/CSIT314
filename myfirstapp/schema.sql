@@ -41,6 +41,7 @@ create table idp(
     designer_id integer not null,
     category_id integer,
     title text not null,
+    houseType text not null, 
     description text,
     status text not null default 'completed'
         check (status in ('ongoing', 'completed')),
