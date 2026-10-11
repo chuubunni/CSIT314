@@ -2,15 +2,15 @@ from myfirstapp.db import get_db
 
 
 class IDPMedia:
-    """Entity: an image or PDF attached to an IDP (table idp_media)."""
+    """Entity: an image attached to an IDP (table idp_media)."""
 
     @staticmethod
-    def create(idp_id, kind, link, filename=None, caption=None):
+    def create(idp_id, link, caption=None):
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO idp_media (idp_id, kind, link, filename, caption)'
-            ' VALUES (?, ?, ?, ?, ?)',
-            (idp_id, kind, link, filename, caption),
+            'INSERT INTO idp_media (idp_id, link, caption)'
+            ' VALUES (?, ?, ?)',
+            (idp_id, link, caption),
         )
         db.commit()
         return cursor.lastrowid
@@ -18,26 +18,23 @@ class IDPMedia:
     @staticmethod
     def find(media_id):
         return get_db().execute(
-            'SELECT id, idp_id, kind, link, filename, caption, created'
-            ' FROM idp_media WHERE id = ?',
+            'SELECT mediaID, idp_id, link, caption, created'
+            ' FROM idp_media WHERE mediaID = ?',
             (media_id,),
         ).fetchone()
 
     @staticmethod
-    def find_by_idp(idp_id, kind=None):
-        sql = ('SELECT id, idp_id, kind, link, filename, caption, created'
+    def find_by_idp(idp_id):
+        sql = ('SELECT mediaID, idp_id, link, caption, created'
                ' FROM idp_media WHERE idp_id = ?')
         params = [idp_id]
-        if kind is not None:
-            sql += ' AND kind = ?'
-            params.append(kind)
-        sql += ' ORDER BY id'
+        sql += ' ORDER BY mediaID'
         return get_db().execute(sql, params).fetchall()
 
     @staticmethod
-    def delete(media_id):
+    def delete(mediaID):
         db = get_db()
-        db.execute('DELETE FROM idp_media WHERE id = ?', (media_id,))
+        db.execute('DELETE FROM idp_media WHERE mediaID = ?', (mediaID,))
         db.commit()
 
     @staticmethod
@@ -46,3 +43,18 @@ class IDPMedia:
         db = get_db()
         db.execute('DELETE FROM idp_media WHERE idp_id = ?', (idp_id,))
         db.commit()
+
+#these two are for image slideshow, may move to customers
+    @staticmethod 
+    def get_all_images(idp_id):
+        db = get_db()
+        all_images = db.execute('SELECT * FROM idp_media WHERE idp_id = ?', (idp_id)).fetchall()
+        db.commit()
+        return all_images
+
+    @staticmethod
+    def count_all_images(idp_id):
+        db = get_db()
+        image_count = db.execute('SELECT COUNT(idp_media) WHERE idp_id = ?',(idp_id)).fetchall()
+        db.commit()
+        return image_count 

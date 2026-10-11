@@ -11,7 +11,8 @@
     {{ idp['status'] }}{% if idp['category_name'] %} &middot; {{ idp['category_name'] }}{% endif %}
     &middot; {{ (idp['created']|string)[:10] }}
   </div>
-  <p class="body">{{ idp['description'] }}</p>
+  <p class="desc">{{ idp['description'] }}</p>
+  <p class="houseType"> Housing type: {{ idp['houseType'] }} </p>
 
   <h2>Images</h2>
   {% for item in images %}
@@ -21,7 +22,7 @@
              alt="{{ item['caption'] or '' }}" style="max-width:400px; height:auto;">
         {% if item['caption'] %}<figcaption>{{ item['caption'] }}</figcaption>{% endif %}
       </figure>
-      <form method="post" action="{{ url_for('designer.remove_media', media_id=item['id']) }}"
+      <form method="post" action="{{ url_for('designer.remove_media', mediaID=item['mediaID']) }}"
             onsubmit="return confirm('Delete this image?');">
         <input class="danger" type="submit" value="Remove image">
       </form>
@@ -40,30 +41,8 @@
   </form>
 
   <hr>
-  <h2>Files</h2>
-  {% for item in files %}
-    <article class="item">
-      <a href="{{ url_for('static', filename='files/' + item['link']) }}"
-         target="_blank" rel="noopener">{{ item['filename'] }}</a>
-      <form method="post" action="{{ url_for('designer.remove_media', media_id=item['id']) }}"
-            onsubmit="return confirm('Delete this file?');">
-        <input class="danger" type="submit" value="Remove file">
-      </form>
-    </article>
-  {% else %}
-    <p>No files yet.</p>
-  {% endfor %}
-
-  <form method="post" enctype="multipart/form-data"
-        action="{{ url_for('designer.upload_file', idp_id=idp['id']) }}">
-    <label for="pdf">Add PDF</label>
-    <input type="file" name="file" id="pdf" accept=".pdf,application/pdf" required>
-    <input type="submit" value="Upload PDF">
-  </form>
-
-  <hr>
   <form method="post" action="{{ url_for('designer.delete_idp', idp_id=idp['id']) }}"
-        onsubmit="return confirm('Delete this project and all its images and files?');">
+        onsubmit="return confirm('Delete this project and all its images?');">
     <input class="danger" type="submit" value="Delete project">
   </form>
 {% endblock %}

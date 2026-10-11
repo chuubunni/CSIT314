@@ -10,7 +10,6 @@ def create_app(test_config=None):
         DATABASE=os.path.join(app.instance_path, 'myfirstapp.sqLite'),
         # folder INSIDE myfirstapp/static so Flask can serve the files
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
-        FILES_FOLDER=os.path.join(app.root_path, 'static', 'files'),
         MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # reject uploads over 15 MB
         #DO NOT REPEAT
     )
@@ -22,8 +21,6 @@ def create_app(test_config=None):
 
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-    os.makedirs(app.config['FILES_FOLDER'],exist_ok= True)
 
     @app.route('/hello')
     def hello():
@@ -43,5 +40,9 @@ def create_app(test_config=None):
     from .boundaries import designer
     app.register_blueprint(designer.bp)
     # the designer blueprint already serves /portfolio as endpoint 'designer.portfolio'
+
+    from .boundaries import platform
+    app.register_blueprint(platform.bp)
+
 
     return app 

@@ -24,3 +24,29 @@ nav ul li a, nav ul li span, header .action { display: block; padding: 0.5rem; }
 .content textarea { min-height: 12em; resize: vertical; }
 input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
+
+/* Homepage: a separate slideshow per project card */
+.project-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 20px; padding-top: 20px; }
+.project-card { border: 1px solid #e0e4e8; border-radius: 12px; background: white; overflow: hidden; box-shadow: 0 2px 8px #0000000c; }
+.project-carousel { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #edf0f2; overflow: hidden; }
+.project-slide { width: 100%; height: 100%; object-fit: cover; display: block; }
+.project-slide[hidden] { display: none; }
+.project-no-image { height: 100%; display: grid; place-items: center; color: #69747d; }
+.carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: #111a; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; }
+.carousel-arrow:hover { background: #111e; }
+.carousel-prev { left: 10px; } .carousel-next { right: 10px; }
+.carousel-counter { position: absolute; bottom: 10px; right: 10px; color: white; background: #111b; border-radius: 15px; padding: 3px 9px; font-size: 12px; }
+.project-info { padding: 15px; } .project-info h2 { font-size: 1.2rem; margin: 0 0 6px; }
+.project-designer { font-weight: 600; } .project-meta { color: #667685; font-size: .85rem; }
+/* Platform manager */
+.manager-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.manager-tools form { display: flex; flex-direction: row; flex-wrap: wrap; align-items: end; gap: 8px; }
+.manager-tools input { margin-bottom: 0; } .manager-tools button { padding: 7px 12px; }
+.manager-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+.manager-table th, .manager-table td { text-align: left; border-bottom: 1px solid #ddd; padding: 9px; }
+.manager-table form { display: inline-flex; flex-direction: row; margin: 0; gap: 5px; }
+.manager-table input { margin: 0; } .manager-table button { cursor: pointer; }
+.manager-stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 12px; }
+.manager-stat { padding: 15px; border-radius: 8px; background: #f0f5fa; }
+.manager-stat strong { display: block; font-size: 1.4rem; margin-top: 8px; }
+

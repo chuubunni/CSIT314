@@ -7,6 +7,7 @@
 {% block content %}
   {% set v_title = form.get('title', idp['title'] if idp else '') %}
   {% set v_desc = form.get('description', idp['description'] if idp else '') %}
+  {% set v_type = form.get('houseType', idp['houseType'] if idp else 'HDB') %}
   {% set v_status = form.get('status', idp['status'] if idp else 'completed') %}
   {% set v_cat = form.get('category_id', (idp['category_id'] if idp and idp['category_id'] else '')|string) %}
   <form method="post">
@@ -16,6 +17,13 @@
     <label for="description">Description</label>
     <textarea name="description" id="description">{{ v_desc }}</textarea>
 
+    <label for="houseType">House Type</label>
+    <select id="houseType" name="houseType">
+            <option value="HDB" {{ 'selected' if v_type == 'HDB' else '' }}>HDB</option> <!--MUST BE SMALL CAPS!!!-->
+            <option value="condo" {{ 'selected' if v_type == 'condo' else '' }}>Condo</option>
+            <option value="landed" {{ 'selected' if v_type == 'landed' else '' }}>Landed</option>
+    </select>
+    
     <label for="category_id">Category</label>
     <select name="category_id" id="category_id">
       <option value="">(none)</option>
