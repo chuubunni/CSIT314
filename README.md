@@ -12,5 +12,5 @@ NOT DONE(await discussion)
 *(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
 
 IN PROGRESS
-- customer clicks on IDP cover image --> brings customer to page on specific IDP (David)
+- customer clicks on IDP title --> brings customer to page on specific IDP (David)
 - image slideshow (fang ying)
