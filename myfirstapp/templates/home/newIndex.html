@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Home{% endblock %}</h1>
+
+  {% if g.user and g.user['Usertype'] == 'designer' %}
+    <a class="action" href="{{ url_for('designer.portfolio') }}">
+      My Portfolio
+    </a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <p>Welcome to our interior design platform.</p>
+
+  {% if g.user and g.user['Usertype'] == 'designer' %}
+    <p>Open My Portfolio to view and manage your projects.</p>
+  {% elif not g.user %}
+    <p>Please log in to access your account.</p>
+  {% endif %}
+{% endblock %}
