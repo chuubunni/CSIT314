@@ -23,7 +23,6 @@
             &middot; {{ (idp['created']|string)[:10] }}
           </div>
         </div>
-        <a class="action" href="{{ url_for('designer.view_idp', idp_id=idp['id']) }}">Open</a>
       </header>
       {% if idp['cover'] %}
         <img src="{{ url_for('static', filename='uploads/' + idp['cover']) }}"

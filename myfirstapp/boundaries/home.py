@@ -9,15 +9,12 @@ from myfirstapp.entities.idp_view import IDPView
 
 bp = Blueprint('home', __name__)
 
-
 @bp.route('/')
 def index():
-    #"""Homepage: display all projects with their images."""
-    #return render_template(
-    #    'home/index.html',
-    #    idps=IDP.find_all_with_images()
-    """Homepage without project listings."""
-    return render_template('home/newIndex.html'
+    """Homepage: display all projects with their images."""
+    return render_template(
+        'home/index.html',
+        idps=IDP.find_all_with_images()
     )
 
 
