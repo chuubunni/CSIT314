@@ -12,5 +12,9 @@ NOT DONE(await discussion)
 *(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
 
 IN PROGRESS
-- customer clicks on IDP title --> brings customer to page on specific IDP (David)
-- image slideshow (fang ying)
+- user's profile
+- designer's profile
+- manager's profile
+- user's favorite tab
+- add IDP to favorite
+- should users be allowed to click on ID's profile?
