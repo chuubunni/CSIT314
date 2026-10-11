@@ -13,7 +13,11 @@
     <article class="post">
       <header>
         <div>
-          <h1>{{ idp['title'] }}</h1>
+          <h1>
+            <a href="{{ url_for('designer.view_idp', idp_id=idp['id']) }}">
+              {{ idp['title'] }}
+            </a>
+          </h1>
           <div class="about">
             {{ idp['status'] }}{% if idp['category_name'] %} &middot; {{ idp['category_name'] }}{% endif %}
             &middot; {{ (idp['created']|string)[:10] }}
