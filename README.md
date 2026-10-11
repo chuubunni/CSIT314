@@ -5,16 +5,20 @@ Currently done and waiting for testing:
 1. IDP image upload
 2. IDP creation
 
-NOT DONE(await discussion) 
-- house type (UPDATE FEATURE)
-- price
-
-*(WILL NEED TO BE MANAGED BY PLATFORM MANAGER AS WELL)
+DISCUSS
+Q: How should search function work? Filter by company? Show ID profiles in results? (Default is filter by categories, house type and basic keyword search)
+Q: Should users be allowed to click on ID's profile?
+Q: Should cost be added?
 
 IN PROGRESS
-- user's profile
-- designer's profile
-- manager's profile
-- user's favorite tab
+- user's profile --> can edit personal information --> should be accessible from home the moment they login 
+- designer's profile --> can edit company information & personal information --> should be accessible from home the moment they login 
+- manager's profile --> (TO BE DISCUSSED) 
+- user's favorite tab --> should be accessible from home the moment they login 
 - add IDP to favorite
-- should users be allowed to click on ID's profile?
+
+TO BE CHANGED 
+
+TO BE IMPROVED 
+
+LAST UPDATED: 11/10/2026
