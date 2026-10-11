@@ -1,34 +1,167 @@
+
 {% extends 'base.html' %}
 
 {% block header %}
   <h1>{% block title %}Interior Design Projects{% endblock %}</h1>
+
   {% if g.user and g.user['Usertype'] == 'designer' %}
-    <a class="action" href="{{ url_for('designer.portfolio') }}">My Portfolio</a>
+    <a class="action" href="{{ url_for('designer.portfolio') }}">
+      My Portfolio
+    </a>
   {% endif %}
 {% endblock %}
 
+
 {% block content %}
+
+<div class="project-grid">
+
   {% for idp in idps %}
-    <article class="post">
-      <header>
-        <div>
-          <h1>{{ idp['title'] }}</h1>
-          <div class="about">
-            by {{ idp['company_name'] or idp['designer_name'] }}
-            &middot; {{ idp['status'] }}{% if idp['category_name'] %} &middot; {{ idp['category_name'] }}{% endif %}
-            &middot; {{ (idp['created']|string)[:10] }}
+
+    <article class="project-card">
+
+      <!-- Independent image slideshow for each project -->
+      <div class="project-carousel"
+           data-carousel
+           aria-label="Images for {{ idp['title'] }}">
+
+        {% if idp['images'] %}
+
+          <!-- Display all uploaded images -->
+          {% for img in idp['images'] %}
+
+            <img
+              class="project-slide{% if loop.first %} active{% endif %}"
+              src="{{ url_for('static', filename='uploads/' + img['link']) }}"
+              alt="{{ img['caption'] or idp['title'] }}"
+              loading="lazy"
+              {% if not loop.first %}hidden{% endif %}
+            >
+
+          {% endfor %}
+
+          <!-- Show navigation only when multiple images exist -->
+          {% if idp['images']|length > 1 %}
+
+            <button
+              type="button"
+              class="carousel-arrow carousel-prev"
+              data-direction="-1"
+              aria-label="Previous image">
+              &#10094;
+            </button>
+
+            <button
+              type="button"
+              class="carousel-arrow carousel-next"
+              data-direction="1"
+              aria-label="Next image">
+              &#10095;
+            </button>
+
+            <!-- Image counter -->
+            <span class="carousel-counter" aria-live="polite">
+              1 / {{ idp['images']|length }}
+            </span>
+
+          {% endif %}
+
+        {% else %}
+
+          <div class="project-no-image">
+            No images uploaded
           </div>
-        </div>
-      </header>
-      {% if idp['cover'] %}
-        <img src="{{ url_for('static', filename='uploads/' + idp['cover']) }}"
-             alt="{{ idp['title'] }}" style="max-width:400px; height:auto;">
-      {% endif %}
-      <p class="desc">{{ idp['description'] }}</p>
+
+        {% endif %}
+
+      </div>
+
+
+      <!-- Project information -->
+      <div class="project-info">
+
+        <!-- Click project title to open details and record a view -->
+        <h2>
+          <a href="{{ url_for('home.project_detail', idp_id=idp['id']) }}">
+            {{ idp['title'] }}
+          </a>
+        </h2>
+
+        <p class="project-designer">
+          {{ idp['company_name'] or idp['designer_name'] }}
+        </p>
+
+        <p class="project-meta">
+          {{ idp['status'] }}
+
+          {% if idp['category_name'] %}
+            · {{ idp['category_name'] }}
+          {% endif %}
+
+          · {{ (idp['created']|string)[:10] }}
+        </p>
+
+        <p>
+          {{ idp['description'] or '' }}
+        </p>
+
+      </div>
       <p class="houseType"> Housing type: {{ idp['houseType']}} </p>
     </article>
-    {% if not loop.last %}<hr>{% endif %}
+
   {% else %}
+
     <p>No projects yet.</p>
+
   {% endfor %}
+
+</div>
+
+
+<!-- JavaScript: independent slideshow for every project -->
+<script>
+
+document.querySelectorAll('[data-carousel]').forEach(carousel => {
+
+    const slides = [
+        ...carousel.querySelectorAll('.project-slide')
+    ];
+
+    // No slideshow needed if fewer than 2 images
+    if (slides.length < 2) return;
+
+    let current = 0;
+
+    // Handle previous and next buttons
+    carousel.querySelectorAll('[data-direction]').forEach(button => {
+
+        button.addEventListener('click', () => {
+
+            // Hide current image
+            slides[current].hidden = true;
+            slides[current].classList.remove('active');
+
+            // Calculate next image index
+            current = (
+                current +
+                Number(button.dataset.direction) +
+                slides.length
+            ) % slides.length;
+
+            // Show selected image
+            slides[current].hidden = false;
+            slides[current].classList.add('active');
+
+            // Update image counter
+            carousel.querySelector('.carousel-counter').textContent =
+                `${current + 1} / ${slides.length}`;
+
+        });
+
+    });
+
+});
+
+</script>
+
 {% endblock %}

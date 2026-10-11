@@ -69,3 +69,23 @@ class IDP:
         db = get_db()
         db.execute('DELETE FROM idp WHERE id = ?', (idp_id,))
         db.commit()
+
+    @staticmethod
+    def find_all_with_images():
+        """Homepage records and their image lists, using two queries (no N+1 queries)."""
+        projects = [dict(item) for item in IDP.find_all()]
+        if not projects:
+            return projects
+        ids = [project['id'] for project in projects]
+        placeholders = ','.join('?' for _ in ids)
+        images = get_db().execute(
+            f'SELECT idp_id, link, caption FROM idp_media '
+            f'WHERE idp_id IN ({placeholders}) ORDER BY mediaID',
+            ids
+        ).fetchall()
+        lookup = {project_id: [] for project_id in ids}
+        for item in images:
+            lookup[item['idp_id']].append(dict(item))
+        for project in projects:
+            project['images'] = lookup[project['id']]
+        return projects
