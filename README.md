@@ -6,6 +6,7 @@ Currently done and waiting for testing:
 2. IDP creation
 
 DISCUSS
+
 Q: How should search function work? Filter by company? Show ID profiles in results? (Default is filter by categories, house type and basic keyword search)
 
 Q: Should users be allowed to click on ID's profile?
