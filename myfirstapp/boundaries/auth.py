@@ -8,6 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from myfirstapp.db import get_db #MUST match the name of the app folder!!!!!! 
 from myfirstapp.entities.user import Users
+from myfirstapp.controller.auth_controller import authenticate_user
 
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -61,29 +62,15 @@ def login():
     if request.method == 'POST': #not GET but POST!
         email = request.form['email']
         password = request.form['password'] #prompt user to enter password and username 
-        error = None 
-        user = Users.check_email(email)
+        user = authenticate_user(email, password)
         #start fetching results from database after user has entered (if user enters nothing will show generic error message)
-
-        if user is None:
-            error = 'Incorrect email address'
-        elif not check_password_hash(user['password'],password):
-        #check_password_hash = hashes the submitted password and compares them
-            error = 'Incorrect password'
-        #wrong!!!!
-        # else: <-- this is for USER not ERROR!
-        #     return render_template('homepage') 
-
         #redirect user when login success
-        if error is None: 
+        if isinstance(user, str):
+            flash(user)
+        else: 
             session.clear()
-            #session = dict that stores data across requests 
-            #when validation succeeds, user's id stored in new session 
             session['user_id'] = user['id']
-
-            #to get user type: g.user['Usertype']
             return redirect(url_for('index'))
-        flash(error)
     return render_template('/auth/login.html') #always send user to login.html after error!
 
 @bp.route('/register', methods=('GET','POST')) 
@@ -102,12 +89,6 @@ def register():
         Usertype = request.form['type']
         db = get_db() #from db.py
         error = None
-
-        if not name:
-            error = 'name is required'
-        elif not password:
-            error = 'password is required'
-        #ensure that username and password are not empty
 
         if error is None: 
         #validation succeeds 
@@ -151,6 +132,6 @@ def designer_register():
         else:
             session.pop('pending_designer_id')
             return redirect(url_for('auth.login'))
-        flash(error)                          # your version built `error` but never showed it
+        flash(error)
 
     return render_template('auth/designer_register.html')

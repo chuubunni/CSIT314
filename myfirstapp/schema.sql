@@ -34,6 +34,7 @@ create table designer(
 
 create table customer(
     cust_id integer primary key,
+    customerHouse text not null, 
     foreign key (cust_id) references user (id) on delete cascade 
 );
 
@@ -65,6 +66,8 @@ create table idp(
     category_id integer,
     title text not null,
     houseType text not null, 
+    houseSize text not null,
+    price int not null,
     description text,
     status text not null default 'completed'
         check (status in ('ongoing', 'completed')),

@@ -9,35 +9,18 @@ from werkzeug.security import check_password_hash, generate_password_hash #this 
 from myfirstapp.db import get_db #MUST match the name of the app folder!!!!!! 
 
 class Users(): 
+    def __init__(self, name, password, email, phone, Usertype):
+        self.name = name 
+        self.password = password
+        self.email = email
+        self.phone = phone
+        self.Usertype = Usertype
+        
     @staticmethod
     def create_user(name, password, email, phone, Usertype):
         db = get_db()
         cursor = db.execute('INSERT INTO user (name, password, email, phone, Usertype)'
                    ' VALUES (?, ?, ?, ?, ?)', (name, generate_password_hash(password), email, phone, Usertype))
-        db.commit()
-        return cursor.lastrowid
-
-    @staticmethod
-    def create_customer(id):
-        db = get_db()
-        cursor = db.execute('INSERT INTO customer (cust_id)'
-                            ' VALUES (?)', (id,))
-        db.commit()
-        return cursor.lastrowid
-
-    @staticmethod
-    def create_manager(id):
-        db = get_db()
-        cursor = db.execute('INSERT INTO platform (managerID)'
-                            ' VALUES (?)', (id,))
-        db.commit()
-        return cursor.lastrowid   
-
-    @staticmethod 
-    def create_designer(id, companyName, comapnyLine, companyDescription, companyEmail):
-        db = get_db()
-        cursor = db.execute('INSERT INTO designer (userID, companyName, companyLine, companyDescription, companyEmail)'
-                            ' VALUES (?, ?, ?, ?, ?)', (id, companyName, comapnyLine, companyDescription, companyEmail))
         db.commit()
         return cursor.lastrowid
 
@@ -65,10 +48,35 @@ class Users():
         return row['id'] if row else None
 
 class customers(Users):
-    pass 
+    @staticmethod 
+    def create_customer(id, customerHouse):
+        db = get_db()
+        cursor = db.execute('INSERT INTO customer (cust_id, customerHouse)'
+                            ' VALUES (?, ?)',(id, customerHouse))
+        db.commit()
+        return cursor.lastrowid
+
+    @staticmethod
+    def get_customer_house(id):
+        db = get_db()
+        customerHouse = db.execute('SELECT customerHouse FROM customer WHERE cust_id = ?', (id,)).fetchone()
+        return customerHouse
 
 class designers(Users):
-    pass
+    @staticmethod 
+    def create_designer(id, companyName, comapnyLine, companyDescription, companyEmail):
+        db = get_db()
+        cursor = db.execute('INSERT INTO designer (userID, companyName, companyLine, companyDescription, companyEmail)'
+                            ' VALUES (?, ?, ?, ?, ?)', (id, companyName, comapnyLine, companyDescription, companyEmail))
+        db.commit()
+        return cursor.lastrowid
 
 class managers(Users):
-    pass
+    @staticmethod
+    def create_manager(id):
+        db = get_db()
+        cursor = db.execute('INSERT INTO platform (managerID)'
+                            ' VALUES (?)', (id,))
+        db.commit()
+        return cursor.lastrowid   
+
