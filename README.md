@@ -1,5 +1,5 @@
-# CSIT314 / idp-changes
-this branch is strictly to initialize the entity, boundary and controllers associated with IDPs
+# CSIT314 / diff-user-profiles
+this branch is strictly to initialize the entity, boundary and controllers associated with different user profiles
 
 Currently done and waiting for testing: 
 1. IDP image upload
