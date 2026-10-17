@@ -60,7 +60,6 @@ class auth_control:
             company = company or {}
             companyName = (company.get('companyName') or '').strip()
             companyLine = (company.get('companyLine') or '').strip()
-            companyDescription = (company.get('companyDescription') or '').strip()
             companyEmail = (company.get('companyEmail') or '').strip()
             if not companyName:
                 raise ValidationError('Company name is required.')
@@ -76,8 +75,7 @@ class auth_control:
             customers.create_customer(user_id)   # customers need no extra details
         else:
             try:
-                designers.create_designer(user_id, companyName, companyLine,
-                                          companyDescription, companyEmail)
+                designers.register_designer(user_id, companyName, companyLine, companyEmail)
             except sqlite3.IntegrityError as error:
                 Users.delete_user(user_id)       # undo step 1 so the person can simply try again
                 if 'companyLine' in str(error):

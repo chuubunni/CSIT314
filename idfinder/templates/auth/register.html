@@ -21,16 +21,13 @@
             <option value="designer" {{ 'selected' if request.form.get('type') == 'designer' }}>designer</option>
         </select>
 
-        <!-- Only shown (and only submitted) when "designer" is selected -->
         <div id="designer-fields" hidden>
             <label for="companyName">Company Name: </label>
-            <input name="companyName" id="companyName" value="{{ request.form.get('companyName', '') }}" required>
+            <input name="companyName" id="companyName" value="{{ request.form.get('companyName', '') }}" required><br>
             <label for="companyLine">Company Phone No.: </label>
-            <input name="companyLine" id="companyLine" value="{{ request.form.get('companyLine', '') }}" required>
-            <label for="companyDescription">Short description of company: </label>
-            <input name="companyDescription" id="companyDescription" value="{{ request.form.get('companyDescription', '') }}" required>
+            <input name="companyLine" id="companyLine" value="{{ request.form.get('companyLine', '') }}" required><br>
             <label for="companyEmail">Company Email: </label>
-            <input name="companyEmail" id="companyEmail" value="{{ request.form.get('companyEmail', '') }}" required>
+            <input name="companyEmail" id="companyEmail" value="{{ request.form.get('companyEmail', '') }}" required><br>
         </div>
 
         <input type="submit" value="register">

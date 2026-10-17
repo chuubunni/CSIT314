@@ -7,10 +7,16 @@
 {% block content %}
   {% set v_title = form.get('title', idp['title'] if idp else '') %}
   {% set v_desc = form.get('description', idp['description'] if idp else '') %}
-  {% set v_type = form.get('houseType', idp['houseType'] if idp else 'HDB') %}
+  {% set v_type = (form.get('houseType', idp['houseType'] if idp else 'HDB'))|lower %}
   {% set v_price = form.get('price', idp['price'] if idp else '') %}
   {% set v_status = form.get('status', idp['status'] if idp else 'completed') %}
-  {% set v_cat = form.get('category_id', (idp['category_id'] if idp and idp['category_id'] else '')|string) %}
+  {# Ticked categories: what the user just submitted (form re-shown after an error),
+     otherwise the IDP's saved categories (selected_categories, a list of ids from the boundary) #}
+  {% if form %}
+    {% set chosen = form.getlist('category_ids')|map('int')|list %}
+  {% else %}
+    {% set chosen = selected_categories|default([]) %}
+  {% endif %}
   <form method="post">
     <label for="title">Title</label>
     <input name="title" id="title" value="{{ v_title }}" required>
@@ -20,21 +26,25 @@
 
     <label for="houseType">House Type</label>
     <select id="houseType" name="houseType">
-            <option value="HDB" {{ 'selected' if v_type == 'HDB' else '' }}>HDB</option> <!--MUST BE SMALL CAPS!!!-->
-            <option value="condo" {{ 'selected' if v_type == 'condo' else '' }}>Condo</option>
-            <option value="landed" {{ 'selected' if v_type == 'landed' else '' }}>Landed</option>
+      <option value="HDB" {{ 'selected' if v_type == 'hdb' else '' }}>HDB</option>
+      <option value="Condo" {{ 'selected' if v_type == 'condo' else '' }}>Condo</option>
+      <option value="Landed" {{ 'selected' if v_type == 'landed' else '' }}>Landed</option>
     </select>
 
-    <label for="price"> Price: </label>
-    <textarea name="price" id="price">{{ v_price }}</textarea>
-    
-    <label for="category_id">Category</label>
-    <select name="category_id" id="category_id">
-      <option value="">(none)</option>
+    <label for="price">Price (SGD)</label>
+    <input type="number" name="price" id="price" min="0" step="1" value="{{ v_price }}" required>
+
+    <fieldset>
+      <legend>Categories</legend>
       {% for c in categories %}
-        <option value="{{ c['id'] }}" {{ 'selected' if v_cat|string == c['id']|string else '' }}>{{ c['name'] }}</option>
+        <label>
+          <input type="checkbox" name="category_ids" value="{{ c['id'] }}" {{ 'checked' if c['id'] in chosen else '' }}>
+          {{ c['name'] }}
+        </label>
+      {% else %}
+        <p>No categories available yet.</p>
       {% endfor %}
-    </select>
+    </fieldset>
 
     <label for="status">Status</label>
     <select name="status" id="status">

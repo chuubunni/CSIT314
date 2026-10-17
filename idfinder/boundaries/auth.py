@@ -57,7 +57,7 @@ def login():
 def register():
     if request.method == 'POST':
         company = {key: request.form.get(key) for key in
-                   ('companyName', 'companyLine', 'companyDescription', 'companyEmail')}
+                   ('companyName', 'companyLine', 'companyEmail')}
         try:
             auth_control.do_register(
                 request.form.get('name'), request.form.get('password'),

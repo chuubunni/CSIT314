@@ -36,10 +36,10 @@ class PortfolioController:
     def categories(self):
         return Category.find_all_active()
 
-    def create_idp(self, designer_id, title, description, houseType, category_id, status):
-        title, description, houseType, category_id, status = self._clean_idp(
-            title, description, houseType, category_id, status)
-        return IDP.create(designer_id, title, description, houseType, category_id, status)
+    def create_idp(self, designer_id, title, description, houseType, price, status):
+        title, description, houseType, price, status = self._clean_idp(
+            title, description, houseType, price, status)
+        return IDP.create(designer_id, title, description, houseType, price, status)
 
     def get_idp(self, idp_id, designer_id):
         return self._owned_idp(idp_id, designer_id)
@@ -50,11 +50,11 @@ class PortfolioController:
         return (idp,
                 IDPMedia.find_by_idp(idp_id))
 
-    def update_idp(self, idp_id, designer_id, title, description, houseType, category_id, status):
+    def update_idp(self, idp_id, designer_id, title, description, houseType, price, status):
         self._owned_idp(idp_id, designer_id)
-        title, description, houseType, category_id, status = self._clean_idp(
-            title, description, houseType, category_id, status)
-        IDP.update(idp_id, title, description, houseType, category_id, status)
+        title, description, houseType, price, status = self._clean_idp(
+            title, description, houseType, price, status)
+        IDP.update(idp_id, title, description, houseType, price, status)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)

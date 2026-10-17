@@ -19,7 +19,7 @@
             </a>
           </h1>
           <div class="about">
-            {{ idp['status'] }}{% if idp['category_name'] %} &middot; {{ idp['category_name'] }}{% endif %}
+            {{ idp['status'] }}{% if idp['category_names'] %} &middot; {{ idp['category_names'] }}{% endif %}
             &middot; {{ (idp['created']|string)[:10] }}
           </div>
         </div>

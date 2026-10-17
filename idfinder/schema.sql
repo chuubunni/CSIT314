@@ -38,44 +38,13 @@ create table platform(
 );
 
 -- ---------------------------------------------------------------------------
--- House types (managed by platform managers)
--- Two levels: a root (HDB / Landed / Condo) and its sub-types (4 Room, Terrace...).
--- IDPs and customers point at the sub-type; the root is found through parent_id.
--- ---------------------------------------------------------------------------
-create table house_type(
-    id integer primary key autoincrement,
-    parent_id integer,                         -- null = a root such as 'HDB'
-    name text not null,
-    active integer not null default 1,         -- managers hide a type instead of deleting it
-    unique (parent_id, name),
-    foreign key (parent_id) references house_type (id)
-);
--- unique(parent_id, name) does not stop duplicate roots (NULLs are distinct), so:
-create unique index ux_house_type_root_name on house_type(name) where parent_id is null;
-
-insert into house_type (parent_id, name) values (null, 'HDB'), (null, 'Landed'), (null, 'Condo');
-insert into house_type (parent_id, name)
-    select id, n from house_type, (select '3 Room' n union all select '4 Room'
-        union all select '5 Room' union all select 'Maisonette')
-    where parent_id is null and name = 'HDB';
-insert into house_type (parent_id, name)
-    select id, n from house_type, (select 'Terrace' n union all select 'Semi-detached'
-        union all select 'Bungalow')
-    where parent_id is null and name = 'Landed';
-insert into house_type (parent_id, name)
-    select id, n from house_type, (select 'Executive' n union all select 'Private'
-        union all select 'Penthouse')
-    where parent_id is null and name = 'Condo';
-
--- ---------------------------------------------------------------------------
 -- Customers
 -- ---------------------------------------------------------------------------
 create table customer(
     cust_id integer primary key,
-    current_house_type_id integer,             -- the house type they live in now
-    received_keys integer check (received_keys in (0, 1)),   -- null = not specified yet
-    foreign key (cust_id) references user (id) on delete cascade,
-    foreign key (current_house_type_id) references house_type (id)
+    current_house_type text not null,
+    received_keys integer check (received_keys in (0, 1)),   
+    foreign key (cust_id) references user (id) on delete cascade
 );
 
 -- ---------------------------------------------------------------------------
@@ -85,7 +54,6 @@ create table company(
     companyID integer primary key autoincrement,
     companyName text not null,
     companyLine text unique not null,
-    companyDescription text,
     companyEmail text
 );
 
@@ -113,16 +81,14 @@ create table category(
 create table idp(
     id integer primary key autoincrement,
     designer_id integer not null,
-    house_type_id integer not null,            -- should be a sub-type such as '4 Room' (checked in the controller)
     title text not null,
     description text,
+    houseType text not null,
     price integer not null check (price >= 0), -- whole dollars (SGD)
-    num_rooms integer check (num_rooms is null or num_rooms > 0),   -- e.g. condo bedrooms
     status text not null default 'completed'
         check (status in ('ongoing', 'completed')),
     created timestamp not null default current_timestamp,
-    foreign key (designer_id) references designer (userID),
-    foreign key (house_type_id) references house_type (id)
+    foreign key (designer_id) references designer (userID)
 );
 
 -- An IDP can be in several categories
@@ -203,10 +169,8 @@ create table idp_view(
 -- ---------------------------------------------------------------------------
 create index ix_user_type            on user (Usertype);
 create index ix_user_created         on user (created);
-create index ix_house_type_parent    on house_type (parent_id);
 create index ix_designer_company     on designer (companyID);
 create index ix_idp_designer         on idp (designer_id);
-create index ix_idp_house_type       on idp (house_type_id);
 create index ix_idp_price            on idp (price);
 create index ix_idp_created          on idp (created);
 create index ix_idp_category_cat     on idp_category (category_id);

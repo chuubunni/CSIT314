@@ -1,39 +1,59 @@
 from idfinder.db import get_db
 
+# An IDP can be in several categories (table idp_category), so the names are
+# combined into one value per IDP instead of joining and repeating the row.
+_CATEGORY_NAMES = (
+    "(SELECT GROUP_CONCAT(c.name, ', ') FROM idp_category ic"
+    " JOIN category c ON c.id = ic.category_id"
+    " WHERE ic.idp_id = p.id) AS category_names"
+)
+
 
 class IDP:
-    """Entity: an interior design project. Only this class writes SQL for the idp table."""
 
     @staticmethod
-    def create(designer_id, house_type_id, title, description, price, num_rooms, category_id, status):
+    def create(designer_id, title, description, houseType, price, status, category_ids=()):
+        """Insert the IDP and its category links in one transaction. Returns the new id."""
         db = get_db()
-        cursor = db.execute(
-            'INSERT INTO idp (designer_id, house_type_id, title, description, price, num_rooms, category_id, status)'
-            ' VALUES (?, ?, ?, ?, ?, ?, ? , ?)',
-            (designer_id, house_type_id, title, description, price, num_rooms, category_id, status),
-        )
-        db.commit()
+        try:
+            cursor = db.execute(
+                'INSERT INTO idp (designer_id, title, description, houseType, price, status)'
+                ' VALUES (?, ?, ?, ?, ?, ?)',
+                (designer_id, title, description, houseType, price, status),
+            )
+            IDP._replace_categories(db, cursor.lastrowid, category_ids)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
         return cursor.lastrowid
 
     @staticmethod
     def find(idp_id):
         return get_db().execute(
-            'SELECT p.id, p.designer_id, p.house_type_id, p.category_id, p.title, p.description,'
-            ' p.price, p.num_rooms, p.status, p.created, c.name AS category_name'
-            ' FROM idp p LEFT JOIN category c ON p.category_id = c.id'
-            ' WHERE p.id = ?',
+            'SELECT p.id, p.designer_id, p.houseType, p.title, p.description,'
+            ' p.price, p.status, p.created, ' + _CATEGORY_NAMES +
+            ' FROM idp p WHERE p.id = ?',
             (idp_id,),
         ).fetchone()
+
+    @staticmethod
+    def find_category_ids(idp_id):
+        """Ids of the categories this IDP is in (for pre-ticking the edit form)."""
+        rows = get_db().execute(
+            'SELECT category_id FROM idp_category WHERE idp_id = ?', (idp_id,)
+        ).fetchall()
+        return [row['category_id'] for row in rows]
 
     @staticmethod
     def find_by_designer(designer_id):
         """A designer's IDPs, newest first, each with a cover image (first image, if any)."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.houseType, p.status, p.created,'
-            ' c.name AS category_name,'
+            'SELECT p.id, p.title, p.description, p.houseType, p.price, p.status, p.created,'
+            ' ' + _CATEGORY_NAMES + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
-            ' FROM idp p LEFT JOIN category c ON p.category_id = c.id'
+            ' FROM idp p'
             ' WHERE p.designer_id = ?'
             ' ORDER BY p.created DESC, p.id DESC',
             (designer_id,),
@@ -43,32 +63,60 @@ class IDP:
     def find_all():
         """Every IDP (for the home page), newest first."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.houseType, p.status, p.created,'
-            ' u.name AS designer_name, d.companyName AS company_name,'
-            ' c.name AS category_name,'
+            'SELECT p.id, p.title, p.description, p.houseType, p.price, p.status, p.created,'
+            ' u.name AS designer_name, co.companyName AS company_name,'
+            ' ' + _CATEGORY_NAMES + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p JOIN user u ON p.designer_id = u.id'
             ' LEFT JOIN designer d ON d.userID = p.designer_id'
-            ' LEFT JOIN category c ON p.category_id = c.id'
+            ' LEFT JOIN company co ON co.companyID = d.companyID'
             ' ORDER BY p.created DESC, p.id DESC'
         ).fetchall()
 
     @staticmethod
-    def update(idp_id, title, description, houseType, category_id, status):
+    def update(idp_id, title, description, houseType, status, price, category_ids=None):
+        """Update the IDP. If category_ids is given (even empty) the categories are replaced
+        too; None leaves them as they are."""
         db = get_db()
-        db.execute(
-            'UPDATE idp SET title = ?, description = ?, houseType = ?, category_id = ?, status = ?'
-            ' WHERE id = ?',
-            (title, description, houseType, category_id, status, idp_id),
-        )
-        db.commit()
+        try:
+            db.execute(
+                'UPDATE idp SET title = ?, description = ?, houseType = ?, status = ?, price = ?'
+                ' WHERE id = ?',
+                (title, description, houseType, status, price, idp_id),
+            )
+            if category_ids is not None:
+                IDP._replace_categories(db, idp_id, category_ids)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+
+    @staticmethod
+    def set_categories(idp_id, category_ids):
+        """Replace the categories of one IDP."""
+        db = get_db()
+        try:
+            IDP._replace_categories(db, idp_id, category_ids)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def delete(idp_id):
+        """Delete the IDP and every row that points at it, in one transaction.
+        Done explicitly because SQLite only cascades when PRAGMA foreign_keys is on."""
         db = get_db()
-        db.execute('DELETE FROM idp WHERE id = ?', (idp_id,))
-        db.commit()
+        try:
+            for table in ('idp_category', 'idp_group_member', 'favourite_idp',
+                          'idp_view', 'idp_media'):
+                db.execute(f'DELETE FROM {table} WHERE idp_id = ?', (idp_id,))
+            db.execute('DELETE FROM idp WHERE id = ?', (idp_id,))
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def find_all_with_images():
@@ -89,3 +137,10 @@ class IDP:
         for project in projects:
             project['images'] = lookup[project['id']]
         return projects
+
+    @staticmethod
+    def _replace_categories(db, idp_id, category_ids):
+        db.execute('DELETE FROM idp_category WHERE idp_id = ?', (idp_id,))
+        for category_id in sorted(set(int(c) for c in (category_ids or ()))):
+            db.execute('INSERT INTO idp_category (idp_id, category_id) VALUES (?, ?)',
+                       (idp_id, category_id))
