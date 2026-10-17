@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}register{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <label for="name">name: </label>
+        <input name="name" id="name" value="{{ request.form.get('name', '') }}" required>
+        <label for="email">email address: </label>
+        <input name="email" id="email" value="{{ request.form.get('email', '') }}" required>
+        <label for="phone">phone no.: </label>
+        <input name="phone" id="phone" value="{{ request.form.get('phone', '') }}" required>
+        <label for="password">password: </label>
+        <input type="password" name="password" id="password" required>
+
+        <label for="type">I am a: </label>
+        <select name="type" id="type">
+            <option value="customer" {{ 'selected' if request.form.get('type') != 'designer' }}>customer</option>
+            <option value="designer" {{ 'selected' if request.form.get('type') == 'designer' }}>designer</option>
+        </select>
+
+        <!-- Only shown (and only submitted) when "designer" is selected -->
+        <div id="designer-fields" hidden>
+            <label for="companyName">Company Name: </label>
+            <input name="companyName" id="companyName" value="{{ request.form.get('companyName', '') }}" required>
+            <label for="companyLine">Company Phone No.: </label>
+            <input name="companyLine" id="companyLine" value="{{ request.form.get('companyLine', '') }}" required>
+            <label for="companyDescription">Short description of company: </label>
+            <input name="companyDescription" id="companyDescription" value="{{ request.form.get('companyDescription', '') }}" required>
+            <label for="companyEmail">Company Email: </label>
+            <input name="companyEmail" id="companyEmail" value="{{ request.form.get('companyEmail', '') }}" required>
+        </div>
+
+        <input type="submit" value="register">
+    </form>
+
+    <script>
+        const typeSelect = document.getElementById('type');
+        const designerFields = document.getElementById('designer-fields');
+
+        function toggleDesignerFields() {
+            const isDesigner = typeSelect.value === 'designer';
+            designerFields.hidden = !isDesigner;
+            // A disabled input is not submitted and is skipped by "required" validation,
+            // so hidden fields can't block a customer from registering.
+            designerFields.querySelectorAll('input').forEach(function (input) {
+                input.disabled = !isDesigner;
+            });
+        }
+
+        typeSelect.addEventListener('change', toggleDesignerFields);
+        toggleDesignerFields();   // also run on page load (e.g. the form re-shown after an error)
+    </script>
+{% endblock %}
