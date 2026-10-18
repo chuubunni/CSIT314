@@ -13,7 +13,7 @@ class PlatformReport:
         return {
             'projects': count("SELECT COUNT(*) FROM idp WHERE created >= datetime('now', ?)"),
             'views': count("SELECT COUNT(*) FROM idp_view WHERE viewed_at >= datetime('now', ?)"),
-            'favourites': count("SELECT COUNT(*) FROM favourite WHERE created >= datetime('now', ?)"),
+            'favourites': count("SELECT COUNT(*) FROM favourite_idp WHERE created >= datetime('now', ?)"),
             'users': count("SELECT COUNT(*) FROM user WHERE created >= datetime('now', ?)"),
         }
 
@@ -22,6 +22,6 @@ class PlatformReport:
         return get_db().execute(
             'SELECT p.id, p.title, '
             '(SELECT COUNT(*) FROM idp_view v WHERE v.idp_id=p.id) AS views, '
-            '(SELECT COUNT(*) FROM favourite f WHERE f.idp_id=p.id) AS favourites '
+            '(SELECT COUNT(*) FROM favourite_idp f WHERE f.idp_id=p.id) AS favourites '
             'FROM idp p ORDER BY views DESC, favourites DESC, p.id DESC'
         ).fetchall()

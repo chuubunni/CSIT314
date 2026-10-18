@@ -19,8 +19,9 @@ class Category:
     @staticmethod
     def find_all(search=''):
         return get_db().execute(
-            'SELECT c.id, c.name, c.active, COUNT(p.id) AS project_count '
-            'FROM category c LEFT JOIN idp p ON p.category_id = c.id '
+            # An IDP can be in several categories, so count through the idp_category link table
+            'SELECT c.id, c.name, c.active, COUNT(ic.idp_id) AS project_count '
+            'FROM category c LEFT JOIN idp_category ic ON ic.category_id = c.id '
             'WHERE c.name LIKE ? GROUP BY c.id ORDER BY c.name',
             (f'%{search}%',)
         ).fetchall()
