@@ -105,7 +105,6 @@ create table idp_media(
     mediaID integer primary key autoincrement,
     idp_id integer not null,
     link text not null,        -- random name on disk
-    caption text,
     created timestamp not null default current_timestamp,
     foreign key (idp_id) references idp (id) on delete cascade
 );

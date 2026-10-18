@@ -36,6 +36,18 @@ def handle_permission_denied(error):
     return str(error), 403
 
 
+def _idp_form_fields():
+    """The fields shared by the create and edit forms, by name (so the order can't get mixed up)."""
+    return dict(
+        title=request.form.get('title'),
+        description=request.form.get('description'),
+        houseType=request.form.get('houseType'),
+        price=request.form.get('price'),
+        status=request.form.get('status'),
+        category_ids=request.form.getlist('category_ids'),   # one value per ticked checkbox
+    )
+
+
 @bp.route('/portfolio')
 @login_required
 @designer_required
@@ -52,14 +64,13 @@ def create_idp():
     ctrl = controller()
     if request.method == 'POST':
         try:
-            idp_id = ctrl.create_idp(
-                g.user['id'], request.form.get('title'), request.form.get('description'), request.form.get('houseType'),
-                request.form.get('category_id'), request.form.get('status'))
+            idp_id = ctrl.create_idp(g.user['id'], **_idp_form_fields())
             return redirect(url_for('designer.view_idp', idp_id=idp_id))
         except ValidationError as error:
             flash(str(error))
     return render_template('designer/create_port.html', idp=None,
-                           categories=ctrl.categories(), form=request.form)
+                           categories=ctrl.categories(), form=request.form,
+                           selected_categories=[])
 
 
 @bp.route('/portfolio/<int:idp_id>')
@@ -75,18 +86,16 @@ def view_idp(idp_id):
 @designer_required
 def edit_idp(idp_id):
     ctrl = controller()
-    idp = ctrl.get_idp(idp_id, g.user['id'])
+    idp = ctrl.get_idp(idp_id, g.user['id'])          # 404 / 403 if not found or not yours
     if request.method == 'POST':
         try:
-            ctrl.update_idp(
-                idp_id, g.user['id'], request.form.get('title'),
-                request.form.get('description'), request.form.get('houseType'), request.form.get('category_id'),
-                request.form.get('status'))
+            ctrl.update_idp(idp_id, g.user['id'], **_idp_form_fields())
             return redirect(url_for('designer.view_idp', idp_id=idp_id))
         except ValidationError as error:
             flash(str(error))
     return render_template('designer/create_port.html', idp=idp,
-                           categories=ctrl.categories(), form=request.form)
+                           categories=ctrl.categories(), form=request.form,
+                           selected_categories=ctrl.get_category_ids(idp_id, g.user['id']))
 
 
 @bp.route('/portfolio/<int:idp_id>/delete', methods=('POST',))
@@ -102,8 +111,7 @@ def delete_idp(idp_id):
 @designer_required
 def upload_image(idp_id):
     try:
-        controller().add_image(idp_id, g.user['id'], request.files.get('file'),
-                               request.form.get('caption', ''))
+        controller().add_image(idp_id, g.user['id'], request.files.get('file'))
     except ValidationError as error:
         flash(str(error))
     return redirect(url_for('designer.view_idp', idp_id=idp_id))

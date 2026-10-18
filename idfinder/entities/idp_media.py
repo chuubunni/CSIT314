@@ -5,12 +5,12 @@ class IDPMedia:
     """Entity: an image attached to an IDP (table idp_media)."""
 
     @staticmethod
-    def create(idp_id, link, caption=None):
+    def create(idp_id, link):
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO idp_media (idp_id, link, caption)'
-            ' VALUES (?, ?, ?)',
-            (idp_id, link, caption),
+            'INSERT INTO idp_media (idp_id, link)'
+            ' VALUES (?, ?)',
+            (idp_id, link),
         )
         db.commit()
         return cursor.lastrowid
@@ -18,14 +18,14 @@ class IDPMedia:
     @staticmethod
     def find(media_id):
         return get_db().execute(
-            'SELECT mediaID, idp_id, link, caption, created'
+            'SELECT mediaID, idp_id, link, created'
             ' FROM idp_media WHERE mediaID = ?',
             (media_id,),
         ).fetchone()
 
     @staticmethod
     def find_by_idp(idp_id):
-        sql = ('SELECT mediaID, idp_id, link, caption, created'
+        sql = ('SELECT mediaID, idp_id, link, created'
                ' FROM idp_media WHERE idp_id = ?')
         params = [idp_id]
         sql += ' ORDER BY mediaID'

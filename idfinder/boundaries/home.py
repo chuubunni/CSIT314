@@ -1,5 +1,3 @@
-from flask import Blueprint, render_template
-
 from flask import Blueprint, render_template, g
 from werkzeug.exceptions import abort
 
@@ -8,6 +6,7 @@ from idfinder.entities.idp_media import IDPMedia
 from idfinder.entities.idp_view import IDPView
 
 bp = Blueprint('home', __name__)
+
 
 @bp.route('/')
 def index():

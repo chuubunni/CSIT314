@@ -127,7 +127,7 @@ class IDP:
         ids = [project['id'] for project in projects]
         placeholders = ','.join('?' for _ in ids)
         images = get_db().execute(
-            f'SELECT idp_id, link, caption FROM idp_media '
+            f'SELECT idp_id, link FROM idp_media '
             f'WHERE idp_id IN ({placeholders}) ORDER BY mediaID',
             ids
         ).fetchall()

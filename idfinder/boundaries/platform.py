@@ -12,7 +12,7 @@ bp = Blueprint('platform', __name__, url_prefix='/platform')
 def platform_required(view):
     @functools.wraps(view)
     def wrapper(**kwargs):
-        if g.user['Usertype'] != 'platform':
+        if g.user['Usertype'] != 'manager':
             abort(403)
         return view(**kwargs)
     return wrapper
