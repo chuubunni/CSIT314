@@ -28,7 +28,7 @@ create table user(
     email text unique not null,
     phone text not null,                       -- text keeps leading zeros / +65
     Usertype text not null
-        check (Usertype in ('designer', 'customer', 'platform')),
+        check (Usertype in ('designer', 'customer', 'manager')),
     created timestamp not null default current_timestamp
 );
 

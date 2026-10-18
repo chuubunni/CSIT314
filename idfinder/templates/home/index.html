@@ -9,6 +9,11 @@
       My Portfolio
     </a>
   {% endif %}
+  {% if g.user and g.user['Usertype'] == 'manager' %}
+  <a class="action" href="{{ url_for('platform.dashboard')}}">
+    Dashboard
+  </a>
+  {% endif %}
 {% endblock %}
 
 

@@ -3,10 +3,10 @@ import sqlite3
 from werkzeug.security import check_password_hash
 
 from idfinder.controller.errors import ValidationError
-from idfinder.entities.user import Users, customers, designers
+from idfinder.entities.user import Users, customers, designers, managers
 
-# Platform managers are never created through the public register form.
-SELF_REGISTER_TYPES = ("designer", "customer")
+# # Platform managers are never created through the public register form.
+# SELF_REGISTER_TYPES = ("designer", "customer")
 
 
 class auth_control:
@@ -52,8 +52,8 @@ class auth_control:
             raise ValidationError('email is required')
         if not phoneNo:
             raise ValidationError('phone is required')
-        if Usertype not in SELF_REGISTER_TYPES:
-            raise ValidationError('Please choose designer or customer.')
+        # if Usertype not in SELF_REGISTER_TYPES:
+        #     raise ValidationError('Please choose designer or customer.')
 
         # Check the company details BEFORE creating the user, so a bad form leaves nothing behind.
         if Usertype == 'designer':
@@ -73,6 +73,8 @@ class auth_control:
 
         if Usertype == 'customer':
             customers.create_customer(user_id)   # customers need no extra details
+        elif Usertype == 'manager':
+            managers.create_manager(user_id)
         else:
             try:
                 designers.register_designer(user_id, companyName, companyLine, companyEmail)
