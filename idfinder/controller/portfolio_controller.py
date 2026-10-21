@@ -1,10 +1,12 @@
 import os
+import sqlite3
 import uuid
 
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.entities.category import Category
 from idfinder.entities.idp import IDP
 from idfinder.entities.idp_media import IDPMedia
+from idfinder.entities.user import designers
 
 # Each upload type has its own whitelist so a PDF can't end up as an image
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
@@ -42,7 +44,8 @@ class PortfolioController:
         title, description, houseType, price, status = self._clean_idp(
             title, description, houseType, price, status)
         category_ids = self._clean_category_ids(category_ids)
-        return IDP.create(designer_id, title, description, houseType, price, status,
+        return IDP.create(designer_id=designer_id, title=title, description=description,
+                          price=price, houseType=houseType, status=status,
                           category_ids=category_ids)
 
     def get_idp(self, idp_id, designer_id):
@@ -66,8 +69,8 @@ class PortfolioController:
             title, description, houseType, price, status)
         if category_ids is not None:
             category_ids = self._clean_category_ids(category_ids)
-        IDP.update(idp_id, title, description, houseType, status, price,
-                   category_ids=category_ids)
+        IDP.update(idp_id, title=title, description=description, houseType=houseType,
+                   status=status, price=price, category_ids=category_ids)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)
@@ -100,6 +103,32 @@ class PortfolioController:
         IDPMedia.delete(mediaID)
         self._remove_from_disk(media)
         return media["idp_id"]
+
+    # ----- profile -----
+    def get_profile(self, designer_id):
+        """The designer's own account and company details."""
+        profile = designers.get_profile(designer_id)
+        if profile is None:
+            raise NotFoundError("Designer profile not found.")
+        return profile
+
+    def update_profile(self, designer_id, name, email, phone):
+        self.get_profile(designer_id)          # 404 if this account has no designer profile
+
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        if not name:
+            raise ValidationError("Name is required.")
+        if not email or "@" not in email:
+            raise ValidationError("Please enter a valid email address.")
+        if not phone:
+            raise ValidationError("Phone number is required.")
+
+        try:
+            designers.update_profile(designer_id, name, email, phone)
+        except sqlite3.IntegrityError:
+            raise ValidationError("This email is already used by another account.")
 
     # ----- helpers -----
     def _owned_idp(self, idp_id, designer_id):

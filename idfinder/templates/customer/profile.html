@@ -1,60 +1,66 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}{{ 'Edit profile' if editing else 'My profile' }}{% endblock %}</h1>
+  <h1>{% block title %}My Profile{% endblock %}</h1>
   {% if not editing %}
-    <a class="action" href="{{ url_for('customer.edit_profile') }}">Edit</a>
+    <a class="action profile-button" href="{{ url_for('customer.edit_profile') }}">Edit Profile</a>
   {% endif %}
 {% endblock %}
 
 {% block content %}
-  {% if editing %}
-    {# What the user just typed (form re-shown after an error), otherwise the saved values #}
-    {% set v_name = form.get('name', profile['name']) %}
-    {% set v_email = form.get('email', profile['email']) %}
-    {% set v_phone = form.get('phone', profile['phone']) %}
-    {% set v_house = (form.get('current_house_type', profile['current_house_type']))|lower %}
-    {% set v_keys = form.get('received_keys', (profile['received_keys']|string) if profile['received_keys'] is not none else '') %}
-    <form method="post">
-      <label for="name">Name</label>
-      <input name="name" id="name" value="{{ v_name }}" required>
+  {# What the user just typed (form re-shown after an error), otherwise the saved values #}
+  {% set v_name = form.get('name', profile['name']) %}
+  {% set v_email = form.get('email', profile['email']) %}
+  {% set v_phone = form.get('phone', profile['phone']) %}
+  {% set v_house = (form.get('current_house_type', profile['current_house_type']))|lower %}
+  {% set v_keys = form.get('received_keys', (profile['received_keys']|string) if profile['received_keys'] is not none else '') %}
 
-      <label for="email">Email address</label>
-      <input type="email" name="email" id="email" value="{{ v_email }}" required>
+  <div class="profile-summary">
+    <div class="profile-avatar" aria-hidden="true">{{ (profile['name'] or '?')[:1]|upper }}</div>
+    <div>
+      <div class="profile-name">{{ profile['name'] }}</div>
+      <div class="profile-role">{{ 'Interior Designer' if g.user['Usertype'] == 'designer' else 'Customer' }}</div>
+    </div>
+  </div>
 
-      <label for="phone">Phone no.</label>
-      <input name="phone" id="phone" value="{{ v_phone }}" required>
+  <form method="post">
+    {# Read-only view and edit form share one layout: the fieldset disables every field until "Edit Profile" #}
+    <fieldset class="profile-fieldset" {{ '' if editing else 'disabled' }}>
+      <div class="profile-fields">
+        <div class="profile-field">
+          <label for="name">Full name</label>
+          <input name="name" id="name" value="{{ v_name }}" required>
+        </div>
+        <div class="profile-field">
+          <label for="email">Email address</label>
+          <input type="email" name="email" id="email" value="{{ v_email }}" required>
+        </div>
+        <div class="profile-field">
+          <label for="phone">Phone number</label>
+          <input name="phone" id="phone" value="{{ v_phone }}" required>
+        </div>
+        <div class="profile-field">
+          <label for="current_house_type">House type</label>
+          <select name="current_house_type" id="current_house_type">
+            <option value="HDB" {{ 'selected' if v_house == 'hdb' else '' }}>HDB</option>
+            <option value="Condo" {{ 'selected' if v_house == 'condo' else '' }}>Condo</option>
+            <option value="Landed" {{ 'selected' if v_house == 'landed' else '' }}>Landed</option>
+          </select>
+        </div>
+      </div>
 
-      <label for="current_house_type">Current house type</label>
-      <select name="current_house_type" id="current_house_type">
-        <option value="HDB" {{ 'selected' if v_house == 'hdb' else '' }}>HDB</option>
-        <option value="Condo" {{ 'selected' if v_house == 'condo' else '' }}>Condo</option>
-        <option value="Landed" {{ 'selected' if v_house == 'landed' else '' }}>Landed</option>
-      </select>
+      <div class="profile-keys">
+        <span>Customer: received house keys?</span>
+        <label class="radio"><input type="radio" name="received_keys" value="1" {{ 'checked' if v_keys == '1' else '' }}> Yes</label>
+        <label class="radio"><input type="radio" name="received_keys" value="0" {{ 'checked' if v_keys == '0' else '' }}> No</label>
+      </div>
+    </fieldset>
 
-      <label for="received_keys">Received your keys?</label>
-      <select name="received_keys" id="received_keys">
-        <option value="" {{ 'selected' if v_keys == '' else '' }}>Not specified</option>
-        <option value="1" {{ 'selected' if v_keys == '1' else '' }}>Yes</option>
-        <option value="0" {{ 'selected' if v_keys == '0' else '' }}>No</option>
-      </select>
-
-      <input type="submit" value="Save">
-    </form>
-    <p><a class="action" href="{{ url_for('customer.profile') }}">Cancel</a></p>
-  {% else %}
-    <dl>
-      <dt>Name</dt><dd>{{ profile['name'] }}</dd>
-      <dt>Email address</dt><dd>{{ profile['email'] }}</dd>
-      <dt>Phone no.</dt><dd>{{ profile['phone'] }}</dd>
-      <dt>Current house type</dt><dd>{{ profile['current_house_type'] }}</dd>
-      <dt>Received your keys?</dt>
-      <dd>
-        {% if profile['received_keys'] is none %}Not specified
-        {% elif profile['received_keys'] == 1 %}Yes
-        {% else %}No{% endif %}
-      </dd>
-      <dt>Member since</dt><dd>{{ (profile['created']|string)[:10] }}</dd>
-    </dl>
-  {% endif %}
+    {% if editing %}
+      <div class="profile-actions">
+        <input class="profile-button" type="submit" value="Save changes">
+        <a class="profile-button" href="{{ url_for('customer.profile') }}">Cancel</a>
+      </div>
+    {% endif %}
+  </form>
 {% endblock %}

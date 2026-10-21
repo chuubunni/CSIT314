@@ -135,7 +135,7 @@ class designer_boundary():
     @bp.route('/profile')
     @login_required
     @designer_required
-    def profile(idp_id):
+    def profile():
         return render_template('designer/profile.html', editing=False, form={},
                         profile=designer_boundary.controller().get_profile(g.user['id']))
 
@@ -153,8 +153,8 @@ class designer_boundary():
                     request.form.get('phone'),
                 )
                 flash('Profile updated.')
-                return redirect(url_for('customer.profile'))
+                return redirect(url_for('designer.profile'))
             except ValidationError as error:
                 flash(str(error))
-            return render_template('designer/profile.html', editing=True, form=request.form,
-                    profile=ctrl.get_profile(g.user['id']))
+        return render_template('designer/profile.html', editing=True, form=request.form,
+                               profile=ctrl.get_profile(g.user['id']))

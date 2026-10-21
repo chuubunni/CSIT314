@@ -50,3 +50,26 @@ input[type=submit] { align-self: start; min-width: 10em; }
 .manager-stat { padding: 15px; border-radius: 8px; background: #f0f5fa; }
 .manager-stat strong { display: block; font-size: 1.4rem; margin-top: 8px; }
 
+
+/* Profile page */
+.profile-button { display: inline-block; box-sizing: border-box; min-width: 10em; padding: 0.4rem 1rem; border: 1px solid #555; background: white; color: inherit; font: inherit; text-align: center; text-decoration: none; cursor: pointer; }
+header .action.profile-button { padding: 0.4rem 1.5rem; margin-bottom: 0.25rem; }
+.profile-summary { display: flex; align-items: center; gap: 1.5rem; margin: 1rem 0 2rem; }
+.profile-avatar { display: grid; place-items: center; width: 100px; height: 100px; border: 1px solid #555; background: #f3f3f3; color: #777; font-size: 2.5rem; }
+.profile-name { font-size: 1.5rem; }
+.profile-role { color: #444; font-size: 0.9rem; }
+.profile-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.profile-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem 2rem; }
+.profile-field { display: flex; flex-direction: column; }
+.content .profile-field input, .content .profile-field select { width: 100%; box-sizing: border-box; padding: 0.5rem; margin-bottom: 0; font: inherit; }
+.profile-fieldset:disabled input, .profile-fieldset:disabled select { background: #f6f6f6; color: #222; opacity: 1; }
+.profile-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 2rem 0; }
+.content label.radio { display: inline-flex; align-items: center; gap: 0.3rem; margin: 0; font-weight: normal; }
+.content .profile-keys input { margin: 0; }
+.profile-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.5rem; margin-top: 0.5rem; }
+.content .profile-actions input { margin-bottom: 0; }
+@media (max-width: 600px) { .profile-fields { grid-template-columns: 1fr; } }
+.profile-label { font-weight: bold; margin-bottom: 0.5em; }
+.profile-readonly { box-sizing: border-box; min-height: 2.4rem; padding: 0.5rem; border: 1px solid #ddd; background: #f6f6f6; color: #222; overflow-wrap: anywhere; }
+.profile-section-title { margin: 2rem 0 1rem; font-size: 1.2rem; }
+

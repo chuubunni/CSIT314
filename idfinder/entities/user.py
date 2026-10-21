@@ -150,9 +150,15 @@ class designers(Users):
             'SELECT c.* FROM designer d JOIN company c ON c.companyID = d.companyID'
             ' WHERE d.userID = ?', (id,)).fetchone()
 
+    @staticmethod
     def get_profile(id):
-        db = get_db()
-        return db.execute('SELECT u.name, u.email, u.phone, u.created FROM user u JOIN designer d ON d.userID = u.id WHERE u.id = ?'(id,)).fetchone()
+        """Account details and company details in one row, or None if this user is not a designer."""
+        return get_db().execute(
+            'SELECT u.id, u.name, u.email, u.phone, u.created,'
+            ' c.companyName, c.companyLine, c.companyEmail'
+            ' FROM user u JOIN designer d ON d.userID = u.id'
+            ' LEFT JOIN company c ON c.companyID = d.companyID'
+            ' WHERE u.id = ?', (id,)).fetchone()
  
     @staticmethod
     def update_profile(id, name, email, phone):
