@@ -48,7 +48,7 @@ class designer_boundary():
         return dict(
             title=request.form.get('title'),
             description=request.form.get('description'),
-            houseType=request.form.get('houseType'),
+            propertyType=request.form.get('propertyType'),
             price=request.form.get('price'),
             status=request.form.get('status'),
             category_ids=request.form.getlist('category_ids'),   # one value per ticked checkbox

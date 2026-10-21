@@ -11,8 +11,8 @@ from idfinder.entities.user import designers
 # Each upload type has its own whitelist so a PDF can't end up as an image
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
 IDP_STATUSES = ("ongoing", "completed")
-# Canonical spellings; these become a house_type table later. Matching ignores case.
-HOUSE_TYPES = ("HDB", "Condo", "Landed")
+# Canonical spellings; these become a property_type table later. Matching ignores case.
+PROPERTY_TYPES = ("HDB", "Condo", "Landed")
 MAX_PRICE = 1_000_000_000
 
 
@@ -39,13 +39,12 @@ class PortfolioController:
     def categories(self):
         return Category.find_all_active()
 
-    def create_idp(self, designer_id, title, description, houseType, price, status,
+    def create_idp(self, designer_id, title, description, propertyType, price, status,
                    category_ids=()):
-        title, description, houseType, price, status = self._clean_idp(
-            title, description, houseType, price, status)
+        title, description, propertyType, price, status = self._clean_idp(
+            title, description, propertyType, price, status)
         category_ids = self._clean_category_ids(category_ids)
-        return IDP.create(designer_id=designer_id, title=title, description=description,
-                          price=price, houseType=houseType, status=status,
+        return IDP.create(designer_id=designer_id, title=title, description=description, propertyType=propertyType, price=price, status=status,
                           category_ids=category_ids)
 
     def get_idp(self, idp_id, designer_id):
@@ -61,16 +60,16 @@ class PortfolioController:
         idp = self._owned_idp(idp_id, designer_id)
         return idp, IDPMedia.find_by_idp(idp_id)
 
-    def update_idp(self, idp_id, designer_id, title, description, houseType, price, status,
+    def update_idp(self, idp_id, designer_id, title, description, propertyType, price, status,
                    category_ids=None):
         """category_ids=None leaves the categories alone; a list (even empty) replaces them."""
         self._owned_idp(idp_id, designer_id)
-        title, description, houseType, price, status = self._clean_idp(
-            title, description, houseType, price, status)
+        title, description, propertyType, price, status = self._clean_idp(
+            title, description, propertyType, price, status)
         if category_ids is not None:
             category_ids = self._clean_category_ids(category_ids)
-        IDP.update(idp_id, title=title, description=description, houseType=houseType,
-                   status=status, price=price, category_ids=category_ids)
+        IDP.update(idp_id, title=title, description=description, propertyType=propertyType, status=status, price=price,
+                   category_ids=category_ids)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)
@@ -139,7 +138,7 @@ class PortfolioController:
             raise PermissionDenied("You can only manage your own projects.")
         return idp
 
-    def _clean_idp(self, title, description, houseType, price, status):
+    def _clean_idp(self, title, description, propertyType, price, status):
         title = (title or "").strip()
         description = (description or "").strip()
         if not title:
@@ -147,10 +146,10 @@ class PortfolioController:
         if status not in IDP_STATUSES:
             raise ValidationError("Status must be 'ongoing' or 'completed'.")
 
-        by_lower = {name.lower(): name for name in HOUSE_TYPES}
-        houseType = by_lower.get((houseType or "").strip().lower())
-        if houseType is None:
-            raise ValidationError("Please choose a house type.")
+        by_lower = {name.lower(): name for name in PROPERTY_TYPES}
+        propertyType = by_lower.get((propertyType or "").strip().lower())
+        if propertyType is None:
+            raise ValidationError("Please choose a property type.")
 
         try:
             price = int(str(price).strip())
@@ -161,7 +160,7 @@ class PortfolioController:
         if price > MAX_PRICE:
             raise ValidationError("Price is too large.")
 
-        return title, description, houseType, price, status
+        return title, description, propertyType, price, status
 
     def _clean_category_ids(self, category_ids):
         """List of ids from the form -> sorted unique ints, each an active category."""

@@ -1,7 +1,7 @@
 import sqlite3
 
 from idfinder.controller.errors import NotFoundError, ValidationError
-from idfinder.controller.portfolio_controller import HOUSE_TYPES   # same list as the IDP form
+from idfinder.controller.portfolio_controller import PROPERTY_TYPES   # same list as the IDP form
 from idfinder.entities.user import customers
 
 
@@ -18,7 +18,7 @@ class CustomerController:
             raise NotFoundError('Customer profile not found.')
         return profile
 
-    def update_profile(self, customer_id, name, email, phone, current_house_type, received_keys):
+    def update_profile(self, customer_id, name, email, phone, current_property_type, received_keys):
         self.get_profile(customer_id)          # 404 if this account has no customer profile
 
         name = (name or '').strip()
@@ -31,15 +31,15 @@ class CustomerController:
         if not phone:
             raise ValidationError('Phone number is required.')
 
-        by_lower = {house.lower(): house for house in HOUSE_TYPES}
-        house = by_lower.get((current_house_type or '').strip().lower())
-        if house is None:
-            raise ValidationError('Please choose your current house type.')
+        by_lower = {property.lower(): property for property in PROPERTY_TYPES}
+        property = by_lower.get((current_property_type or '').strip().lower())
+        if property is None:
+            raise ValidationError('Please choose your current property type.')
 
         keys = self._clean_keys(received_keys)
 
         try:
-            customers.update_profile(customer_id, name, email, phone, house, keys)
+            customers.update_profile(customer_id, name, email, phone, property, keys)
         except sqlite3.IntegrityError:
             raise ValidationError('This email is already used by another account.')
 

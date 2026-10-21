@@ -50,39 +50,39 @@ class Users():
 
 class customers(Users):
     @staticmethod
-    def create_customer(id, current_house_type, received_keys=None):
-        """current_house_type is required by the schema; received_keys is 0, 1 or None (not specified)."""
+    def create_customer(id, current_property_type, received_keys=None):
+        """current_property_type is required by the schema; received_keys is 0, 1 or None (not specified)."""
         db = get_db()
-        cursor = db.execute('INSERT INTO customer (cust_id, current_house_type, received_keys)'
-                            ' VALUES (?, ?, ?)', (id, current_house_type, received_keys))
+        cursor = db.execute('INSERT INTO customer (cust_id, current_property_type, received_keys)'
+                            ' VALUES (?, ?, ?)', (id, current_property_type, received_keys))
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
-    def get_customer_house(id):
+    def get_customer_property(id):
         db = get_db()
-        customerHouse = db.execute('SELECT current_house_type FROM customer WHERE cust_id = ?', (id,)).fetchone()
-        return customerHouse
+        customerProperty = db.execute('SELECT current_property_type FROM customer WHERE cust_id = ?', (id,)).fetchone()
+        return customerProperty
 
     @staticmethod
     def get_profile(id):
         """Account details and customer details in one row, or None if this user is not a customer."""
         return get_db().execute(
             'SELECT u.id, u.name, u.email, u.phone, u.created,'
-            ' c.current_house_type, c.received_keys'
+            ' c.current_property_type, c.received_keys'
             ' FROM user u JOIN customer c ON c.cust_id = u.id'
             ' WHERE u.id = ?', (id,)).fetchone()
 
     @staticmethod
-    def update_profile(id, name, email, phone, current_house_type, received_keys):
+    def update_profile(id, name, email, phone, current_property_type, received_keys):
         """Update the user row and the customer row together, or neither.
         Raises sqlite3.IntegrityError if the email belongs to another account."""
         db = get_db()
         try:
             db.execute('UPDATE user SET name = ?, email = ?, phone = ? WHERE id = ?',
                        (name, email, phone, id))
-            db.execute('UPDATE customer SET current_house_type = ?, received_keys = ?'
-                       ' WHERE cust_id = ?', (current_house_type, received_keys, id))
+            db.execute('UPDATE customer SET current_property_type = ?, received_keys = ?'
+                       ' WHERE cust_id = ?', (current_property_type, received_keys, id))
             db.commit()
         except Exception:
             db.rollback()

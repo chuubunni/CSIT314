@@ -3,20 +3,20 @@ import sqlite3
 from werkzeug.security import check_password_hash
 
 from idfinder.controller.errors import ValidationError
-from idfinder.controller.portfolio_controller import HOUSE_TYPES   # same list as the IDP form
+from idfinder.controller.portfolio_controller import PROPERTY_TYPES   # same list as the IDP form
 from idfinder.entities.user import Users, customers, designers, managers
 
 # Platform managers are never created through the public register form.
 SELF_REGISTER_TYPES = ("designer", "customer")
 
 
-def _clean_house_type(value):
-    """Canonical spelling of a house type (matched ignoring case), or ValidationError."""
-    by_lower = {house.lower(): house for house in HOUSE_TYPES}
-    house = by_lower.get((value or '').strip().lower())
-    if house is None:
-        raise ValidationError('Please choose your current house type.')
-    return house
+def _clean_property_type(value):
+    """Canonical spelling of a property type (matched ignoring case), or ValidationError."""
+    by_lower = {property.lower(): property for property in PROPERTY_TYPES}
+    property = by_lower.get((value or '').strip().lower())
+    if property is None:
+        raise ValidationError('Please choose your current property type.')
+    return property
 
 
 def _clean_received_keys(value):
@@ -57,7 +57,7 @@ class auth_control:
         """Register a customer or a designer in one step. Returns the new user's id.
 
         company  - dict with companyName, companyLine, companyEmail (designers only)
-        customer - dict with current_house_type, received_keys      (customers only)
+        customer - dict with current_property_type, received_keys      (customers only)
         The details for the other user type are ignored. Raises ValidationError.
         """
         name = (name or '').strip()
@@ -86,7 +86,7 @@ class auth_control:
                 raise ValidationError('Company phone number is required.')
         if Usertype == 'customer':
             customer = customer or {}
-            house_type = _clean_house_type(customer.get('current_house_type'))
+            property_type = _clean_property_type(customer.get('current_property_type'))
             received_keys = _clean_received_keys(customer.get('received_keys'))
 
         try:
@@ -96,7 +96,7 @@ class auth_control:
 
         if Usertype == 'customer':
             try:
-                customers.create_customer(user_id, house_type, received_keys)
+                customers.create_customer(user_id, property_type, received_keys)
             except sqlite3.IntegrityError:
                 Users.delete_user(user_id)       # undo step 1 so the person can simply try again
                 raise ValidationError('Could not create the customer profile.')

@@ -60,7 +60,7 @@ class auth_boundary():
             company = {key: request.form.get(key) for key in
                     ('companyName', 'companyLine', 'companyEmail')}
             customer = {key: request.form.get(key) for key in
-                        ('current_house_type', 'received_keys')}
+                        ('current_property_type', 'received_keys')}
             try:
                 auth_control.do_register(
                     request.form.get('name'), request.form.get('password'),

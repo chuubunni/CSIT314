@@ -12,7 +12,7 @@ drop table if exists customer;
 drop table if exists designer;
 drop table if exists company;
 drop table if exists platform;
-drop table if exists house_type;
+drop table if exists property_type;
 drop table if exists user;
 
 -- ---------------------------------------------------------------------------
@@ -41,7 +41,7 @@ create table platform(
 -- ---------------------------------------------------------------------------
 create table customer(
     cust_id integer primary key,
-    current_house_type text not null,
+    current_property_type text not null,
     received_keys integer check (received_keys in (0, 1)),   
     foreign key (cust_id) references user (id) on delete cascade
 );
@@ -82,7 +82,7 @@ create table idp(
     designer_id integer not null,
     title text not null,
     description text,
-    houseType text not null,
+    propertyType text not null,
     price integer not null check (price >= 0), -- whole dollars (SGD)
     status text not null default 'completed'
         check (status in ('ongoing', 'completed')),

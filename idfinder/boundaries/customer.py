@@ -60,7 +60,7 @@ class customer_boundary():
                     request.form.get('name'),
                     request.form.get('email'),
                     request.form.get('phone'),
-                    request.form.get('current_house_type'),
+                    request.form.get('current_property_type'),
                     request.form.get('received_keys'),
                 )
                 flash('Profile updated.')

@@ -7,7 +7,7 @@
 {% block content %}
   {% set v_title = form.get('title', idp['title'] if idp else '') %}
   {% set v_desc = form.get('description', idp['description'] if idp else '') %}
-  {% set v_type = (form.get('houseType', idp['houseType'] if idp else 'HDB'))|lower %}
+  {% set v_type = (form.get('propertyType', idp['propertyType'] if idp else 'HDB'))|lower %}
   {% set v_price = form.get('price', idp['price'] if idp else '') %}
   {% set v_status = form.get('status', idp['status'] if idp else 'completed') %}
   {# Ticked categories: what the user just submitted (form re-shown after an error),
@@ -24,12 +24,15 @@
     <label for="description">Description</label>
     <textarea name="description" id="description">{{ v_desc }}</textarea>
 
-    <label for="houseType">House Type</label>
-    <select id="houseType" name="houseType">
+    <label for="propertyType">Property Type</label>
+    <select id="propertyType" name="propertyType">
       <option value="HDB" {{ 'selected' if v_type == 'hdb' else '' }}>HDB</option>
       <option value="Condo" {{ 'selected' if v_type == 'condo' else '' }}>Condo</option>
       <option value="Landed" {{ 'selected' if v_type == 'landed' else '' }}>Landed</option>
     </select>
+
+
+    
 
     <label for="price">Price (SGD)</label>
     <input type="number" name="price" id="price" min="0" step="1" value="{{ v_price }}" required>
