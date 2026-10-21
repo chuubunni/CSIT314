@@ -3,6 +3,7 @@ import sqlite3
 from idfinder.entities.category import Category
 from idfinder.entities.platform_report import PlatformReport
 from idfinder.controller.errors import ValidationError, NotFoundError
+from idfinder.entities.user import managers
 
 
 class PlatformController:
@@ -51,3 +52,28 @@ class PlatformController:
         if not name or len(name) > 80:
             raise ValidationError('Category name must be 1–80 characters.')
         return name
+
+
+    def get_profile(self, managerid):
+        profile = managers.get_profile(managerid)
+        if profile is None: 
+            raise NotFoundError("No manager profile found")
+        return profile 
+
+    def edit_profile(self, managerid, name, email, phone):
+        self.get_profile(managerid)          # 404 if this account has no customer profile
+
+        name = (name or '').strip()
+        email = (email or '').strip()
+        phone = (phone or '').strip()
+        if not name:
+            raise ValidationError('Name is required.')
+        if not email or '@' not in email:
+            raise ValidationError('Please enter a valid email address.')
+        if not phone:
+            raise ValidationError('Phone number is required.')
+
+        try:
+            managers.update_profile(managerid, name, email, phone)
+        except sqlite3.IntegrityError:
+            raise ValidationError('This email is already used by another account.')

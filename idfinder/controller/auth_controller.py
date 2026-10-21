@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash
 
 from idfinder.controller.errors import ValidationError
 from idfinder.controller.portfolio_controller import HOUSE_TYPES   # same list as the IDP form
-from idfinder.entities.user import Users, customers, designers
+from idfinder.entities.user import Users, customers, designers, managers
 
 # Platform managers are never created through the public register form.
 SELF_REGISTER_TYPES = ("designer", "customer")
@@ -72,11 +72,9 @@ class auth_control:
             raise ValidationError('email is required')
         if not phoneNo:
             raise ValidationError('phone is required')
-        if Usertype not in SELF_REGISTER_TYPES:
-            raise ValidationError('Please choose designer or customer.')
 
         # Check the type-specific details BEFORE creating the user,
-        # so a bad form leaves nothing behind.
+        # so a bad form leaves nothing behind.  
         if Usertype == 'designer':
             company = company or {}
             companyName = (company.get('companyName') or '').strip()
@@ -86,7 +84,7 @@ class auth_control:
                 raise ValidationError('Company name is required.')
             if not companyLine:
                 raise ValidationError('Company phone number is required.')
-        else:
+        if Usertype == 'customer':
             customer = customer or {}
             house_type = _clean_house_type(customer.get('current_house_type'))
             received_keys = _clean_received_keys(customer.get('received_keys'))
@@ -102,6 +100,12 @@ class auth_control:
             except sqlite3.IntegrityError:
                 Users.delete_user(user_id)       # undo step 1 so the person can simply try again
                 raise ValidationError('Could not create the customer profile.')
+        elif Usertype == 'manager':
+            try:
+                managers.create_manager(user_id)
+            except sqlite3.IntegrityError:
+                Users.delete_user(user_id)
+                raise ValidationError('Cannot create platform manager profile')
         else:
             try:
                 designers.register_designer(user_id, companyName, companyLine, companyEmail)

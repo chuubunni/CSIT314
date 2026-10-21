@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}{{ 'Edit profile' if editing else 'Manager profile' }}{% endblock %}</h1>
+  {% if not editing %}
+    <a class="action" href="{{ url_for('platform.edit_profile') }}">Edit</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% if editing %}
+    {# What the user just typed (form re-shown after an error), otherwise the saved values #}
+    {% set v_name = form.get('name', profile['name']) %}
+    {% set v_email = form.get('email', profile['email']) %}
+    {% set v_phone = form.get('phone', profile['phone']) %}
+    <form method="post">
+      <label for="name">Name</label>
+      <input name="name" id="name" value="{{ v_name }}" required>
+
+      <label for="email">Email address</label>
+      <input type="email" name="email" id="email" value="{{ v_email }}" required>
+
+      <label for="phone">Phone no.</label>
+      <input name="phone" id="phone" value="{{ v_phone }}" required>
+
+      <input type="submit" value="Save">
+    </form>
+    <p><a class="action" href="{{ url_for('platform.profile') }}">Cancel</a></p>
+  {% else %}
+    <dl>
+      <dt>Name</dt><dd>{{ profile['name'] }}</dd>
+      <dt>Email address</dt><dd>{{ profile['email'] }}</dd>
+      <dt>Phone no.</dt><dd>{{ profile['phone'] }}</dd>
+      <dt>Member since</dt><dd>{{ (profile['created']|string)[:10] }}</dd>
+    </dl>
+  {% endif %}
+{% endblock %}

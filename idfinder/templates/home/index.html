@@ -13,10 +13,15 @@
   <a class="action" href="{{ url_for('platform.dashboard')}}">
     Dashboard
   </a>
+  <a class="action" href="{{ url_for('platform.profile')}}">
+    Manager Profile
+  </a>
   {% endif %}
+  {% if g.user and g.user['Usertype'] == 'customer' %}
   <a class="action" href="{{ url_for('customer.profile')}}">
     My Profile
   </a>
+  {% endif %}
 {% endblock %}
 
 

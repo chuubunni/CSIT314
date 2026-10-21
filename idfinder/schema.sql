@@ -4,7 +4,6 @@ drop table if exists idp_group;
 drop table if exists idp_view;
 drop table if exists favourite_designer;
 drop table if exists favourite_idp;
-drop table if exists favourite;          -- old name, kept so re-running init-db cleans it up
 drop table if exists idp_media;
 drop table if exists idp_category;
 drop table if exists idp;
