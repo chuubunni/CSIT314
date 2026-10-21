@@ -58,11 +58,13 @@ def register():
     if request.method == 'POST':
         company = {key: request.form.get(key) for key in
                    ('companyName', 'companyLine', 'companyEmail')}
+        customer = {key: request.form.get(key) for key in
+                    ('current_house_type', 'received_keys')}
         try:
             auth_control.do_register(
                 request.form.get('name'), request.form.get('password'),
                 request.form.get('email'), request.form.get('phone'),
-                request.form.get('type'), company)
+                request.form.get('type'), company, customer)
         except ValidationError as error:
             flash(str(error))
         else:

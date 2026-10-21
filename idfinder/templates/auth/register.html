@@ -5,6 +5,8 @@
 {% endblock %}
 
 {% block content %}
+    {% set v_house = request.form.get('current_house_type', 'HDB')|lower %}
+    {% set v_keys = request.form.get('received_keys', '') %}
     <form method="post">
         <label for="name">name: </label>
         <input name="name" id="name" value="{{ request.form.get('name', '') }}" required>
@@ -22,6 +24,7 @@
             <option value="manager" {{ 'selected' if request.form.get('type') == 'manager' }}>manager</option>
         </select>
 
+        <!-- Each section is only shown (and only submitted) for its own user type -->
         <div id="designer-fields" hidden>
             <label for="companyName">Company Name: </label>
             <input name="companyName" id="companyName" value="{{ request.form.get('companyName', '') }}" required><br>
@@ -31,24 +34,47 @@
             <input name="companyEmail" id="companyEmail" value="{{ request.form.get('companyEmail', '') }}" required><br>
         </div>
 
+        <div id="customer-fields" hidden>
+            <label for="current_house_type">Current house type: </label>
+            <select id="current_house_type" name="current_house_type">
+                <option value="HDB" {{ 'selected' if v_house == 'hdb' else '' }}>HDB</option>
+                <option value="Condo" {{ 'selected' if v_house == 'condo' else '' }}>Condo</option>
+                <option value="Landed" {{ 'selected' if v_house == 'landed' else '' }}>Landed</option>
+            </select>
+            <label for="received_keys">Received your keys yet? </label>
+            <select id="received_keys" name="received_keys">
+                <option value="" {{ 'selected' if v_keys == '' else '' }}>Not specified</option>
+                <option value="1" {{ 'selected' if v_keys == '1' else '' }}>Yes</option>
+                <option value="0" {{ 'selected' if v_keys == '0' else '' }}>No</option>
+            </select>
+        </div>
+
         <input type="submit" value="register">
     </form>
 
     <script>
         const typeSelect = document.getElementById('type');
-        const designerFields = document.getElementById('designer-fields');
+        const sections = {
+            designer: document.getElementById('designer-fields'),
+            customer: document.getElementById('customer-fields'),
+        };
 
-        function toggleDesignerFields() {
-            const isDesigner = typeSelect.value === 'designer';
-            designerFields.hidden = !isDesigner;
-            // A disabled input is not submitted and is skipped by "required" validation,
-            // so hidden fields can't block a customer from registering.
-            designerFields.querySelectorAll('input').forEach(function (input) {
-                input.disabled = !isDesigner;
+        function showSection(section, show) {
+            section.hidden = !show;
+            // A disabled field is not submitted and is skipped by "required" validation,
+            // so a hidden section can't block the form or send stray values.
+            section.querySelectorAll('input, select').forEach(function (field) {
+                field.disabled = !show;
             });
         }
 
-        typeSelect.addEventListener('change', toggleDesignerFields);
-        toggleDesignerFields();   // also run on page load (e.g. the form re-shown after an error)
+        function updateSections() {
+            Object.keys(sections).forEach(function (type) {
+                showSection(sections[type], typeSelect.value === type);
+            });
+        }
+
+        typeSelect.addEventListener('change', updateSections);
+        updateSections();   // also run on page load (e.g. the form re-shown after an error)
     </script>
 {% endblock %}

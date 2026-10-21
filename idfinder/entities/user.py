@@ -19,6 +19,13 @@ class Users():
         return cursor.lastrowid
 
     @staticmethod
+    def delete_user(id):
+        """Remove a user row (used to undo a registration that failed half-way)."""
+        db = get_db()
+        db.execute('DELETE FROM user WHERE id = ?', (id,))
+        db.commit()
+
+    @staticmethod
     def get_info(id):
         return get_db().execute('SELECT * FROM user WHERE id = ?', (id,)).fetchone()
 
@@ -42,19 +49,44 @@ class Users():
         return row['id'] if row else None
 
 class customers(Users):
-    @staticmethod 
-    def create_customer(id, customerHouse):
+    @staticmethod
+    def create_customer(id, current_house_type, received_keys=None):
+        """current_house_type is required by the schema; received_keys is 0, 1 or None (not specified)."""
         db = get_db()
-        cursor = db.execute('INSERT INTO customer (cust_id, customerHouse)'
-                            ' VALUES (?, ?)',(id, customerHouse))
+        cursor = db.execute('INSERT INTO customer (cust_id, current_house_type, received_keys)'
+                            ' VALUES (?, ?, ?)', (id, current_house_type, received_keys))
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
     def get_customer_house(id):
         db = get_db()
-        customerHouse = db.execute('SELECT customerHouse FROM customer WHERE cust_id = ?', (id,)).fetchone()
+        customerHouse = db.execute('SELECT current_house_type FROM customer WHERE cust_id = ?', (id,)).fetchone()
         return customerHouse
+
+    @staticmethod
+    def get_profile(id):
+        """Account details and customer details in one row, or None if this user is not a customer."""
+        return get_db().execute(
+            'SELECT u.id, u.name, u.email, u.phone, u.created,'
+            ' c.current_house_type, c.received_keys'
+            ' FROM user u JOIN customer c ON c.cust_id = u.id'
+            ' WHERE u.id = ?', (id,)).fetchone()
+
+    @staticmethod
+    def update_profile(id, name, email, phone, current_house_type, received_keys):
+        """Update the user row and the customer row together, or neither.
+        Raises sqlite3.IntegrityError if the email belongs to another account."""
+        db = get_db()
+        try:
+            db.execute('UPDATE user SET name = ?, email = ?, phone = ? WHERE id = ?',
+                       (name, email, phone, id))
+            db.execute('UPDATE customer SET current_house_type = ?, received_keys = ?'
+                       ' WHERE cust_id = ?', (current_house_type, received_keys, id))
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
 class designers(Users):
     """Designer accounts. A designer row links a user to a company (many designers per company)."""
@@ -125,5 +157,5 @@ class managers(Users):
         cursor = db.execute('INSERT INTO platform (managerID)'
                             ' VALUES (?)', (id,))
         db.commit()
-        return cursor.lastrowid   
+        return cursor.lastrowid
 

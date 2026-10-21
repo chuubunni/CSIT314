@@ -44,5 +44,7 @@ def create_app(test_config=None):
     from .boundaries import platform
     app.register_blueprint(platform.bp)
 
+    from .boundaries import customer
+    app.register_blueprint(customer.bp)
 
     return app 
