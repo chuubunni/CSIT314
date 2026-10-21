@@ -150,6 +150,22 @@ class designers(Users):
             'SELECT c.* FROM designer d JOIN company c ON c.companyID = d.companyID'
             ' WHERE d.userID = ?', (id,)).fetchone()
 
+    def get_profile(id):
+        db = get_db()
+        return db.execute('SELECT u.name, u.email, u.phone, u.created FROM user u JOIN designer d ON d.userID = u.id WHERE u.id = ?'(id,)).fetchone()
+ 
+    @staticmethod
+    def update_profile(id, name, email, phone):
+        db = get_db()
+        try:
+            db.execute('UPDATE user SET name = ?, email = ?, phone = ? WHERE id = ?',
+                        (name, email, phone, id))
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+    
+
 class managers(Users):
     @staticmethod
     def create_manager(id):

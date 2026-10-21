@@ -130,3 +130,31 @@ class designer_boundary():
     def remove_media(mediaID):
         idp_id = designer_boundary.controller().remove_media(mediaID, g.user['id'])
         return redirect(url_for('designer.view_idp', idp_id=idp_id))
+
+
+    @bp.route('/profile')
+    @login_required
+    @designer_required
+    def profile(idp_id):
+        return render_template('designer/profile.html', editing=False, form={},
+                        profile=designer_boundary.controller().get_profile(g.user['id']))
+
+    @bp.route('/profile/edit', methods=('GET', 'POST'))
+    @login_required
+    @designer_required
+    def edit_profile():
+        ctrl = designer_boundary.controller()
+        if request.method == 'POST':
+            try:
+                ctrl.update_profile(
+                    g.user['id'],
+                    request.form.get('name'),
+                    request.form.get('email'),
+                    request.form.get('phone'),
+                )
+                flash('Profile updated.')
+                return redirect(url_for('customer.profile'))
+            except ValidationError as error:
+                flash(str(error))
+            return render_template('designer/profile.html', editing=True, form=request.form,
+                    profile=ctrl.get_profile(g.user['id']))
