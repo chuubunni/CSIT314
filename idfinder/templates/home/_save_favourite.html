@@ -1,0 +1,13 @@
+{# C08: shared save controls; this is not a separate C09 favourites-list page. #}
+{% if g.user and g.user['Usertype'] == 'customer' %}
+  {% if project_id in favourite_ids %}<p class="c08-saved" role="status">✓ Saved to favourites</p>
+  {% else %}<form class="c08-save-form" method="post" action="{{ url_for('favourites.save_favourite', idp_id=project_id) }}">
+    <input type="hidden" name="form_token" value="{{ story_form_token }}">
+    <input type="hidden" name="return_to" value="{{ save_return_to }}">
+    {% if save_return_to == 'home' %}
+      <input type="hidden" name="property_type" value="{{ selected_type }}">
+      <input type="hidden" name="property_subtype_id" value="{{ selected_subtype }}">
+    {% endif %}
+    <button type="submit">Save to favourites</button>
+  </form>{% endif %}
+{% endif %}

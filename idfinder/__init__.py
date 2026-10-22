@@ -50,4 +50,8 @@ def create_app(test_config=None):
     from .boundaries import customer
     app.register_blueprint(customer.bp)
 
+    # C08: register saving on the Customer branch without adding ID19 routes.
+    from .boundaries import favourites
+    app.register_blueprint(favourites.bp)
+
     return app
