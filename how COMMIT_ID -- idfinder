@@ -1,0 +1,268 @@
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800   1) import os
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800   2) import sqlite3
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800   3) import uuid
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800   4) 
+edb8b53 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-17 16:53:15 +0800   5) from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
+edb8b53 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-17 16:53:15 +0800   6) from idfinder.entities.category import Category
+edb8b53 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-17 16:53:15 +0800   7) from idfinder.entities.idp import IDP
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800   8) from idfinder.entities.housing import Housing
+edb8b53 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-17 16:53:15 +0800   9) from idfinder.entities.idp_media import IDPMedia
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800  10) from idfinder.entities.user import designers
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  11) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  12) # Each upload type has its own whitelist so a PDF can't end up as an image
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  13) IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  14) IDP_STATUSES = ("ongoing", "completed")
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  15) # Canonical spellings; these become a property_type table later. Matching ignores case.
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  16) PROPERTY_TYPES = ("HDB", "Condo", "Landed")
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800  17) 
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800  18) HOUSE_TYPES = {
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800  19)     "HDB": ["2-Room", "3-Room", "4-Room", "5-Room", "3 Gen", "Mansionette", "Jumbo", "Studio Apartment"],
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800  20)     "Condo": ["Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom", "4-Bedroom", "5+ Bedrooms", "Penthouse"],
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800  21)     "Landed": ["Terrace House", "Semi-Detached House", "Bungalow / Detached House", "Good Class Bungalow (GCB)", "Townhouse"]
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800  22) }
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800  23) 
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  24) MAX_PRICE = 1_000_000_000
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  25) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  26) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  27) def allowed_file(filename, allowed):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  28)     """True if the filename's LAST extension is in the `allowed` set."""
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  29)     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  30) 
+23ff4ec myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 10:14:32 +0800  31) 
+23ff4ec myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 10:14:32 +0800  32) class PortfolioController:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  33)     """Control: business rules for a designer's IDP portfolio.
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  34) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  35)     Knows nothing about Flask requests: it receives plain values and file objects,
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  36)     raises ValidationError / NotFoundError / PermissionDenied, and uses the entity
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  37)     classes for all database access. That makes it easy to unit test.
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  38)     """
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  39) 
+669d67f myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-09 15:01:29 +0800  40)     def __init__(self, upload_folder):
+669d67f myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-09 15:01:29 +0800  41)         self.folders = {"image": upload_folder}
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  42) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  43)     # ----- IDP -----
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  44)     def list_portfolio(self, designer_id):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  45)         return IDP.find_by_designer(designer_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  46) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  47)     def categories(self):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  48)         return Category.find_all_active()
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  49) 
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  50)     def create_idp(self, designer_id, title, description, propertyType, price, status,
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800  51)                    category_ids=(), property_subtype_id=None):
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  52)         title, description, propertyType, price, status = self._clean_idp(
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  53)             title, description, propertyType, price, status)
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800  54)         property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  55)         category_ids = self._clean_category_ids(category_ids)
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  56)         return IDP.create(designer_id=designer_id, title=title, description=description, propertyType=propertyType, price=price, status=status,
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800  57)                           category_ids=category_ids, property_subtype_id=property_subtype_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  58) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  59)     def get_idp(self, idp_id, designer_id):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  60)         return self._owned_idp(idp_id, designer_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  61) 
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  62)     def get_category_ids(self, idp_id, designer_id):
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  63)         """Ids of the IDP's categories, for pre-ticking the edit form."""
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  64)         self._owned_idp(idp_id, designer_id)
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  65)         return IDP.find_category_ids(idp_id)
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  66) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  67)     def get_idp_with_media(self, idp_id, designer_id):
+eab1525 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-10 10:00:10 +0800  68)         """Returns (idp, images) for the detail page."""
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  69)         idp = self._owned_idp(idp_id, designer_id)
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  70)         return idp, IDPMedia.find_by_idp(idp_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  71) 
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  72)     def update_idp(self, idp_id, designer_id, title, description, propertyType, price, status,
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800  73)                    category_ids=None, property_subtype_id=None):
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  74)         """category_ids=None leaves the categories alone; a list (even empty) replaces them."""
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  75)         self._owned_idp(idp_id, designer_id)
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  76)         title, description, propertyType, price, status = self._clean_idp(
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  77)             title, description, propertyType, price, status)
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800  78)         property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  79)         if category_ids is not None:
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  80)             category_ids = self._clean_category_ids(category_ids)
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800  81)         IDP.update(idp_id, title=title, description=description, propertyType=propertyType, status=status, price=price,
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800  82)                    category_ids=category_ids, property_subtype_id=property_subtype_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  83) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  84)     def delete_idp(self, idp_id, designer_id):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  85)         self._owned_idp(idp_id, designer_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  86)         media = IDPMedia.find_by_idp(idp_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  87)         IDPMedia.delete_by_idp(idp_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  88)         IDP.delete(idp_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  89)         for item in media:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  90)             self._remove_from_disk(item)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  91) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  92)     # ----- media -----
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800  93)     def add_image(self, idp_id, designer_id, fileobj):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  94)         self._owned_idp(idp_id, designer_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  95)         if fileobj is None or fileobj.filename == "":
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  96)             raise ValidationError("No file selected.")
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  97)         if not allowed_file(fileobj.filename, IMAGE_EXTENSIONS):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  98)             raise ValidationError("Wrong file extension! Allowed: jpg, jpeg, png, gif.")
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800  99) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 100)         ext = fileobj.filename.rsplit(".", 1)[1].lower()
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 101)         # random name: avoids overwriting other uploads and unsafe filenames
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 102)         saved_name = f"{uuid.uuid4().hex}.{ext}"
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 103)         fileobj.save(os.path.join(self.folders["image"], saved_name))
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 104)         return IDPMedia.create(idp_id, saved_name)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 105) 
+eab1525 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-10 10:00:10 +0800 106)     def remove_media(self, mediaID, designer_id):
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 107)         """Delete one image. Returns the idp_id so the boundary can redirect back."""
+eab1525 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-10 10:00:10 +0800 108)         media = IDPMedia.find(mediaID)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 109)         if media is None:
+eab1525 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-10 10:00:10 +0800 110)             raise NotFoundError(f"Media id {mediaID} doesn't exist.")
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 111)         self._owned_idp(media["idp_id"], designer_id)
+eab1525 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-10 10:00:10 +0800 112)         IDPMedia.delete(mediaID)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 113)         self._remove_from_disk(media)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 114)         return media["idp_id"]
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 115) 
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 116)     # ----- profile -----
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 117)     def get_profile(self, designer_id):
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 118)         """The designer's own account and company details."""
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 119)         profile = designers.get_profile(designer_id)
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 120)         if profile is None:
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 121)             raise NotFoundError("Designer profile not found.")
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 122)         return profile
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 123) 
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 124)     def update_profile(self, designer_id, name, email, phone):
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 125)         self.get_profile(designer_id)          # 404 if this account has no designer profile
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 126) 
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 127)         name = (name or "").strip()
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 128)         email = (email or "").strip()
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 129)         phone = (phone or "").strip()
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 130)         if not name:
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 131)             raise ValidationError("Name is required.")
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 132)         if not email or "@" not in email:
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 133)             raise ValidationError("Please enter a valid email address.")
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 134)         if not phone:
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 135)             raise ValidationError("Phone number is required.")
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 136) 
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 137)         try:
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 138)             designers.update_profile(designer_id, name, email, phone)
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 139)         except sqlite3.IntegrityError:
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 140)             raise ValidationError("This email is already used by another account.")
+c010091 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-21 20:03:30 +0800 141) 
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 142)     def update_company_profile(self, designer_id, companyName,
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 143)                                companyLine, companyEmail):
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 144)         self.get_profile(designer_id)
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 145) 
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 146)         if designers.get_company(designer_id) is None:
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 147)             raise NotFoundError('Company profile not found.')
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 148) 
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 149)         companyName = (companyName or '').strip()
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 150)         companyLine = (companyLine or '').strip()
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 151)         companyEmail = (companyEmail or '').strip()
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 152) 
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 153)         if not companyName:
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 154)             raise ValidationError('Company name is required.')
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 155) 
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 156)         if not companyLine:
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 157)             raise ValidationError('Company phone number is required.')
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 158) 
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 159)         if companyEmail and (
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 160)                 '@' not in companyEmail
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 161)                 or not all(companyEmail.split('@'))
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 162)                 or companyEmail.count('@') != 1):
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 163)             raise ValidationError('Please enter a valid company email.')
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 164) 
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 165)         try:
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 166)             designers.update_company_profile(
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 167)                 designer_id, companyName, companyLine, companyEmail
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 168)             )
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 169)         except sqlite3.IntegrityError as error:
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 170)             if 'companyLine' in str(error):
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 171)                 raise ValidationError(
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 172)                     'This company phone number is already in use.'
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 173)                 ) from error
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 174)             raise
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 175)         except ValueError as error:
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 176)             raise NotFoundError(str(error)) from error
+c9c9159 idfinder/controller/portfolio_controller.py   (David     2026-10-22 21:11:42 +0800 177) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 178)     # ----- helpers -----
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 179)     def _owned_idp(self, idp_id, designer_id):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 180)         idp = IDP.find(idp_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 181)         if idp is None:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 182)             raise NotFoundError(f"IDP id {idp_id} doesn't exist.")
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 183)         if idp["designer_id"] != designer_id:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 184)             raise PermissionDenied("You can only manage your own projects.")
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 185)         return idp
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 186) 
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 187)     def _clean_idp(self, title, description, propertyType, houseType, price, status):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 188)         title = (title or "").strip()
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 189)         description = (description or "").strip()
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 190)         if not title:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 191)             raise ValidationError("Title is required.")
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 192)         if status not in IDP_STATUSES:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 193)             raise ValidationError("Status must be 'ongoing' or 'completed'.")
+23ff4ec myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 10:14:32 +0800 194) 
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 195)         # Validate propertyType
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800 196)         by_lower = {name.lower(): name for name in PROPERTY_TYPES}
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800 197)         propertyType = by_lower.get((propertyType or "").strip().lower())
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800 198)         if propertyType is None:
+325f9e6 idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-21 21:29:44 +0800 199)             raise ValidationError("Please choose a property type.")
+eab1525 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-10 10:00:10 +0800 200) 
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 201)         # Validate houseType against the selected propertyType
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 202)         houseType = (houseType or "").strip()
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 203) 
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 204)         if not houseType:
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 205)             raise ValidationError("Please choose a house type.")
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 206) 
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 207)         allowed_house_types = HOUSE_TYPES[propertyType]
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 208)         if houseType not in allowed_house_types:
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 209)             raise ValidationError("Please choose a valid house type for the selected property type.")
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 210) 
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 211)         try:
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 212)             price = int(str(price).strip())
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 213)         except (TypeError, ValueError):
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 214)             raise ValidationError("Price must be a whole number of dollars.")
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 215)         if price < 0:
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 216)             raise ValidationError("Price can't be negative.")
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 217)         if price > MAX_PRICE:
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 218)             raise ValidationError("Price is too large.")
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 219) 
+28a54ed idfinder/controller/portfolio_controller.py   (freyaaa   2026-10-22 16:24:30 +0800 220)         return title, description, propertyType, houseType, price, status
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 221) 
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 222)     def housing_options(self):
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 223)         return Housing.types(), Housing.subtypes()
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 224) 
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 225)     def _clean_housing(self, property_type, raw_subtype):
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 226)         try:
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 227)             subtype_id = int(raw_subtype)
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 228)         except (TypeError, ValueError):
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 229)             raise ValidationError("Please choose a housing subtype.")
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 230)         subtype = Housing.find_subtype(subtype_id)
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 231)         if subtype is None or subtype['type_code'] != property_type:
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 232)             raise ValidationError("The subtype must belong to the selected property type.")
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 233)         return subtype_id
+93109c8 idfinder/controller/portfolio_controller.py   (leefy     2026-10-22 21:27:52 +0800 234) 
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 235)     def _clean_category_ids(self, category_ids):
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 236)         """List of ids from the form -> sorted unique ints, each an active category."""
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 237)         cleaned = set()
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 238)         for raw in (category_ids or ()):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 239)             try:
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 240)                 category_id = int(raw)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 241)             except (TypeError, ValueError):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 242)                 raise ValidationError("Unknown category.")
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 243)             category = Category.find(category_id)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 244)             if category is None or not category["active"]:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 245)                 raise ValidationError("Unknown category.")
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 246)             cleaned.add(category_id)
+275e704 idfinder/controller/portfolio_controller.py   (chuubunni 2026-10-18 14:16:46 +0800 247)         return sorted(cleaned)
+23ff4ec myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 10:14:32 +0800 248) 
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 249)     def _remove_from_disk(self, media):
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 250)         # basename guards against path tricks
+eab1525 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-10 10:00:10 +0800 251)         path = os.path.join(self.folders["image"], os.path.basename(media["link"]))
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 252)         try:
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 253)             os.remove(path)
+89d1468 myfirstapp/controller/portfolio_controller.py (chuubunni 2026-10-08 21:11:33 +0800 254)         except FileNotFoundError:
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 255)             pass  # row is already gone; nothing left to clean up
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 256) 
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 257)     # ID19: validate selection IDs; the entity checks and replaces all links atomically.
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 258)     def update_selected_categories(self, designer_id, idp_ids, category_ids):
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 259)         try:
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 260)             projects = sorted({int(value) for value in (idp_ids or ())})
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 261)         except (ValueError, TypeError):
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 262)             raise ValidationError('Invalid project selection.')
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 263)         if not projects or any(value <= 0 for value in projects):
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 264)             raise ValidationError('Select at least one valid project.')
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 265)         categories = self._clean_category_ids(category_ids)
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 266)         if not categories:
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 267)             raise ValidationError('Select at least one active category.')
+e012b02 idfinder/controller/portfolio_controller.py   (nzrdn     2026-10-23 04:07:20 +0800 268)         return IDP.update_categories_bulk(designer_id, projects, categories)
