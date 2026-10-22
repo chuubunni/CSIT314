@@ -47,7 +47,14 @@ def create_app(test_config=None):
     from .boundaries import platform
     app.register_blueprint(platform.bp)
 
+    from .boundaries import platform_charts
+    app.register_blueprint(platform_charts.bp)
+
     from .boundaries import customer
     app.register_blueprint(customer.bp)
 
+    from .housing_migration import migrate_housing_command
+    app.cli.add_command(migrate_housing_command)
+
+    return app 
     return app
