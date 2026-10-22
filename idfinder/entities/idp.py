@@ -12,7 +12,7 @@ _CATEGORY_NAMES = (
 class IDP:
 
     @staticmethod
-    def create(designer_id, title, description, propertyType, houseType, price, status, category_ids=()):
+    def create(designer_id, title, description, propertyType, houseType, price, status, category_ids=(), property_subtype_id=None):
         """Insert the IDP and its category links in one transaction. Returns the new id."""
         db = get_db()
         try:
@@ -31,8 +31,9 @@ class IDP:
     @staticmethod
     def find(idp_id):
         return get_db().execute(
-            'SELECT p.id, p.designer_id, p.propertyType, p.houseType, p.title, p.description,'
-            ' p.price, p.status, p.created, ' + _CATEGORY_NAMES +
+            'SELECT p.id, p.designer_id, p.propertyType, p.title, p.description,'
+            ' p.price, p.status, p.created, p.property_subtype_id, '
+            " (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name, " + _CATEGORY_NAMES +
             ' FROM idp p WHERE p.id = ?',
             (idp_id,),
         ).fetchone()
@@ -49,7 +50,9 @@ class IDP:
     def find_by_designer(designer_id):
         """A designer's IDPs, newest first, each with a cover image (first image, if any)."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.propertyType, p.houseType, p.price, p.status, p.created,'
+            'SELECT p.id, p.title, p.description, p.propertyType, p.price, p.status, p.created,'
+            ' p.property_subtype_id,'
+            ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
             ' ' + _CATEGORY_NAMES + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
@@ -60,10 +63,20 @@ class IDP:
         ).fetchall()
 
     @staticmethod
-    def find_all():
-        """Every IDP (for the home page), newest first."""
+    def find_all(property_type='', property_subtype_id=None):
+        """Homepage projects, with optional parameterised housing filters."""
+        conditions, parameters = [], []
+        if property_type:
+            conditions.append('p.propertyType = ?')
+            parameters.append(property_type)
+        if property_subtype_id is not None:
+            conditions.append('p.property_subtype_id = ?')
+            parameters.append(property_subtype_id)
+        where = (' WHERE ' + ' AND '.join(conditions)) if conditions else '' 
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.propertyType, p.houseType, p.price, p.status, p.created,'
+            'SELECT p.id, p.title, p.description, p.propertyType, p.price, p.status, p.created,'
+            ' p.property_subtype_id,'
+            ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
             ' u.name AS designer_name, co.companyName AS company_name,'
             ' ' + _CATEGORY_NAMES + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
@@ -71,19 +84,20 @@ class IDP:
             ' FROM idp p JOIN user u ON p.designer_id = u.id'
             ' LEFT JOIN designer d ON d.userID = p.designer_id'
             ' LEFT JOIN company co ON co.companyID = d.companyID'
-            ' ORDER BY p.created DESC, p.id DESC'
+            + where + ' ORDER BY p.created DESC, p.id DESC',
+            parameters
         ).fetchall()
 
     @staticmethod
-    def update(idp_id, title, description, propertyType, houseType, status, price, category_ids=None):
+    def update(idp_id, title, description, propertyType, status, price, category_ids=None, property_subtype_id=None):
         """Update the IDP. If category_ids is given (even empty) the categories are replaced
         too; None leaves them as they are."""
         db = get_db()
         try:
             db.execute(
-                'UPDATE idp SET title = ?, description = ?, propertyType = ?, houseType = ?, status = ?, price = ?'
+                'UPDATE idp SET title = ?, description = ?, propertyType = ?, status = ?, price = ?, property_subtype_id = ?'
                 ' WHERE id = ?',
-                (title, description, propertyType, houseType, status, price, idp_id),
+                (title, description, propertyType, status, price, property_subtype_id, idp_id),
             )
             if category_ids is not None:
                 IDP._replace_categories(db, idp_id, category_ids)
@@ -119,9 +133,9 @@ class IDP:
             raise
 
     @staticmethod
-    def find_all_with_images():
+    def find_all_with_images(property_type='', property_subtype_id=None):
         """Homepage records and their image lists, using two queries (no N+1 queries)."""
-        projects = [dict(item) for item in IDP.find_all()]
+        projects = [dict(item) for item in IDP.find_all(property_type, property_subtype_id)]
         if not projects:
             return projects
         ids = [project['id'] for project in projects]
