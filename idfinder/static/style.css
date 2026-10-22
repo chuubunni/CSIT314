@@ -73,3 +73,9 @@ header .action.profile-button { padding: 0.4rem 1.5rem; margin-bottom: 0.25rem; 
 .profile-readonly { box-sizing: border-box; min-height: 2.4rem; padding: 0.5rem; border: 1px solid #ddd; background: #f6f6f6; color: #222; overflow-wrap: anywhere; }
 .profile-section-title { margin: 2rem 0 1rem; font-size: 1.2rem; }
 
+/* interior designer: edit ID's company information */
+.company-fields {align-items: end;}
+.company-edit-action {align-self: end;}
+.company-edit-action .profile-button {display: inline-flex;align-items: center;justify-content: center;min-height: 2.4rem;margin: 0;}
+
+

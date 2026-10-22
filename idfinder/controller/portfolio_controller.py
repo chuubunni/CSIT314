@@ -136,6 +136,42 @@ class PortfolioController:
         except sqlite3.IntegrityError:
             raise ValidationError("This email is already used by another account.")
 
+    def update_company_profile(self, designer_id, companyName,
+                               companyLine, companyEmail):
+        self.get_profile(designer_id)
+
+        if designers.get_company(designer_id) is None:
+            raise NotFoundError('Company profile not found.')
+
+        companyName = (companyName or '').strip()
+        companyLine = (companyLine or '').strip()
+        companyEmail = (companyEmail or '').strip()
+
+        if not companyName:
+            raise ValidationError('Company name is required.')
+
+        if not companyLine:
+            raise ValidationError('Company phone number is required.')
+
+        if companyEmail and (
+                '@' not in companyEmail
+                or not all(companyEmail.split('@'))
+                or companyEmail.count('@') != 1):
+            raise ValidationError('Please enter a valid company email.')
+
+        try:
+            designers.update_company_profile(
+                designer_id, companyName, companyLine, companyEmail
+            )
+        except sqlite3.IntegrityError as error:
+            if 'companyLine' in str(error):
+                raise ValidationError(
+                    'This company phone number is already in use.'
+                ) from error
+            raise
+        except ValueError as error:
+            raise NotFoundError(str(error)) from error
+
     # ----- helpers -----
     def _owned_idp(self, idp_id, designer_id):
         idp = IDP.find(idp_id)
