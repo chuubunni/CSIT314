@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}{{ 'Edit project' if idp else 'New project' }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  {% set v_title = form.get('title', idp['title'] if idp else '') %}
+  {% set v_desc = form.get('description', idp['description'] if idp else '') %}
+  {% set v_type = (form.get('propertyType', idp['propertyType'] if idp else 'HDB'))|lower %}
+
+  {% set v_htype = form.get('houseType', idp['houseType'] if idp else '') %}
+  
+  {% set v_price = form.get('price', idp['price'] if idp else '') %}
+  {% set v_status = form.get('status', idp['status'] if idp else 'completed') %}
+  {# Ticked categories: what the user just submitted (form re-shown after an error),
+     otherwise the IDP's saved categories (selected_categories, a list of ids from the boundary) #}
+  {% if form %}
+    {% set chosen = form.getlist('category_ids')|map('int')|list %}
+  {% else %}
+    {% set chosen = selected_categories|default([]) %}
+  {% endif %}
+  <form method="post">
+    <label for="title">Title</label>
+    <input name="title" id="title" value="{{ v_title }}" required>
+
+    <label for="description">Description</label>
+    <textarea name="description" id="description">{{ v_desc }}</textarea>
+
+    {% set v_subtype = form.get('property_subtype_id', idp['property_subtype_id'] if idp else '')|string %}
+    <div data-housing-selects>
+      <label for="propertyType">Housing Type</label>
+      <select id="propertyType" name="propertyType" data-housing-type required>
+        <option value="">Choose housing type</option>
+        {% for housing in housing_types %}
+          <option value="{{ housing.code }}" {% if v_type == housing.code|lower %}selected{% endif %}>{{ housing.name }}</option>
+        {% endfor %}
+      </select>
+      <label for="property_subtype_id">Housing Subtype</label>
+      <select id="property_subtype_id" name="property_subtype_id" data-housing-subtype
+              data-placeholder="Choose housing subtype" required>
+        <option value="">Choose housing subtype</option>
+        {% for subtype in housing_subtypes %}
+          <option value="{{ subtype.id }}" data-type="{{ subtype.type_code }}"
+                  {% if v_subtype == subtype.id|string %}selected{% endif %}>{{ subtype.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <label for="price">Price (SGD)</label>
+    <input type="number" name="price" id="price" min="0" step="1" value="{{ v_price }}" required>
+
+    <fieldset>
+      <legend>Categories</legend>
+      {% for c in categories %}
+        <label>
+          <input type="checkbox" name="category_ids" value="{{ c['id'] }}" {{ 'checked' if c['id'] in chosen else '' }}>
+          {{ c['name'] }}
+        </label>
+      {% else %}
+        <p>No categories available yet.</p>
+      {% endfor %}
+    </fieldset>
+
+    <label for="status">Status</label>
+    <select name="status" id="status">
+      <option value="ongoing" {{ 'selected' if v_status == 'ongoing' else '' }}>Ongoing</option>
+      <option value="completed" {{ 'selected' if v_status == 'completed' else '' }}>Completed</option>
+    </select>
+
+    <input type="submit" value="Save">
+  </form>
+  <p><a class="action" href="{{ url_for('designer.portfolio') }}">Back to portfolio</a></p>
+
+  <script>
+    const HOUSE_TYPES = {
+      "HDB": [
+        "2-Room", "3-Room", "4-Room", "5-Room", "3 Gen", "Mansionette", "Jumbo", "Studio Apartment"
+      ],
+      "Condo": [
+        "Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom", "4-Bedroom", "5+ Bedrooms", "Penthouse"
+      ],
+      "Landed": [
+        "Terrace House", "Semi-Detached House", "Bungalow / Detached House", "Good Class Bungalow (GCB)", "Townhouse"
+      ]
+    };
+
+    const propertySelect = document.getElementById('propertyType');
+    const houseSelect = document.getElementById('houseType');
+
+    function updateHouseTypes(selectedHouseType) {
+
+      // Get the selected property type
+      const selectedProperty = propertySelect.value;
+
+      // Get the house types for the selected property type
+      const houseTypes = HOUSE_TYPES[selectedProperty] || [];
+
+      // Clear the existing options in the house type select
+      houseSelect.innerHTML = '';
+
+      // Add a default option
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '--Select house type --';
+      houseSelect.appendChild(placeholder);
+
+      // Populate the house type select with the new options
+      houseTypes.forEach(function (htype) {
+
+        const option = document.createElement('option');
+
+        option.value = htype;
+        option.textContent = htype;
+
+        if (htype === selectedHouseType) {
+          option.selected = true;
+        }
+
+        houseSelect.appendChild(option);
+
+      });
+
+    }
+
+    // Update house types when the property type changes
+    propertySelect.addEventListener('change', updateHouseTypes);
+
+    // Initialize house types on page load
+    updateHouseTypes();
+
+    
+
+  </script>
+
+  <script src="{{ url_for('static', filename='housing.js') }}" defer></script>
+{% endblock %}

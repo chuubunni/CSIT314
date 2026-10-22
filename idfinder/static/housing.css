@@ -1,0 +1,10 @@
+.housing-filter { margin: 1rem 0 1.5rem; padding: 1rem; border: 1px solid #d6d6d6; border-radius: 6px; background: #f8f8f8; }
+.housing-fields { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+.housing-field { flex: 1 1 210px; }
+.housing-field label { display: block; margin-bottom: .4rem; font-weight: bold; }
+.housing-field select { width: 100%; padding: .65rem; }
+.housing-actions { display: flex; gap: .8rem; align-items: center; padding-bottom: .2rem; }
+.housing-actions button, .housing-actions a { padding: .6rem 1rem; }
+.housing-error { padding: .8rem; border: 1px solid #b44; color: #8a2020; }
+.housing-project-meta { padding: 0 1rem 1rem; }
+@media (max-width: 600px) { .housing-field { flex-basis: 100%; } }

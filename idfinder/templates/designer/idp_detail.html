@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}{{ idp['title'] }}{% endblock %}</h1>
+  <a class="action" href="{{ url_for('designer.edit_idp', idp_id=idp['id']) }}">Edit</a>
+  <a class="action" href="{{ url_for('designer.portfolio') }}">Back to portfolio</a>
+  <a href="{{ url_for('home.index') }}">Back to home</a>
+{% endblock %}
+
+{% block content %}
+  <div class="about">
+    {{ idp['status'] }}{% if idp['category_names'] %} &middot; {{ idp['category_names'] }}{% endif %}
+    &middot; {{ (idp['created']|string)[:10] }}
+  </div>
+  <p class="desc">{{ idp['description'] }}</p>
+  <p class="propertyType"> Property type: {{ idp['propertyType'] }} </p>
+  <p class="houseType"> House type: {{ idp['houseType'] }} </p>
+  <p class="price"> Price of design: {{ idp['price'] }}</p>
+
+  <h2>Images</h2>
+  {% for item in images %}
+    <article class="item">
+      <figure>
+        <img src="{{ url_for('static', filename='uploads/' + item['link']) }}" style="max-width:400px; height:auto;">
+      </figure>
+      <form method="post" action="{{ url_for('designer.remove_media', mediaID=item['mediaID']) }}"
+            onsubmit="return confirm('Delete this image?');">
+        <input class="danger" type="submit" value="Remove image">
+      </form>
+    </article>
+  {% else %}
+    <p>No images yet.</p>
+  {% endfor %}
+
+  <form method="post" enctype="multipart/form-data"
+        action="{{ url_for('designer.upload_image', idp_id=idp['id']) }}">
+    <label for="image">Add image (jpg, jpeg, png, gif)</label>
+    <input type="file" name="file" id="image" accept=".jpg,.jpeg,.png,.gif" required>
+    <input type="submit" value="Upload image">
+  </form>
+
+  <hr>
+  <form method="post" action="{{ url_for('designer.delete_idp', idp_id=idp['id']) }}"
+        onsubmit="return confirm('Delete this project and all its images?');">
+    <input class="danger" type="submit" value="Delete project">
+  </form>
+{% endblock %}

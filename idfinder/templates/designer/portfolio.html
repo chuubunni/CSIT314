@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}My Portfolio{% endblock %}</h1>
+  <a href="{{ url_for('home.index') }}">Back to home</a>
+  <a class="action" href="{{ url_for('designer.create_idp') }}">New project</a>
+{% endblock %}
+
+{% block content %}
+  {% if not idps %}
+    <p>No projects yet.</p>
+  {% endif %}
+  {% for idp in idps %}
+    <article class="post">
+      <header>
+        <div>
+          <h1>
+            <a href="{{ url_for('designer.view_idp', idp_id=idp['id']) }}">
+              {{ idp['title'] }}
+            </a>
+          </h1>
+          <div class="about">
+            {{ idp['status'] }}{% if idp['category_names'] %} &middot; {{ idp['category_names'] }}{% endif %}
+            &middot; {{ (idp['created']|string)[:10] }}
+          </div>
+        </div>
+      </header>
+      {% if idp['cover'] %}
+        <img src="{{ url_for('static', filename='uploads/' + idp['cover']) }}"
+             alt="{{ idp['title'] }}" style="max-width:300px; height:auto;">
+      {% endif %}
+      <p class="desc">{{ idp['description'] }}</p>
+      <p class="propertyType"> Property type: {{ idp['propertyType'] }} </p>
+      <p class="houseType"> House type: {{ idp['houseType'] }} </p>
+      <p class="price">Price of design: {{ idp['price'] }}</p>
+    </article>
+    {% if not loop.last %}<hr>{% endif %}
+  {% endfor %}
+{% endblock %}
