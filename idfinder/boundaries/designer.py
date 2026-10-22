@@ -49,6 +49,7 @@ class designer_boundary():
             title=request.form.get('title'),
             description=request.form.get('description'),
             propertyType=request.form.get('propertyType'),
+            property_subtype_id=request.form.get('property_subtype_id'),
             price=request.form.get('price'),
             status=request.form.get('status'),
             category_ids=request.form.getlist('category_ids'),   # one value per ticked checkbox
@@ -77,7 +78,9 @@ class designer_boundary():
                 flash(str(error))
         return render_template('designer/create_port.html', idp=None,
                             categories=ctrl.categories(), form=request.form,
-                            selected_categories=[])
+                            selected_categories=[],
+                            housing_types=ctrl.housing_options()[0],
+                            housing_subtypes=ctrl.housing_options()[1])
 
 
     @bp.route('/portfolio/<int:idp_id>')
@@ -102,7 +105,9 @@ class designer_boundary():
                 flash(str(error))
         return render_template('designer/create_port.html', idp=idp,
                             categories=ctrl.categories(), form=request.form,
-                            selected_categories=ctrl.get_category_ids(idp_id, g.user['id']))
+                            selected_categories=ctrl.get_category_ids(idp_id, g.user['id']),
+                            housing_types=ctrl.housing_options()[0],
+                            housing_subtypes=ctrl.housing_options()[1])
 
 
     @bp.route('/portfolio/<int:idp_id>/delete', methods=('POST',))

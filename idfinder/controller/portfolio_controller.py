@@ -5,6 +5,7 @@ import uuid
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.entities.category import Category
 from idfinder.entities.idp import IDP
+from idfinder.entities.housing import Housing
 from idfinder.entities.idp_media import IDPMedia
 from idfinder.entities.user import designers
 
@@ -40,12 +41,13 @@ class PortfolioController:
         return Category.find_all_active()
 
     def create_idp(self, designer_id, title, description, propertyType, price, status,
-                   category_ids=()):
+                   category_ids=(), property_subtype_id=None):
         title, description, propertyType, price, status = self._clean_idp(
             title, description, propertyType, price, status)
+        property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
         category_ids = self._clean_category_ids(category_ids)
         return IDP.create(designer_id=designer_id, title=title, description=description, propertyType=propertyType, price=price, status=status,
-                          category_ids=category_ids)
+                          category_ids=category_ids, property_subtype_id=property_subtype_id)
 
     def get_idp(self, idp_id, designer_id):
         return self._owned_idp(idp_id, designer_id)
@@ -61,15 +63,16 @@ class PortfolioController:
         return idp, IDPMedia.find_by_idp(idp_id)
 
     def update_idp(self, idp_id, designer_id, title, description, propertyType, price, status,
-                   category_ids=None):
+                   category_ids=None, property_subtype_id=None):
         """category_ids=None leaves the categories alone; a list (even empty) replaces them."""
         self._owned_idp(idp_id, designer_id)
         title, description, propertyType, price, status = self._clean_idp(
             title, description, propertyType, price, status)
+        property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
         if category_ids is not None:
             category_ids = self._clean_category_ids(category_ids)
         IDP.update(idp_id, title=title, description=description, propertyType=propertyType, status=status, price=price,
-                   category_ids=category_ids)
+                   category_ids=category_ids, property_subtype_id=property_subtype_id)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)
@@ -161,6 +164,19 @@ class PortfolioController:
             raise ValidationError("Price is too large.")
 
         return title, description, propertyType, price, status
+
+    def housing_options(self):
+        return Housing.types(), Housing.subtypes()
+
+    def _clean_housing(self, property_type, raw_subtype):
+        try:
+            subtype_id = int(raw_subtype)
+        except (TypeError, ValueError):
+            raise ValidationError("Please choose a housing subtype.")
+        subtype = Housing.find_subtype(subtype_id)
+        if subtype is None or subtype['type_code'] != property_type:
+            raise ValidationError("The subtype must belong to the selected property type.")
+        return subtype_id
 
     def _clean_category_ids(self, category_ids):
         """List of ids from the form -> sorted unique ints, each an active category."""

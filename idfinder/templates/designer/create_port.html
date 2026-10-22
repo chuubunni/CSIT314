@@ -24,15 +24,25 @@
     <label for="description">Description</label>
     <textarea name="description" id="description">{{ v_desc }}</textarea>
 
-    <label for="propertyType">Property Type</label>
-    <select id="propertyType" name="propertyType">
-      <option value="HDB" {{ 'selected' if v_type == 'hdb' else '' }}>HDB</option>
-      <option value="Condo" {{ 'selected' if v_type == 'condo' else '' }}>Condo</option>
-      <option value="Landed" {{ 'selected' if v_type == 'landed' else '' }}>Landed</option>
-    </select>
-
-
-    
+    {% set v_subtype = form.get('property_subtype_id', idp['property_subtype_id'] if idp else '')|string %}
+    <div data-housing-selects>
+      <label for="propertyType">Housing Type</label>
+      <select id="propertyType" name="propertyType" data-housing-type required>
+        <option value="">Choose housing type</option>
+        {% for housing in housing_types %}
+          <option value="{{ housing.code }}" {% if v_type == housing.code|lower %}selected{% endif %}>{{ housing.name }}</option>
+        {% endfor %}
+      </select>
+      <label for="property_subtype_id">Housing Subtype</label>
+      <select id="property_subtype_id" name="property_subtype_id" data-housing-subtype
+              data-placeholder="Choose housing subtype" required>
+        <option value="">Choose housing subtype</option>
+        {% for subtype in housing_subtypes %}
+          <option value="{{ subtype.id }}" data-type="{{ subtype.type_code }}"
+                  {% if v_subtype == subtype.id|string %}selected{% endif %}>{{ subtype.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
     <label for="price">Price (SGD)</label>
     <input type="number" name="price" id="price" min="0" step="1" value="{{ v_price }}" required>
@@ -58,4 +68,5 @@
     <input type="submit" value="Save">
   </form>
   <p><a class="action" href="{{ url_for('designer.portfolio') }}">Back to portfolio</a></p>
+  <script src="{{ url_for('static', filename='housing.js') }}" defer></script>
 {% endblock %}
