@@ -12,14 +12,14 @@ _CATEGORY_NAMES = (
 class IDP:
 
     @staticmethod
-    def create(designer_id, title, description, propertyType, price, status, category_ids=()):
+    def create(designer_id, title, description, propertyType, houseType, price, status, category_ids=()):
         """Insert the IDP and its category links in one transaction. Returns the new id."""
         db = get_db()
         try:
             cursor = db.execute(
-                'INSERT INTO idp (designer_id, title, description, propertyType, price, status)'
-                ' VALUES (?, ?, ?, ?, ?, ?)',
-                (designer_id, title, description, propertyType, price, status),
+                'INSERT INTO idp (designer_id, title, description, propertyType, houseType, price, status)'
+                ' VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (designer_id, title, description, propertyType, houseType, price, status),
             )
             IDP._replace_categories(db, cursor.lastrowid, category_ids)
             db.commit()
@@ -31,7 +31,7 @@ class IDP:
     @staticmethod
     def find(idp_id):
         return get_db().execute(
-            'SELECT p.id, p.designer_id, p.propertyType, p.title, p.description,'
+            'SELECT p.id, p.designer_id, p.propertyType, p.houseType, p.title, p.description,'
             ' p.price, p.status, p.created, ' + _CATEGORY_NAMES +
             ' FROM idp p WHERE p.id = ?',
             (idp_id,),
@@ -49,7 +49,7 @@ class IDP:
     def find_by_designer(designer_id):
         """A designer's IDPs, newest first, each with a cover image (first image, if any)."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.propertyType, p.price, p.status, p.created,'
+            'SELECT p.id, p.title, p.description, p.propertyType, p.houseType, p.price, p.status, p.created,'
             ' ' + _CATEGORY_NAMES + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
@@ -63,7 +63,7 @@ class IDP:
     def find_all():
         """Every IDP (for the home page), newest first."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.propertyType, p.price, p.status, p.created,'
+            'SELECT p.id, p.title, p.description, p.propertyType, p.houseType, p.price, p.status, p.created,'
             ' u.name AS designer_name, co.companyName AS company_name,'
             ' ' + _CATEGORY_NAMES + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
@@ -75,15 +75,15 @@ class IDP:
         ).fetchall()
 
     @staticmethod
-    def update(idp_id, title, description, propertyType, status, price, category_ids=None):
+    def update(idp_id, title, description, propertyType, houseType, status, price, category_ids=None):
         """Update the IDP. If category_ids is given (even empty) the categories are replaced
         too; None leaves them as they are."""
         db = get_db()
         try:
             db.execute(
-                'UPDATE idp SET title = ?, description = ?, propertyType = ?, status = ?, price = ?'
+                'UPDATE idp SET title = ?, description = ?, propertyType = ?, houseType = ?, status = ?, price = ?'
                 ' WHERE id = ?',
-                (title, description, propertyType, status, price, idp_id),
+                (title, description, propertyType, houseType, status, price, idp_id),
             )
             if category_ids is not None:
                 IDP._replace_categories(db, idp_id, category_ids)
