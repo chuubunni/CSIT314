@@ -83,6 +83,7 @@ create table idp(
     title text not null,
     description text,
     propertyType text not null,
+    houseType text not null,
     price integer not null check (price >= 0), -- whole dollars (SGD)
     status text not null default 'completed'
         check (status in ('ongoing', 'completed')),

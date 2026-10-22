@@ -5,6 +5,7 @@ import uuid
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.entities.category import Category
 from idfinder.entities.idp import IDP
+from idfinder.entities.housing import Housing
 from idfinder.entities.idp_media import IDPMedia
 from idfinder.entities.user import designers
 
@@ -13,6 +14,13 @@ IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
 IDP_STATUSES = ("ongoing", "completed")
 # Canonical spellings; these become a property_type table later. Matching ignores case.
 PROPERTY_TYPES = ("HDB", "Condo", "Landed")
+
+HOUSE_TYPES = {
+    "HDB": ["2-Room", "3-Room", "4-Room", "5-Room", "3 Gen", "Mansionette", "Jumbo", "Studio Apartment"],
+    "Condo": ["Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom", "4-Bedroom", "5+ Bedrooms", "Penthouse"],
+    "Landed": ["Terrace House", "Semi-Detached House", "Bungalow / Detached House", "Good Class Bungalow (GCB)", "Townhouse"]
+}
+
 MAX_PRICE = 1_000_000_000
 
 
@@ -40,12 +48,13 @@ class PortfolioController:
         return Category.find_all_active()
 
     def create_idp(self, designer_id, title, description, propertyType, price, status,
-                   category_ids=()):
+                   category_ids=(), property_subtype_id=None):
         title, description, propertyType, price, status = self._clean_idp(
             title, description, propertyType, price, status)
+        property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
         category_ids = self._clean_category_ids(category_ids)
         return IDP.create(designer_id=designer_id, title=title, description=description, propertyType=propertyType, price=price, status=status,
-                          category_ids=category_ids)
+                          category_ids=category_ids, property_subtype_id=property_subtype_id)
 
     def get_idp(self, idp_id, designer_id):
         return self._owned_idp(idp_id, designer_id)
@@ -61,15 +70,16 @@ class PortfolioController:
         return idp, IDPMedia.find_by_idp(idp_id)
 
     def update_idp(self, idp_id, designer_id, title, description, propertyType, price, status,
-                   category_ids=None):
+                   category_ids=None, property_subtype_id=None):
         """category_ids=None leaves the categories alone; a list (even empty) replaces them."""
         self._owned_idp(idp_id, designer_id)
         title, description, propertyType, price, status = self._clean_idp(
             title, description, propertyType, price, status)
+        property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
         if category_ids is not None:
             category_ids = self._clean_category_ids(category_ids)
         IDP.update(idp_id, title=title, description=description, propertyType=propertyType, status=status, price=price,
-                   category_ids=category_ids)
+                   category_ids=category_ids, property_subtype_id=property_subtype_id)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)
@@ -129,6 +139,42 @@ class PortfolioController:
         except sqlite3.IntegrityError:
             raise ValidationError("This email is already used by another account.")
 
+    def update_company_profile(self, designer_id, companyName,
+                               companyLine, companyEmail):
+        self.get_profile(designer_id)
+
+        if designers.get_company(designer_id) is None:
+            raise NotFoundError('Company profile not found.')
+
+        companyName = (companyName or '').strip()
+        companyLine = (companyLine or '').strip()
+        companyEmail = (companyEmail or '').strip()
+
+        if not companyName:
+            raise ValidationError('Company name is required.')
+
+        if not companyLine:
+            raise ValidationError('Company phone number is required.')
+
+        if companyEmail and (
+                '@' not in companyEmail
+                or not all(companyEmail.split('@'))
+                or companyEmail.count('@') != 1):
+            raise ValidationError('Please enter a valid company email.')
+
+        try:
+            designers.update_company_profile(
+                designer_id, companyName, companyLine, companyEmail
+            )
+        except sqlite3.IntegrityError as error:
+            if 'companyLine' in str(error):
+                raise ValidationError(
+                    'This company phone number is already in use.'
+                ) from error
+            raise
+        except ValueError as error:
+            raise NotFoundError(str(error)) from error
+
     # ----- helpers -----
     def _owned_idp(self, idp_id, designer_id):
         idp = IDP.find(idp_id)
@@ -138,7 +184,7 @@ class PortfolioController:
             raise PermissionDenied("You can only manage your own projects.")
         return idp
 
-    def _clean_idp(self, title, description, propertyType, price, status):
+    def _clean_idp(self, title, description, propertyType, houseType, price, status):
         title = (title or "").strip()
         description = (description or "").strip()
         if not title:
@@ -146,10 +192,21 @@ class PortfolioController:
         if status not in IDP_STATUSES:
             raise ValidationError("Status must be 'ongoing' or 'completed'.")
 
+        # Validate propertyType
         by_lower = {name.lower(): name for name in PROPERTY_TYPES}
         propertyType = by_lower.get((propertyType or "").strip().lower())
         if propertyType is None:
             raise ValidationError("Please choose a property type.")
+
+        # Validate houseType against the selected propertyType
+        houseType = (houseType or "").strip()
+
+        if not houseType:
+            raise ValidationError("Please choose a house type.")
+
+        allowed_house_types = HOUSE_TYPES[propertyType]
+        if houseType not in allowed_house_types:
+            raise ValidationError("Please choose a valid house type for the selected property type.")
 
         try:
             price = int(str(price).strip())
@@ -160,7 +217,20 @@ class PortfolioController:
         if price > MAX_PRICE:
             raise ValidationError("Price is too large.")
 
-        return title, description, propertyType, price, status
+        return title, description, propertyType, houseType, price, status
+
+    def housing_options(self):
+        return Housing.types(), Housing.subtypes()
+
+    def _clean_housing(self, property_type, raw_subtype):
+        try:
+            subtype_id = int(raw_subtype)
+        except (TypeError, ValueError):
+            raise ValidationError("Please choose a housing subtype.")
+        subtype = Housing.find_subtype(subtype_id)
+        if subtype is None or subtype['type_code'] != property_type:
+            raise ValidationError("The subtype must belong to the selected property type.")
+        return subtype_id
 
     def _clean_category_ids(self, category_ids):
         """List of ids from the form -> sorted unique ints, each an active category."""

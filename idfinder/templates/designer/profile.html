@@ -2,8 +2,9 @@
 
 {% block header %}
   <h1>{% block title %}My Profile{% endblock %}</h1>
-  {% if not editing %}
+  {% if not editing and not editing_company %}
     <a class="action profile-button" href="{{ url_for('designer.edit_profile') }}">Edit Profile</a>
+    <a class="action profile-button" href="{{ url_for('home.index') }}">Return to Home</a>
   {% endif %}
 {% endblock %}
 
@@ -49,18 +50,58 @@
   </form>
 
   <h2 class="profile-section-title">Company</h2>
-  <div class="profile-fields">
-    <div class="profile-field">
-      <span class="profile-label">Company name</span>
-      <div class="profile-readonly">{{ profile['companyName'] or '' }}</div>
-    </div>
-    <div class="profile-field">
-      <span class="profile-label">Company phone number</span>
-      <div class="profile-readonly">{{ profile['companyLine'] or '' }}</div>
-    </div>
-    <div class="profile-field">
-      <span class="profile-label">Company email</span>
-      <div class="profile-readonly">{{ profile['companyEmail'] or '' }}</div>
-    </div>
-  </div>
+
+  <form method="post" 
+    action="{{ url_for('designer.edit_company_profile') }}" method="post">
+
+    <fieldset class="profile-fieldset"
+        {% if not editing_company %}disabled{% endif %}>
+
+        <div class="profile-fields company-fields">
+
+          <div class="profile-field">
+            <label for="companyName">Company name</label>
+            <input id="companyName"
+               name="companyName"
+               value="{{ form.get('companyName', profile['companyName'] or '') }}"
+               required>
+          </div>
+
+          <div class="profile-field">
+            <label for="companyLine">Company phone number</label>
+            <input type="tel"
+               id="companyLine"
+               name="companyLine"
+               value="{{ form.get('companyLine', profile['companyLine'] or '') }}"
+               required>
+            </div>
+
+          <div class="profile-field">
+            <label for="companyEmail">Company email</label>
+            <input type="email"
+               id="companyEmail"
+               name="companyEmail"
+               value="{{ form.get('companyEmail', profile['companyEmail'] or '') }}"
+               required>            
+          </div>
+
+          {% if not editing and not editing_company %}
+            <div class="company-edit-action">
+              <a class="profile-button" href="{{ url_for('designer.edit_company_profile') }}">Edit company information</a>
+            </div>
+          {% endif %}
+
+        </div>
+
+    </fieldset>
+
+    {% if editing_company %}
+      <div class="profile-actions">
+        <input class="profile-button" type="submit" value="Save company changes">
+        <a class="profile-button" href="{{ url_for('designer.profile') }}">Cancel</a>
+      </div>
+    {% endif %}
+
+  </form>
+
 {% endblock %}
