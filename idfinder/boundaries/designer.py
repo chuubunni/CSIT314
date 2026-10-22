@@ -192,4 +192,25 @@ class designer_boundary():
             form=request.form,
             profile=ctrl.get_profile(g.user['id'])
         )
-    
+
+    # ID19: add a bulk page to the existing designer_boundary class.
+    @bp.route('/portfolio/categories', methods=('GET', 'POST'))
+    @login_required
+    @designer_required
+    def update_selected_categories():
+        from idfinder.boundaries.form_security import form_token, validate_form_token
+        ctrl = designer_boundary.controller()
+        if request.method == 'POST':
+            validate_form_token()
+            try:
+                count = ctrl.update_selected_categories(
+                    g.user['id'], request.form.getlist('idp_ids'), request.form.getlist('category_ids'))
+            except ValidationError as error:
+                flash(str(error))
+            else:
+                flash(f'Categories updated for {count} project(s).')
+                return redirect(url_for('designer.update_selected_categories'))
+        return render_template('designer/bulk_categories.html',
+                               idps=ctrl.list_portfolio(g.user['id']), categories=ctrl.categories(),
+                               form_token=form_token(), selected_projects=request.form.getlist('idp_ids'),
+                               selected_categories=request.form.getlist('category_ids'))

@@ -158,3 +158,28 @@ class IDP:
         for category_id in sorted(set(int(c) for c in (category_ids or ()))):
             db.execute('INSERT INTO idp_category (idp_id, category_id) VALUES (?, ?)',
                        (idp_id, category_id))
+
+    # ID19: use the existing idp_category and _replace_categories; no schema migration.
+    @staticmethod
+    def update_categories_bulk(designer_id, idp_ids, category_ids):
+        from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
+        db = get_db()
+        try:
+            db.execute('BEGIN IMMEDIATE')
+            for idp_id in idp_ids:
+                row = db.execute('SELECT designer_id FROM idp WHERE id=?', (idp_id,)).fetchone()
+                if row is None:
+                    raise NotFoundError('A selected project no longer exists.')
+                if row['designer_id'] != designer_id:
+                    raise PermissionDenied('You can only update your own projects.')
+            for category_id in category_ids:
+                row = db.execute('SELECT active FROM category WHERE id=?', (category_id,)).fetchone()
+                if row is None or not row['active']:
+                    raise ValidationError('Choose only available categories.')
+            for idp_id in idp_ids:
+                IDP._replace_categories(db, idp_id, category_ids)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        return len(idp_ids)

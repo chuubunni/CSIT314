@@ -1,0 +1,24 @@
+{# ID19: bulk category selection, feedback and form token. #}
+{% extends 'base.html' %}
+{% block header %}<h1>{% block title %}Update project categories{% endblock %}</h1>{% endblock %}
+{% block content %}
+{# ID19: isolated bulk-editor stylesheet. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='id19_categories.css') }}">
+<div class="id19-editor">
+<p><a href="{{ url_for('designer.portfolio') }}">← My portfolio</a></p>
+<p>Select projects, then choose their new categories. Saving replaces the categories on every selected project.</p>
+{% if not idps %}<p>No projects yet. <a href="{{ url_for('designer.create_idp') }}">Create a project</a> first.</p>
+{% elif not categories %}<p>No active categories are available. Ask a platform manager to add categories.</p>
+{% else %}<form method="post">
+<input type="hidden" name="form_token" value="{{ form_token }}">
+<div class="split-panels"><fieldset><legend>1. Select your projects</legend>
+<button type="button" id="select-projects">Select all projects</button>
+{% for idp in idps %}<label class="choice"><input type="checkbox" name="idp_ids" value="{{ idp['id'] }}" {% if idp['id']|string in selected_projects %}checked{% endif %}>
+<span><strong>{{ idp['title'] }}</strong><small>{{ idp['category_names'] or 'Uncategorised' }} · {{ idp['status'] }}</small></span></label>{% endfor %}
+</fieldset><fieldset><legend>2. Choose replacement categories</legend>
+{% for category in categories %}<label class="choice"><input type="checkbox" name="category_ids" value="{{ category['id'] }}" {% if category['id']|string in selected_categories %}checked{% endif %}>{{ category['name'] }}</label>{% endfor %}
+</fieldset></div><p id="selection-summary" role="status" aria-live="polite"></p>
+<button type="submit">Update selected projects</button></form>
+<script src="{{ url_for('static', filename='bulk_categories.js') }}" defer></script>{% endif %}
+</div>
+{% endblock %}

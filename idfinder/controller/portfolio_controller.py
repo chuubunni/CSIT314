@@ -253,3 +253,16 @@ class PortfolioController:
             os.remove(path)
         except FileNotFoundError:
             pass  # row is already gone; nothing left to clean up
+
+    # ID19: validate selection IDs; the entity checks and replaces all links atomically.
+    def update_selected_categories(self, designer_id, idp_ids, category_ids):
+        try:
+            projects = sorted({int(value) for value in (idp_ids or ())})
+        except (ValueError, TypeError):
+            raise ValidationError('Invalid project selection.')
+        if not projects or any(value <= 0 for value in projects):
+            raise ValidationError('Select at least one valid project.')
+        categories = self._clean_category_ids(category_ids)
+        if not categories:
+            raise ValidationError('Select at least one active category.')
+        return IDP.update_categories_bulk(designer_id, projects, categories)
