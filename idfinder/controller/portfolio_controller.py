@@ -5,21 +5,19 @@ import uuid
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.entities.category import Category
 from idfinder.entities.idp import IDP
-from idfinder.entities.housing import Housing
+from idfinder.entities.housing import PropertySubtype, PropertyType
 from idfinder.entities.idp_media import IDPMedia
 from idfinder.entities.user import designers
 
 # Each upload type has its own whitelist so a PDF can't end up as an image
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
 IDP_STATUSES = ("ongoing", "completed")
-# Canonical spellings; these become a property_type table later. Matching ignores case.
+# Property types and their subtypes now live in the property_type / property_subtype tables
+# (see schema.sql) and are read through the Housing entity, so this file no longer keeps its
+# own copy of the lists. The codes below are only here for modules that still import them
+# (customer / auth controllers).
 PROPERTY_TYPES = ("HDB", "Condo", "Landed")
-
-HOUSE_TYPES = {
-    "HDB": ["2-Room", "3-Room", "4-Room", "5-Room", "3 Gen", "Mansionette", "Jumbo", "Studio Apartment"],
-    "Condo": ["Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom", "4-Bedroom", "5+ Bedrooms", "Penthouse"],
-    "Landed": ["Terrace House", "Semi-Detached House", "Bungalow / Detached House", "Good Class Bungalow (GCB)", "Townhouse"]
-}
+HOUSE_TYPES = PROPERTY_TYPES   # old name for the same three codes
 
 MAX_PRICE = 1_000_000_000
 
@@ -47,14 +45,18 @@ class PortfolioController:
     def categories(self):
         return Category.find_all_active()
 
-    def create_idp(self, designer_id, title, description, propertyType, houseType, price, status,
-                   category_ids=(), property_subtype_id=None):
-        title, description, propertyType, houseType, price, status = self._clean_idp(
-            title, description, propertyType, houseType, price, status)
-        property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
+    def create_idp(self, designer_id, title, description, propertyType, price, status,
+                   category_ids=(), property_subtype_id=None, houseType=None):
+        """houseType is ignored (accepted only so older callers don't break): the form now
+        sends a subtype, and the old houseType column is filled from the subtype's name."""
+        title, description, propertyType, price, status = self._clean_idp(
+            title, description, propertyType, price, status)
+        property_subtype_id, houseType = self._clean_housing(propertyType, property_subtype_id)
         category_ids = self._clean_category_ids(category_ids)
-        return IDP.create(designer_id=designer_id, title=title, description=description, propertyType=propertyType, houseType=houseType, price=price, status=status,
-                          category_ids=category_ids, property_subtype_id=property_subtype_id)
+        return IDP.create(designer_id=designer_id, title=title, description=description,
+                          propertyType=propertyType, houseType=houseType, price=price,
+                          status=status, category_ids=category_ids,
+                          property_subtype_id=property_subtype_id)
 
     def get_idp(self, idp_id, designer_id):
         return self._owned_idp(idp_id, designer_id)
@@ -69,17 +71,19 @@ class PortfolioController:
         idp = self._owned_idp(idp_id, designer_id)
         return idp, IDPMedia.find_by_idp(idp_id)
 
-    def update_idp(self, idp_id, designer_id, title, description, propertyType, houseType, price, status,
-                   category_ids=None, property_subtype_id=None):
-        """category_ids=None leaves the categories alone; a list (even empty) replaces them."""
+    def update_idp(self, idp_id, designer_id, title, description, propertyType, price, status,
+                   category_ids=None, property_subtype_id=None, houseType=None):
+        """category_ids=None leaves the categories alone; a list (even empty) replaces them.
+        houseType is ignored (see create_idp). IDP.update has no houseType parameter."""
         self._owned_idp(idp_id, designer_id)
-        title, description, propertyType, houseType, price, status = self._clean_idp(
-            title, description, propertyType, houseType, price, status)
-        property_subtype_id = self._clean_housing(propertyType, property_subtype_id)
+        title, description, propertyType, price, status = self._clean_idp(
+            title, description, propertyType, price, status)
+        property_subtype_id, _ = self._clean_housing(propertyType, property_subtype_id)
         if category_ids is not None:
             category_ids = self._clean_category_ids(category_ids)
-        IDP.update(idp_id, title=title, description=description, propertyType=propertyType, houseType=houseType, status=status, price=price,
-                   category_ids=category_ids, property_subtype_id=property_subtype_id)
+        IDP.update(idp_id, title=title, description=description, propertyType=propertyType,
+                   status=status, price=price, category_ids=category_ids,
+                   property_subtype_id=property_subtype_id)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)
@@ -184,7 +188,7 @@ class PortfolioController:
             raise PermissionDenied("You can only manage your own projects.")
         return idp
 
-    def _clean_idp(self, title, description, propertyType, houseType, price, status):
+    def _clean_idp(self, title, description, propertyType, price, status):
         title = (title or "").strip()
         description = (description or "").strip()
         if not title:
@@ -192,21 +196,11 @@ class PortfolioController:
         if status not in IDP_STATUSES:
             raise ValidationError("Status must be 'ongoing' or 'completed'.")
 
-        # Validate propertyType
-        by_lower = {name.lower(): name for name in PROPERTY_TYPES}
+        # propertyType must be one of the codes in the property_type table (matching ignores case)
+        by_lower = {t["code"].lower(): t["code"] for t in PropertyType.types()}
         propertyType = by_lower.get((propertyType or "").strip().lower())
         if propertyType is None:
             raise ValidationError("Please choose a property type.")
-
-        # Validate houseType against the selected propertyType
-        houseType = (houseType or "").strip()
-
-        if not houseType:
-            raise ValidationError("Please choose a house type.")
-
-        allowed_house_types = HOUSE_TYPES[propertyType]
-        if houseType not in allowed_house_types:
-            raise ValidationError("Please choose a valid house type for the selected property type.")
 
         try:
             price = int(str(price).strip())
@@ -217,20 +211,23 @@ class PortfolioController:
         if price > MAX_PRICE:
             raise ValidationError("Price is too large.")
 
-        return title, description, propertyType, houseType, price, status
+        return title, description, propertyType, price, status
 
     def housing_options(self):
-        return Housing.types(), Housing.subtypes()
+        """(types, subtypes) for the IDP form's two dropdowns."""
+        return PropertyType.types(), PropertySubtype.subtypes()
 
     def _clean_housing(self, property_type, raw_subtype):
+        """Returns (subtype_id, subtype name); the name is also saved in the old houseType column.
+        Checked here so the user gets a friendly message instead of the database trigger's error."""
         try:
             subtype_id = int(raw_subtype)
         except (TypeError, ValueError):
             raise ValidationError("Please choose a housing subtype.")
-        subtype = Housing.find_subtype(subtype_id)
+        subtype = PropertySubtype.find_subtype(subtype_id)
         if subtype is None or subtype['type_code'] != property_type:
             raise ValidationError("The subtype must belong to the selected property type.")
-        return subtype_id
+        return subtype_id, subtype['name']
 
     def _clean_category_ids(self, category_ids):
         """List of ids from the form -> sorted unique ints, each an active category."""

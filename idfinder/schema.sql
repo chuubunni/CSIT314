@@ -12,6 +12,7 @@ drop table if exists customer;
 drop table if exists designer;
 drop table if exists company;
 drop table if exists platform;
+drop table if exists property_subtype;
 drop table if exists property_type;
 drop table if exists user;
 
@@ -75,6 +76,39 @@ create table category(
 );
 
 -- ---------------------------------------------------------------------------
+-- Housing options (managed by platform managers)
+-- A property type (HDB / Condo / Landed) has many subtypes (4-Room, Penthouse...).
+-- idp.propertyType stores the type CODE; idp.property_subtype_id points at a subtype.
+-- Keep the seed data below in step with HOUSING_OPTIONS in housing_migration.py,
+-- which upgrades an existing database that cannot be wiped.
+-- ---------------------------------------------------------------------------
+create table property_type(
+    id integer primary key,
+    code text not null unique,
+    name text not null unique
+);
+
+create table property_subtype(
+    id integer primary key,
+    property_type_id integer not null references property_type(id),
+    name text not null,
+    unique (property_type_id, name)
+);
+
+insert into property_type (id, code, name) values
+    (1, 'HDB', 'HDB'),
+    (2, 'Condo', 'Condominium'),
+    (3, 'Landed', 'Landed');
+
+insert into property_subtype (property_type_id, name) values
+    (1, '2-Room'), (1, '3-Room'), (1, '4-Room'), (1, '5-Room'), (1, '3Gen'),
+    (1, 'Maisonette'), (1, 'Jumbo'), (1, 'Studio Apartment'),
+    (2, 'Studio'), (2, '1-Bedroom'), (2, '2-Bedroom'), (2, '3-Bedroom'),
+    (2, '4-Bedroom'), (2, '5+ Bedrooms'), (2, 'Penthouse'),
+    (3, 'Terrace House'), (3, 'Semi-Detached House'),
+    (3, 'Bungalow / Detached House'), (3, 'Good Class Bungalow (GCB)'), (3, 'Townhouse');
+
+-- ---------------------------------------------------------------------------
 -- Interior design projects
 -- ---------------------------------------------------------------------------
 create table idp(
@@ -84,12 +118,35 @@ create table idp(
     description text,
     propertyType text not null,
     houseType text not null,
+    property_subtype_id integer,               -- optional: existing projects have none
     price integer not null check (price >= 0), -- whole dollars (SGD)
     status text not null default 'completed'
         check (status in ('ongoing', 'completed')),
     created timestamp not null default current_timestamp,
-    foreign key (designer_id) references designer (userID)
+    foreign key (designer_id) references designer (userID),
+    foreign key (property_subtype_id) references property_subtype (id)
 );
+
+-- A subtype must belong to the project's property type (SQLite cannot express this as a CHECK)
+create trigger validate_idp_housing_insert
+before insert on idp
+when new.property_subtype_id is not null and not exists (
+    select 1 from property_subtype s join property_type t on t.id = s.property_type_id
+    where s.id = new.property_subtype_id and t.code = new.propertyType
+)
+begin
+    select raise(abort, 'Housing subtype does not match property type');
+end;
+
+create trigger validate_idp_housing_update
+before update on idp
+when new.property_subtype_id is not null and not exists (
+    select 1 from property_subtype s join property_type t on t.id = s.property_type_id
+    where s.id = new.property_subtype_id and t.code = new.propertyType
+)
+begin
+    select raise(abort, 'Housing subtype does not match property type');
+end;
 
 -- An IDP can be in several categories
 create table idp_category(
@@ -171,6 +228,8 @@ create index ix_user_created         on user (created);
 create index ix_designer_company     on designer (companyID);
 create index ix_idp_designer         on idp (designer_id);
 create index ix_idp_price            on idp (price);
+create index ix_idp_property_type    on idp (propertyType);
+create index ix_idp_subtype          on idp (property_subtype_id);
 create index ix_idp_created          on idp (created);
 create index ix_idp_category_cat     on idp_category (category_id);
 create index ix_idp_media_idp        on idp_media (idp_id);
