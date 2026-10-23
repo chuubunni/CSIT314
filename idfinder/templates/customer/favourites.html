@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}My Favourites{% endblock %}</h1>
+  <a href="{{ url_for('home.index') }}">Back to home</a>
+{% endblock %}
+
+{% block content %}
+  {% for project in projects %}
+    <article class="post">
+      <header>
+        <div>
+          <h1>
+            <a href="{{ url_for('home.project_detail', idp_id=project['id']) }}">
+              {{ project['title'] }}
+            </a>
+          </h1>
+          <div class="about">
+            {{ project['company_name'] or project['designer_name'] }}
+            &middot; {{ project['status'] }}{% if project['category_names'] %} &middot; {{ project['category_names'] }}{% endif %}
+            &middot; saved {{ (project['saved_at']|string)[:10] }}
+          </div>
+        </div>
+      </header>
+      {% if project['cover'] %}
+        <img src="{{ url_for('static', filename='uploads/' + project['cover']) }}"
+             alt="{{ project['title'] }}" style="max-width:300px; height:auto;">
+      {% endif %}
+      <p class="desc">{{ project['description'] or '' }}</p>
+
+      <p class="property_type"> Property type: {{ 'Condominium' if project['property_type'] == 'Condo' else project['property_type'] }} </p>
+      <p class="property_subtype"> Property subtype: {{ project['property_subtype_name'] or '-' }} </p>
+
+      <p class="price">Price of design: {{ project['price'] }}</p>
+    </article>
+    {% if not loop.last %}<hr>{% endif %}
+  {% else %}
+    <p>You have not saved any projects yet.</p>
+    <p><a href="{{ url_for('home.index') }}">Browse projects</a></p>
+  {% endfor %}
+{% endblock %}
