@@ -151,35 +151,20 @@
 
         <p>
           {{ idp['description'] or '' }}
-          {% if g.user and g.user['Usertype'] == 'designer'and g.user['id'] == idp['designer_id'] %}
+          {% if g.user and g.user['Usertype'] == 'designer'and g.user['id'] == project['designer_id'] %}
             <div class="project-interest">
               <div>
                 <span class="interest-label">Views</span>
-<<<<<<< Updated upstream
-                <strong class="interest-count">{{ idp['view_count'] }}</strong>
-=======
-                  <strong class="interest-count">
-                    {{ idp['view_count'] }}
-                  </strong>
->>>>>>> Stashed changes
+                <strong class="interest-count">{{ project['view_count'] }}</strong>
               </div>
 
               <div>
                 <span class="interest-label">Favourites</span>
-<<<<<<< Updated upstream
-                <strong class="interest-count">{{ idp['favourite_count'] }}</strong>
+                <strong class="interest-count">{{ project['favourite_count'] }}</strong>
               </div>
             </div>
           {% endif %}
-=======
-                  <strong class="interest-count">
-                    {{ idp['favourite_count'] }}
-                  </strong>
-                </div>
-            </div>
-          {% endif %}
-           
->>>>>>> Stashed changes
+
         </p>
 
         {# C08: place the save action within each existing project card. #}
