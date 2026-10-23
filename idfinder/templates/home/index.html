@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 
 {% block header %}
@@ -29,6 +28,8 @@
 
 
 {% block content %}
+{# C08: isolated styles keep this branch independent of ID19. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='c08_favourites.css') }}">
 
 <link rel="stylesheet" href="{{ url_for('static', filename='housing.css') }}">
 <form method="get" action="{{ url_for('home.index') }}" class="housing-filter" data-housing-selects>
@@ -155,6 +156,10 @@
           {{ idp['description'] or '' }}
         </p>
 
+        {# C08: place the save action within each existing project card. #}
+        {% with project_id=idp['id'], save_return_to='home' %}
+          {% include 'home/_save_favourite.html' %}
+        {% endwith %}
       </div>
       <p class="housing-project-meta">{{ 'Condominium' if idp['propertyType'] == 'Condo' else idp['propertyType'] }}
         {% if idp['property_subtype_name'] %} &middot; {{ idp['property_subtype_name'] }}{% endif %}</p>

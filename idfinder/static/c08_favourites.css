@@ -1,0 +1,5 @@
+/* C08: save controls for existing home/detail cards. */
+.c08-saved { color:#246241; font-weight:bold; }
+.c08-save-form input[type=hidden] { display:none; }
+.c08-save-form button { cursor:pointer; padding:.6rem 1rem; }
+.c08-save-form button:focus-visible { outline:3px solid #d08612; outline-offset:3px; }

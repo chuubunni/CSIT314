@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 
 {% block header %}
@@ -6,6 +5,8 @@
 {% endblock %}
 
 {% block content %}
+{# C08: isolated styles keep this branch independent of ID19. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='c08_favourites.css') }}">
 
 <h2>{{ project['title'] }}</h2>
 
@@ -16,6 +17,11 @@
 {% if project['category_name'] %}
   <p>Category: {{ project['category_name'] }}</p>
 {% endif %}
+
+{# C08: save this project from the existing detail page. #}
+{% with project_id=project['id'], save_return_to='detail' %}
+  {% include 'home/_save_favourite.html' %}
+{% endwith %}
 
 <h2>Project Images</h2>
 
