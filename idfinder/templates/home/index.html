@@ -62,9 +62,6 @@
 </form>
 {% if filter_error %}<p class="housing-error" role="alert">{{ filter_error }}</p>{% endif %}
 <p aria-live="polite">{{ idps|length }} project{{ '' if idps|length == 1 else 's' }} found</p>
-<script src="{{ url_for('static', filename='housing.js') }}" defer></script>
-
-
 <div class="project-grid">
 
   {% for idp in idps %}
