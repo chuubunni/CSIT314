@@ -65,3 +65,26 @@ class PropertySubtype:
         db = get_db()
         db.execute('DELETE FROM property_subtype WHERE id = ?', (subtype_id,))
         db.commit()
+
+
+class Housing:
+    """Entity: read access to housing options, as used by the IDP form and its validation.
+
+    A thin layer over PropertyType and PropertySubtype so callers need only one name:
+      types()              -> rows with id, code, name
+      subtypes()           -> rows with id, property_type_id, type_code, type_name, name, project_count
+      find_subtype(id)     -> one subtype row (with type_code), or None
+    Managers add, rename and delete subtypes through PropertySubtype directly.
+    """
+
+    @staticmethod
+    def types():
+        return PropertyType.find_all()
+
+    @staticmethod
+    def subtypes(property_type_id=None):
+        return PropertySubtype.find_all(property_type_id)
+
+    @staticmethod
+    def find_subtype(subtype_id):
+        return PropertySubtype.find(subtype_id)

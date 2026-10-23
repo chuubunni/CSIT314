@@ -5,7 +5,7 @@ import uuid
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.entities.category import Category
 from idfinder.entities.idp import IDP
-from idfinder.entities.housing import PropertySubtype, PropertyType
+from idfinder.entities.housing import Housing
 from idfinder.entities.idp_media import IDPMedia
 from idfinder.entities.user import designers
 
@@ -197,7 +197,7 @@ class PortfolioController:
             raise ValidationError("Status must be 'ongoing' or 'completed'.")
 
         # propertyType must be one of the codes in the property_type table (matching ignores case)
-        by_lower = {t["code"].lower(): t["code"] for t in PropertyType.types()}
+        by_lower = {t["code"].lower(): t["code"] for t in Housing.types()}
         propertyType = by_lower.get((propertyType or "").strip().lower())
         if propertyType is None:
             raise ValidationError("Please choose a property type.")
@@ -215,7 +215,7 @@ class PortfolioController:
 
     def housing_options(self):
         """(types, subtypes) for the IDP form's two dropdowns."""
-        return PropertyType.types(), PropertySubtype.subtypes()
+        return Housing.types(), Housing.subtypes()
 
     def _clean_housing(self, property_type, raw_subtype):
         """Returns (subtype_id, subtype name); the name is also saved in the old houseType column.
@@ -224,7 +224,7 @@ class PortfolioController:
             subtype_id = int(raw_subtype)
         except (TypeError, ValueError):
             raise ValidationError("Please choose a housing subtype.")
-        subtype = PropertySubtype.find_subtype(subtype_id)
+        subtype = Housing.find_subtype(subtype_id)
         if subtype is None or subtype['type_code'] != property_type:
             raise ValidationError("The subtype must belong to the selected property type.")
         return subtype_id, subtype['name']
