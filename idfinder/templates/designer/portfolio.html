@@ -32,9 +32,34 @@
              alt="{{ idp['title'] }}" style="max-width:300px; height:auto;">
       {% endif %}
       <p class="desc">{{ idp['description'] }}</p>
+<<<<<<< Updated upstream
       <p class="property_type"> Property type: {{ idp['property_type'] }} </p>
       <p class="property_subtype"> Property subtype: {{ idp['property_subtype_name'] or '-' }} </p>
+=======
+<<<<<<< HEAD
+      <p class="propertyType"> Property type: {{ idp['propertyType'] }} </p>
+      <p class="houseType"> House type: {{ idp['houseType'] or "Not specified" }} </p>
+=======
+      <p class="property_type"> Property type: {{ idp['property_type'] }} </p>
+      <p class="property_subtype"> Property subtype: {{ idp['property_subtype_name'] or '-' }} </p>
+>>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
+>>>>>>> Stashed changes
       <p class="price">Price of design: {{ idp['price'] }}</p>
+
+      <div class="project-interest">
+        <div>
+          <span class="interest-label">Views</span>
+                <strong class="interest-count">
+                    {{ idp['view_count'] }}
+                </strong>
+        </div>
+        <div>
+          <span class="interest-label">Favourites</span>
+                <strong class="interest-count">
+                    {{ idp['favourite_count'] }}
+                </strong>
+        </div>
+      </div>
     </article>
     {% if not loop.last %}<hr>{% endif %}
   {% endfor %}
