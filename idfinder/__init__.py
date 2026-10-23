@@ -50,8 +50,4 @@ def create_app(test_config=None):
     from .boundaries import customer
     app.register_blueprint(customer.bp)
 
-    from .housing_migration import migrate_housing_command
-    app.cli.add_command(migrate_housing_command)
-
-    return app 
     return app
