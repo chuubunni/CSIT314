@@ -20,8 +20,8 @@
 
 <p>Status: {{ project['status'] }}</p>
 
-{% if project['category_name'] %}
-  <p>Category: {{ project['category_name'] }}</p>
+{% if project['category_names'] %}
+  <p>Category: {{ project['category_names'] }}</p>
 {% endif %}
 
 {% with project_id=project['id'], save_return_to='detail' %}
@@ -34,24 +34,12 @@
   <div class="project-interest">
     <div>
       <span class="interest-label">Views</span>
-<<<<<<< Updated upstream
       <strong class="interest-count">{{ project['view_count'] }}</strong>
-=======
-      <strong class="interest-count">
-        {{ project['view_count'] }}
-      </strong>
->>>>>>> Stashed changes
     </div>
 
     <div>
       <span class="interest-label">Favourites</span>
-<<<<<<< Updated upstream
       <strong class="interest-count">{{ project['favourite_count'] }}</strong>
-=======
-      <strong class="interest-count">
-        {{ project['favourite_count'] }}
-      </strong>
->>>>>>> Stashed changes
     </div>
   </div>
 {% endif %}

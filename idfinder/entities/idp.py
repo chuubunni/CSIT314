@@ -39,67 +39,14 @@ class IDP:
     @staticmethod
     def find(idp_id):
         return get_db().execute(
-<<<<<<< Updated upstream
-            '''
-            SELECT
-                p.id,
-                p.designer_id,
-                p.property_type,
-                p.title,
-                p.description,
-                p.price,
-                p.status,
-                p.created,
-                p.property_subtype_id,
-                (
-                    SELECT name
-                    FROM property_subtype
-                    WHERE id = p.property_subtype_id
-                ) AS property_subtype_name,
-            '''
-            + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS +
-            '''
-=======
-<<<<<<< HEAD
-            '''
-            SELECT
-                p.id, p.designer_id, p.propertyType,
-                p.title, p.description, p.price,
-                p.status, p.created, p.property_subtype_id,
-                (
-                    SELECT name FROM property_subtype
-                    WHERE id = p.property_subtype_id
-                ) AS property_subtype_name,
-            '''
-            + _CATEGORY_NAMES +
-            ''',
-                (
-                    SELECT COUNT(*)
-                    FROM idp_view v
-                    WHERE v.idp_id = p.id
-                ) AS view_count,
-                (
-                    SELECT COUNT(*)
-                    FROM favourite_idp f
-                    WHERE f.idp_id = p.id
-                ) AS favourite_count
->>>>>>> Stashed changes
-            FROM idp p
-            WHERE p.id = ?
-            ''',
-            (idp_id,)
-<<<<<<< Updated upstream
-=======
-=======
             'SELECT p.id, p.designer_id, p.property_type, p.title, p.description,'
-            ' p.price, p.status, p.created, p.property_subtype_id, '
-            " (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name, " + _CATEGORY_NAMES +
+            ' p.price, p.status, p.created, p.property_subtype_id,'
+            ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
+            ' ' + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS +
             ' FROM idp p WHERE p.id = ?',
             (idp_id,),
->>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
->>>>>>> Stashed changes
         ).fetchone()
-    
+
     @staticmethod
     def find_category_ids(idp_id):
         """Ids of the categories this IDP is in (for pre-ticking the edit form)."""
@@ -112,55 +59,16 @@ class IDP:
     def find_by_designer(designer_id):
         """A designer's IDPs, newest first, each with a cover image (first image, if any)."""
         return get_db().execute(
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-            '''
-            SELECT
-                p.id, p.title, p.description, p.propertyType,
-                p.price, p.status, p.created, p.property_subtype_id,
-                (
-                    SELECT name FROM property_subtype
-                    WHERE id = p.property_subtype_id
-                ) AS property_subtype_name,
-            '''
-            + _CATEGORY_NAMES +
-            ''',
-                (
-                    SELECT m.link
-                    FROM idp_media m
-                    WHERE m.idp_id = p.id
-                    ORDER BY m.mediaID
-                    LIMIT 1
-                ) AS cover,
-                (
-                    SELECT COUNT(*)
-                    FROM idp_view v
-                    WHERE v.idp_id = p.id
-                ) AS view_count,
-                (
-                    SELECT COUNT(*)
-                    FROM favourite_idp f
-                    WHERE f.idp_id = p.id
-                ) AS favourite_count
-            FROM idp p
-            WHERE p.designer_id = ?
-            ORDER BY p.created DESC, p.id DESC
-            ''',
-            (designer_id,)
-=======
->>>>>>> Stashed changes
             'SELECT p.id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
             ' p.property_subtype_id,'
             ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
-            ' ' + _CATEGORY_NAMES + ','+ _INTEREST_COUNTS + ','
-            ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
+            ' ' + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS + ','
+            ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p'
             ' WHERE p.designer_id = ?'
             ' ORDER BY p.created DESC, p.id DESC',
             (designer_id,),
->>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
         ).fetchall()
 
     @staticmethod
@@ -175,69 +83,17 @@ class IDP:
             parameters.append(property_subtype_id)
         where = (' WHERE ' + ' AND '.join(conditions) if conditions else '')
         return get_db().execute(
-<<<<<<< Updated upstream
-            'SELECT p.id,p.designer_id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
-=======
-<<<<<<< HEAD
-            '''
-            SELECT
-                p.id,
-                p.designer_id,
-                p.title,
-                p.description,
-                p.propertyType,
-                p.price,
-                p.status,
-                p.created,
-                p.property_subtype_id,
-                (
-                    SELECT name
-                    FROM property_subtype
-                    WHERE id = p.property_subtype_id
-                ) AS property_subtype_name,
-                u.name AS designer_name,
-                co.companyName AS company_name,
-            '''
-            + _CATEGORY_NAMES +
-            ''',
-                (
-                    SELECT m.link
-                    FROM idp_media m
-                    WHERE m.idp_id = p.id
-                    ORDER BY m.mediaID
-                    LIMIT 1
-                ) AS cover,
-                (
-                    SELECT COUNT(*)
-                    FROM idp_view v
-                    WHERE v.idp_id = p.id
-                ) AS view_count,
-                (
-                    SELECT COUNT(*)
-                    FROM favourite_idp f
-                    WHERE f.idp_id = p.id
-                ) AS favourite_count
-            FROM idp p
-            JOIN user u ON p.designer_id = u.id
-            LEFT JOIN designer d ON d.userID = p.designer_id
-            LEFT JOIN company co ON co.companyID = d.companyID
-            '''
-            + where +
-            ' ORDER BY p.created DESC, p.id DESC',
-=======
-            'SELECT p.id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
->>>>>>> Stashed changes
+            'SELECT p.id, p.designer_id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
             ' p.property_subtype_id,'
             ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
             ' u.name AS designer_name, co.companyName AS company_name,'
-            ' ' + _CATEGORY_NAMES + ','+ _INTEREST_COUNTS + ','
+            ' ' + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p JOIN user u ON p.designer_id = u.id'
             ' LEFT JOIN designer d ON d.userID = p.designer_id'
             ' LEFT JOIN company co ON co.companyID = d.companyID'
             + where + ' ORDER BY p.created DESC, p.id DESC',
->>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
             parameters
         ).fetchall()
 
