@@ -18,7 +18,6 @@
   <p>Category: {{ project['category_name'] }}</p>
 {% endif %}
 
-{# C08: save this project from the existing detail page. #}
 {% with project_id=project['id'], save_return_to='detail' %}
   {% include 'home/_save_favourite.html' %}
 {% endwith %}

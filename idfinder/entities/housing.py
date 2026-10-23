@@ -2,7 +2,7 @@ from idfinder.db import get_db
 
 
 class PropertyType:
-    """Entity: a property type (HDB / Condo / Landed). idp.propertyType stores the code."""
+    """Entity: a property type (HDB / Condo / Landed). idp.property_type stores the code."""
 
     @staticmethod
     def find_all():
@@ -43,7 +43,7 @@ class PropertySubtype:
 
     @staticmethod
     def find(subtype_id):
-        """One subtype with its type code, so callers can check it matches an IDP's propertyType."""
+        """One subtype with its type code, so callers can check it matches an IDP's property_type."""
         return get_db().execute(PropertySubtype._SELECT + ' WHERE s.id = ?', (subtype_id,)).fetchone()
 
     @staticmethod
@@ -68,14 +68,6 @@ class PropertySubtype:
 
 
 class Housing:
-    """Entity: read access to housing options, as used by the IDP form and its validation.
-
-    A thin layer over PropertyType and PropertySubtype so callers need only one name:
-      types()              -> rows with id, code, name
-      subtypes()           -> rows with id, property_type_id, type_code, type_name, name, project_count
-      find_subtype(id)     -> one subtype row (with type_code), or None
-    Managers add, rename and delete subtypes through PropertySubtype directly.
-    """
 
     @staticmethod
     def types():
@@ -84,6 +76,10 @@ class Housing:
     @staticmethod
     def subtypes(property_type_id=None):
         return PropertySubtype.find_all(property_type_id)
+
+    @staticmethod
+    def find_type(code):
+        return PropertyType.find_by_code(code)
 
     @staticmethod
     def find_subtype(subtype_id):

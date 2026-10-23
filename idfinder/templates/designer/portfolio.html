@@ -32,8 +32,8 @@
              alt="{{ idp['title'] }}" style="max-width:300px; height:auto;">
       {% endif %}
       <p class="desc">{{ idp['description'] }}</p>
-      <p class="propertyType"> Property type: {{ idp['propertyType'] }} </p>
-      <p class="houseType"> House type: {{ idp['houseType'] }} </p>
+      <p class="property_type"> Property type: {{ idp['property_type'] }} </p>
+      <p class="property_subtype"> Property subtype: {{ idp['property_subtype_name'] or '-' }} </p>
       <p class="price">Price of design: {{ idp['price'] }}</p>
     </article>
     {% if not loop.last %}<hr>{% endif %}

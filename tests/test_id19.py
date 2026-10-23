@@ -7,11 +7,11 @@ from idfinder.controller.errors import ValidationError, PermissionDenied, NotFou
 
 class ID19Tests(StoryFixture):
     def test_id19_bulk_replace_deduplicates_and_preserves_fields(self):
-        before=tuple(get_db().execute('SELECT title,propertyType,price,status,property_subtype_id FROM idp WHERE id=1').fetchone())
+        before=tuple(get_db().execute('SELECT title,property_type,price,status,property_subtype_id FROM idp WHERE id=1').fetchone())
         self.assertEqual(self.ctrl.update_selected_categories(1,['1','2','1'],['2','1','2']),2)
         self.assertEqual(self.categories(1),[1,2]);self.assertEqual(self.categories(2),[1,2])
         self.assertEqual(self.categories(3),[2])
-        after=tuple(get_db().execute('SELECT title,propertyType,price,status,property_subtype_id FROM idp WHERE id=1').fetchone())
+        after=tuple(get_db().execute('SELECT title,property_type,price,status,property_subtype_id FROM idp WHERE id=1').fetchone())
         self.assertEqual(before,after)
         self.ctrl.update_selected_categories(1,['1'],['2'])
         self.assertEqual(self.categories(1),[2])

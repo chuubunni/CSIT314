@@ -13,8 +13,8 @@
     &middot; {{ (idp['created']|string)[:10] }}
   </div>
   <p class="desc">{{ idp['description'] }}</p>
-  <p class="propertyType"> Property type: {{ idp['propertyType'] }} </p>
-  <p class="houseType"> House type: {{ idp['houseType'] }} </p>
+  <p class="property_type"> Property type: {{ idp['property_type'] }} </p>
+  <p class="property_subtype"> Property subtype: {{ idp['property_subtype_name'] or '-' }} </p>
   <p class="price"> Price of design: {{ idp['price'] }}</p>
 
   <h2>Images</h2>
