@@ -170,6 +170,33 @@ class designers(Users):
         except Exception:
             db.rollback()
             raise
+
+    @staticmethod
+    def update_company_profile(designer_id, companyName,
+                               companyLine, companyEmail):
+        db = get_db()
+
+        try:
+            cursor = db.execute(
+                '''
+                UPDATE company
+                SET companyName = ?, companyLine = ?, companyEmail = ?
+                WHERE companyID = (
+                    SELECT companyID
+                    FROM designer
+                    WHERE userID = ?
+                )
+                ''',
+                (companyName, companyLine, companyEmail, designer_id)
+            )
+
+            if cursor.rowcount != 1:
+                raise ValueError('Company profile not found.')
+
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
     
 
 class managers(Users):

@@ -8,6 +8,8 @@
   {% set v_title = form.get('title', idp['title'] if idp else '') %}
   {% set v_desc = form.get('description', idp['description'] if idp else '') %}
   {% set v_type = (form.get('propertyType', idp['propertyType'] if idp else 'HDB'))|lower %}
+
+  {% set v_subtype = form.get('property_subtype_id', (idp['property_subtype_id'] or '') if idp else '')|string %}
   {% set v_price = form.get('price', idp['price'] if idp else '') %}
   {% set v_status = form.get('status', idp['status'] if idp else 'completed') %}
   {# Ticked categories: what the user just submitted (form re-shown after an error),
@@ -24,7 +26,6 @@
     <label for="description">Description</label>
     <textarea name="description" id="description">{{ v_desc }}</textarea>
 
-    {% set v_subtype = form.get('property_subtype_id', idp['property_subtype_id'] if idp else '')|string %}
     <div data-housing-selects>
       <label for="propertyType">Housing Type</label>
       <select id="propertyType" name="propertyType" data-housing-type required>
@@ -68,5 +69,32 @@
     <input type="submit" value="Save">
   </form>
   <p><a class="action" href="{{ url_for('designer.portfolio') }}">Back to portfolio</a></p>
-  <script src="{{ url_for('static', filename='housing.js') }}" defer></script>
+
+  <script>
+    // The subtype dropdown only offers the subtypes of the selected housing type
+    // (each <option> carries data-type). The choice is kept when the page is re-shown.
+    document.querySelectorAll('[data-housing-selects]').forEach(function (group) {
+      const typeSelect = group.querySelector('[data-housing-type]');
+      const subtypeSelect = group.querySelector('[data-housing-subtype]');
+      const placeholder = subtypeSelect.querySelector('option[value=""]');
+      const allOptions = Array.from(subtypeSelect.querySelectorAll('option[data-type]'));
+
+      function refreshSubtypes(keepSelection) {
+        const type = typeSelect.value;
+        const current = keepSelection ? subtypeSelect.value : '';
+        subtypeSelect.innerHTML = '';
+        subtypeSelect.appendChild(placeholder);
+        allOptions.forEach(function (option) {
+          if (option.dataset.type === type) {
+            option.selected = option.value === current;
+            subtypeSelect.appendChild(option);
+          }
+        });
+        subtypeSelect.disabled = !type;
+      }
+
+      typeSelect.addEventListener('change', function () { refreshSubtypes(false); });
+      refreshSubtypes(true);   // also on page load: edit form, or form re-shown after an error
+    });
+  </script>
 {% endblock %}
