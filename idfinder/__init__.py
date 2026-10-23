@@ -7,7 +7,7 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',  # change to a random value when deploying
-        DATABASE=os.path.join(app.instance_path, 'myfirstapp.sqLite'),
+        DATABASE=os.path.join(app.instance_path, 'idfinder.sqLite'),
         # folder INSIDE myfirstapp/static so Flask can serve the files
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
         MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # reject uploads over 15 MB
@@ -21,10 +21,6 @@ def create_app(test_config=None):
 
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-    @app.route('/hello')
-    def hello():
-        return 'Hello, world!'
 
     from . import db
     db.init_app(app)

@@ -20,7 +20,7 @@ class home_boundary():
         """Homepage filters use GET so results can be bookmarked and shared."""
         selected_type = request.args.get('property_type', '').strip()
         selected_subtype = request.args.get('property_subtype_id', '').strip()
-        housing_types, housing_subtypes = SearchController.options()
+        property_types, property_subtypes = SearchController.options()
         error = None
         try:
             projects = SearchController.search(selected_type, selected_subtype)
@@ -32,7 +32,7 @@ class home_boundary():
         saved_ids = FavouritesController().favourite_ids(g.user['id']) if customer else set()
         return render_template(
             'home/index.html', idps=projects,
-            housing_types=housing_types, housing_subtypes=housing_subtypes,
+            property_types=property_types, property_subtypes=property_subtypes,
             selected_type=selected_type, selected_subtype=selected_subtype,
             filter_error=error,
             favourite_ids=saved_ids, story_form_token=form_token() if customer else None,

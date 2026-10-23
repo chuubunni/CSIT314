@@ -44,17 +44,17 @@ class IDPMedia:
         db.execute('DELETE FROM idp_media WHERE idp_id = ?', (idp_id,))
         db.commit()
 
-#these two are for image slideshow, may move to customers
-    @staticmethod 
+    # these two are for the image slideshow
+    @staticmethod
     def get_all_images(idp_id):
-        db = get_db()
-        all_images = db.execute('SELECT * FROM idp_media WHERE idp_id = ?', (idp_id)).fetchall()
-        db.commit()
-        return all_images
+        return get_db().execute(
+            'SELECT mediaID, idp_id, link, created'
+            ' FROM idp_media WHERE idp_id = ? ORDER BY mediaID',
+            (idp_id,),
+        ).fetchall()
 
     @staticmethod
     def count_all_images(idp_id):
-        db = get_db()
-        image_count = db.execute('SELECT COUNT(idp_media) WHERE idp_id = ?',(idp_id)).fetchall()
-        db.commit()
-        return image_count 
+        return get_db().execute(
+            'SELECT COUNT(*) FROM idp_media WHERE idp_id = ?', (idp_id,)
+        ).fetchone()[0]

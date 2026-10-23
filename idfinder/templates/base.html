@@ -14,7 +14,7 @@
     <ul>
         {% if g.user %}
             <li><span>{{g.user['name']}}</span></li>
-            {% if g.user['Usertype'] == 'platform' %}
+            {% if g.user['Usertype'] == 'manager' %}
               <li><a href="{{url_for('platform.dashboard')}}">Manager Dashboard</a></li>
             {% endif %}
             <li><a href="{{url_for('auth.log_out_user')}}">log out</a></li>

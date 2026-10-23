@@ -1,0 +1,11 @@
+/* ID19: isolate bulk-form styling from the repo's existing profile/housing forms. */
+.id19-editor .split-panels { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.id19-editor fieldset { min-width:0; border:1px solid #ccd6de; padding:1rem; border-radius:8px; }
+.id19-editor .choice { display:flex; gap:.7rem; align-items:flex-start; padding:.6rem 0; font-weight:normal; }
+.id19-editor .choice input { margin:.2rem 0 0; }
+.id19-editor .choice small { display:block; color:#526476; margin-top:.25rem; }
+.id19-editor button { padding:.65rem 1rem; cursor:pointer; }
+.id19-editor input[type=hidden] { display:none; }
+/* ID19: keyboard focus and mobile layout for the new forms only. */
+.id19-editor button:focus-visible, .id19-editor input:focus-visible { outline:3px solid #d08612; outline-offset:3px; }
+@media(max-width:640px) { .id19-editor .split-panels { grid-template-columns:1fr; } }

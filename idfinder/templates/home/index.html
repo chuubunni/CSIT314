@@ -39,7 +39,7 @@
       <label for="filter-type">Housing Type</label>
       <select id="filter-type" name="property_type" data-housing-type>
         <option value="">All housing types</option>
-        {% for housing in housing_types %}
+        {% for housing in property_types %}
           <option value="{{ housing.code }}" {% if selected_type == housing.code %}selected{% endif %}>{{ housing.name }}</option>
         {% endfor %}
       </select>
@@ -48,7 +48,7 @@
       <label for="filter-subtype">Housing Subtype</label>
       <select id="filter-subtype" name="property_subtype_id" data-housing-subtype data-placeholder="All subtypes">
         <option value="">All subtypes</option>
-        {% for subtype in housing_subtypes %}
+        {% for subtype in property_subtypes %}
           <option value="{{ subtype.id }}" data-type="{{ subtype.type_code }}"
                   {% if selected_subtype == subtype.id|string %}selected{% endif %}>{{ subtype.name }}</option>
         {% endfor %}
@@ -62,9 +62,6 @@
 </form>
 {% if filter_error %}<p class="housing-error" role="alert">{{ filter_error }}</p>{% endif %}
 <p aria-live="polite">{{ idps|length }} project{{ '' if idps|length == 1 else 's' }} found</p>
-<script src="{{ url_for('static', filename='housing.js') }}" defer></script>
-
-
 <div class="project-grid">
 
   {% for idp in idps %}
@@ -154,6 +151,35 @@
 
         <p>
           {{ idp['description'] or '' }}
+          {% if g.user and g.user['Usertype'] == 'designer'and g.user['id'] == idp['designer_id'] %}
+            <div class="project-interest">
+              <div>
+                <span class="interest-label">Views</span>
+<<<<<<< Updated upstream
+                <strong class="interest-count">{{ idp['view_count'] }}</strong>
+=======
+                  <strong class="interest-count">
+                    {{ idp['view_count'] }}
+                  </strong>
+>>>>>>> Stashed changes
+              </div>
+
+              <div>
+                <span class="interest-label">Favourites</span>
+<<<<<<< Updated upstream
+                <strong class="interest-count">{{ idp['favourite_count'] }}</strong>
+              </div>
+            </div>
+          {% endif %}
+=======
+                  <strong class="interest-count">
+                    {{ idp['favourite_count'] }}
+                  </strong>
+                </div>
+            </div>
+          {% endif %}
+           
+>>>>>>> Stashed changes
         </p>
 
         {# C08: place the save action within each existing project card. #}
@@ -161,7 +187,7 @@
           {% include 'home/_save_favourite.html' %}
         {% endwith %}
       </div>
-      <p class="housing-project-meta">{{ 'Condominium' if idp['propertyType'] == 'Condo' else idp['propertyType'] }}
+      <p class="housing-project-meta">{{ 'Condominium' if idp['property_type'] == 'Condo' else idp['property_type'] }}
         {% if idp['property_subtype_name'] %} &middot; {{ idp['property_subtype_name'] }}{% endif %}</p>
     </article>
 

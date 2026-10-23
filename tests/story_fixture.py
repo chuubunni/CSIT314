@@ -7,7 +7,6 @@ from urllib.parse import urlsplit, parse_qs
 from werkzeug.security import generate_password_hash
 from idfinder import create_app
 from idfinder.db import get_db, init_db
-from idfinder.housing_migration import migrate_housing
 from idfinder.entities.idp import IDP
 from idfinder.controller.portfolio_controller import PortfolioController
 from idfinder.controller.errors import ValidationError, PermissionDenied, NotFoundError
@@ -20,7 +19,7 @@ class StoryFixture(unittest.TestCase):
                               'DATABASE': str(Path(self.temp.name)/'test.sqlite'),
                               'UPLOAD_FOLDER': self.temp.name})
         self.context = self.app.app_context(); self.context.push()
-        init_db(); migrate_housing(get_db())
+        init_db()
         db = get_db()
         for user_id, role in [(1,'designer'),(2,'designer'),(3,'customer'),(4,'manager'),(5,'customer'),(6,'customer')]:
             db.execute('INSERT INTO user(id,name,password,email,phone,Usertype) VALUES (?,?,?,?,?,?)',
@@ -32,10 +31,8 @@ class StoryFixture(unittest.TestCase):
         db.executemany('INSERT INTO category(id,name,active) VALUES (?,?,?)',[(1,'Modern',1),(2,'Minimalist',1),(3,'Inactive',0),(4,'Empty',1)])
         subtype=db.execute("SELECT s.id FROM property_subtype s JOIN property_type t ON t.id=s.property_type_id WHERE t.code='HDB' ORDER BY s.id LIMIT 1").fetchone()[0]
         for project,designer,title in [(1,1,'First'),(2,1,'Second'),(3,2,'Other designer')]:
-            columns=['id','designer_id','title','description','propertyType','price','status','property_subtype_id']
+            columns=['id','designer_id','title','description','property_type','price','status','property_subtype_id']
             values=[project,designer,title,'Sample project','HDB',10000,'completed',subtype]
-            if any(row[1]=='houseType' for row in db.execute('PRAGMA table_info(idp)')):
-                columns.append('houseType');values.append('2-Room')
             db.execute('INSERT INTO idp('+','.join(columns)+') VALUES ('+','.join('?' for _ in values)+')',values)
         db.executemany('INSERT INTO idp_category VALUES (?,?)',[(1,1),(2,1),(3,2)])
         db.commit()

@@ -8,23 +8,25 @@ _CATEGORY_NAMES = (
     " WHERE ic.idp_id = p.id) AS category_names"
 )
 
+_INTEREST_COUNTS = (
+    "(SELECT COUNT(*) FROM idp_view v"
+    " WHERE v.idp_id = p.id) AS view_count,"
+    " (SELECT COUNT(*) FROM favourite_idp f"
+    " WHERE f.idp_id = p.id) AS favourite_count"
+)
+
 
 class IDP:
 
     @staticmethod
-    def create(designer_id, title, description, propertyType, houseType, price, status, category_ids=(), property_subtype_id=None):
-        """Insert the IDP and its category links in one transaction. Returns the new id.
-
-        property_subtype_id is optional. A subtype that doesn't belong to propertyType is
-        rejected by a database trigger (sqlite3.IntegrityError) and nothing is saved.
-        """
+    def create(designer_id, title, description, property_type, price, status, category_ids=(), property_subtype_id=None):
         db = get_db()
         try:
             cursor = db.execute(
-                'INSERT INTO idp (designer_id, title, description, propertyType, houseType,'
+                'INSERT INTO idp (designer_id, title, description, property_type, '
                 ' property_subtype_id, price, status)'
-                ' VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                (designer_id, title, description, propertyType, houseType or propertyType,
+                ' VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (designer_id, title, description, property_type,
                  property_subtype_id, price, status),
             )
             IDP._replace_categories(db, cursor.lastrowid, category_ids)
@@ -37,13 +39,67 @@ class IDP:
     @staticmethod
     def find(idp_id):
         return get_db().execute(
-            'SELECT p.id, p.designer_id, p.propertyType, p.title, p.description,'
+<<<<<<< Updated upstream
+            '''
+            SELECT
+                p.id,
+                p.designer_id,
+                p.property_type,
+                p.title,
+                p.description,
+                p.price,
+                p.status,
+                p.created,
+                p.property_subtype_id,
+                (
+                    SELECT name
+                    FROM property_subtype
+                    WHERE id = p.property_subtype_id
+                ) AS property_subtype_name,
+            '''
+            + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS +
+            '''
+=======
+<<<<<<< HEAD
+            '''
+            SELECT
+                p.id, p.designer_id, p.propertyType,
+                p.title, p.description, p.price,
+                p.status, p.created, p.property_subtype_id,
+                (
+                    SELECT name FROM property_subtype
+                    WHERE id = p.property_subtype_id
+                ) AS property_subtype_name,
+            '''
+            + _CATEGORY_NAMES +
+            ''',
+                (
+                    SELECT COUNT(*)
+                    FROM idp_view v
+                    WHERE v.idp_id = p.id
+                ) AS view_count,
+                (
+                    SELECT COUNT(*)
+                    FROM favourite_idp f
+                    WHERE f.idp_id = p.id
+                ) AS favourite_count
+>>>>>>> Stashed changes
+            FROM idp p
+            WHERE p.id = ?
+            ''',
+            (idp_id,)
+<<<<<<< Updated upstream
+=======
+=======
+            'SELECT p.id, p.designer_id, p.property_type, p.title, p.description,'
             ' p.price, p.status, p.created, p.property_subtype_id, '
             " (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name, " + _CATEGORY_NAMES +
             ' FROM idp p WHERE p.id = ?',
             (idp_id,),
+>>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
+>>>>>>> Stashed changes
         ).fetchone()
-
+    
     @staticmethod
     def find_category_ids(idp_id):
         """Ids of the categories this IDP is in (for pre-ticking the edit form)."""
@@ -56,16 +112,55 @@ class IDP:
     def find_by_designer(designer_id):
         """A designer's IDPs, newest first, each with a cover image (first image, if any)."""
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.propertyType, p.price, p.status, p.created,'
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+            '''
+            SELECT
+                p.id, p.title, p.description, p.propertyType,
+                p.price, p.status, p.created, p.property_subtype_id,
+                (
+                    SELECT name FROM property_subtype
+                    WHERE id = p.property_subtype_id
+                ) AS property_subtype_name,
+            '''
+            + _CATEGORY_NAMES +
+            ''',
+                (
+                    SELECT m.link
+                    FROM idp_media m
+                    WHERE m.idp_id = p.id
+                    ORDER BY m.mediaID
+                    LIMIT 1
+                ) AS cover,
+                (
+                    SELECT COUNT(*)
+                    FROM idp_view v
+                    WHERE v.idp_id = p.id
+                ) AS view_count,
+                (
+                    SELECT COUNT(*)
+                    FROM favourite_idp f
+                    WHERE f.idp_id = p.id
+                ) AS favourite_count
+            FROM idp p
+            WHERE p.designer_id = ?
+            ORDER BY p.created DESC, p.id DESC
+            ''',
+            (designer_id,)
+=======
+>>>>>>> Stashed changes
+            'SELECT p.id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
             ' p.property_subtype_id,'
             ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
-            ' ' + _CATEGORY_NAMES + ','
+            ' ' + _CATEGORY_NAMES + ','+ _INTEREST_COUNTS + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p'
             ' WHERE p.designer_id = ?'
             ' ORDER BY p.created DESC, p.id DESC',
             (designer_id,),
+>>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
         ).fetchall()
 
     @staticmethod
@@ -73,41 +168,87 @@ class IDP:
         """Homepage projects, with optional parameterised housing filters."""
         conditions, parameters = [], []
         if property_type:
-            conditions.append('p.propertyType = ?')
+            conditions.append('p.property_type = ?')
             parameters.append(property_type)
         if property_subtype_id is not None:
             conditions.append('p.property_subtype_id = ?')
             parameters.append(property_subtype_id)
-        where = (' WHERE ' + ' AND '.join(conditions)) if conditions else '' 
+        where = (' WHERE ' + ' AND '.join(conditions) if conditions else '')
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.propertyType, p.price, p.status, p.created,'
+<<<<<<< Updated upstream
+            'SELECT p.id,p.designer_id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
+=======
+<<<<<<< HEAD
+            '''
+            SELECT
+                p.id,
+                p.designer_id,
+                p.title,
+                p.description,
+                p.propertyType,
+                p.price,
+                p.status,
+                p.created,
+                p.property_subtype_id,
+                (
+                    SELECT name
+                    FROM property_subtype
+                    WHERE id = p.property_subtype_id
+                ) AS property_subtype_name,
+                u.name AS designer_name,
+                co.companyName AS company_name,
+            '''
+            + _CATEGORY_NAMES +
+            ''',
+                (
+                    SELECT m.link
+                    FROM idp_media m
+                    WHERE m.idp_id = p.id
+                    ORDER BY m.mediaID
+                    LIMIT 1
+                ) AS cover,
+                (
+                    SELECT COUNT(*)
+                    FROM idp_view v
+                    WHERE v.idp_id = p.id
+                ) AS view_count,
+                (
+                    SELECT COUNT(*)
+                    FROM favourite_idp f
+                    WHERE f.idp_id = p.id
+                ) AS favourite_count
+            FROM idp p
+            JOIN user u ON p.designer_id = u.id
+            LEFT JOIN designer d ON d.userID = p.designer_id
+            LEFT JOIN company co ON co.companyID = d.companyID
+            '''
+            + where +
+            ' ORDER BY p.created DESC, p.id DESC',
+=======
+            'SELECT p.id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
+>>>>>>> Stashed changes
             ' p.property_subtype_id,'
             ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
             ' u.name AS designer_name, co.companyName AS company_name,'
-            ' ' + _CATEGORY_NAMES + ','
+            ' ' + _CATEGORY_NAMES + ','+ _INTEREST_COUNTS + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p JOIN user u ON p.designer_id = u.id'
             ' LEFT JOIN designer d ON d.userID = p.designer_id'
             ' LEFT JOIN company co ON co.companyID = d.companyID'
             + where + ' ORDER BY p.created DESC, p.id DESC',
+>>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
             parameters
         ).fetchall()
 
     @staticmethod
-    def update(idp_id, title, description, propertyType, status, price, category_ids=None, property_subtype_id=None):
-        """Update the IDP. If category_ids is given (even empty) the categories are replaced
-        too; None leaves them as they are.
-
-        property_subtype_id is always written: pass None to clear it (for example when the
-        property type changes). A subtype that doesn't belong to propertyType raises
-        sqlite3.IntegrityError and nothing is saved."""
+    def update(idp_id, title, description, property_type, status, price, category_ids=None, property_subtype_id=None):
         db = get_db()
         try:
             db.execute(
-                'UPDATE idp SET title = ?, description = ?, propertyType = ?, status = ?, price = ?, property_subtype_id = ?'
+                'UPDATE idp SET title = ?, description = ?, property_type = ?, status = ?, price = ?, property_subtype_id = ?'
                 ' WHERE id = ?',
-                (title, description, propertyType, status, price, property_subtype_id, idp_id),
+                (title, description, property_type, status, price, property_subtype_id, idp_id),
             )
             if category_ids is not None:
                 IDP._replace_categories(db, idp_id, category_ids)
@@ -168,3 +309,28 @@ class IDP:
         for category_id in sorted(set(int(c) for c in (category_ids or ()))):
             db.execute('INSERT INTO idp_category (idp_id, category_id) VALUES (?, ?)',
                        (idp_id, category_id))
+
+    # ID19: use the existing idp_category and _replace_categories; no schema migration.
+    @staticmethod
+    def update_categories_bulk(designer_id, idp_ids, category_ids):
+        from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
+        db = get_db()
+        try:
+            db.execute('BEGIN IMMEDIATE')
+            for idp_id in idp_ids:
+                row = db.execute('SELECT designer_id FROM idp WHERE id=?', (idp_id,)).fetchone()
+                if row is None:
+                    raise NotFoundError('A selected project no longer exists.')
+                if row['designer_id'] != designer_id:
+                    raise PermissionDenied('You can only update your own projects.')
+            for category_id in category_ids:
+                row = db.execute('SELECT active FROM category WHERE id=?', (category_id,)).fetchone()
+                if row is None or not row['active']:
+                    raise ValidationError('Choose only available categories.')
+            for idp_id in idp_ids:
+                IDP._replace_categories(db, idp_id, category_ids)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        return len(idp_ids)

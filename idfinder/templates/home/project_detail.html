@@ -12,16 +12,49 @@
 
 <p>{{ project['description'] or '' }}</p>
 
+<p>Property Type: {{ project['property_type'] }}</p>
+
+<p>Property Subtype: {{ project['property_subtype_name'] }}</p>
+
+<p>Price: {{ project['price'] }}</p>
+
 <p>Status: {{ project['status'] }}</p>
 
 {% if project['category_name'] %}
   <p>Category: {{ project['category_name'] }}</p>
 {% endif %}
 
-{# C08: save this project from the existing detail page. #}
 {% with project_id=project['id'], save_return_to='detail' %}
   {% include 'home/_save_favourite.html' %}
 {% endwith %}
+
+{% if g.user
+      and g.user['Usertype'] == 'designer'
+      and g.user['id'] == project['designer_id'] %}
+  <div class="project-interest">
+    <div>
+      <span class="interest-label">Views</span>
+<<<<<<< Updated upstream
+      <strong class="interest-count">{{ project['view_count'] }}</strong>
+=======
+      <strong class="interest-count">
+        {{ project['view_count'] }}
+      </strong>
+>>>>>>> Stashed changes
+    </div>
+
+    <div>
+      <span class="interest-label">Favourites</span>
+<<<<<<< Updated upstream
+      <strong class="interest-count">{{ project['favourite_count'] }}</strong>
+=======
+      <strong class="interest-count">
+        {{ project['favourite_count'] }}
+      </strong>
+>>>>>>> Stashed changes
+    </div>
+  </div>
+{% endif %}
 
 <h2>Project Images</h2>
 

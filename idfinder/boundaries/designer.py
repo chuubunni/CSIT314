@@ -48,8 +48,7 @@ class designer_boundary():
         return dict(
             title=request.form.get('title'),
             description=request.form.get('description'),
-            propertyType=request.form.get('propertyType'),
-            houseType=request.form.get('houseType'),
+            property_type=request.form.get('property_type'),
             property_subtype_id=request.form.get('property_subtype_id'),
             price=request.form.get('price'),
             status=request.form.get('status'),
@@ -80,8 +79,8 @@ class designer_boundary():
         return render_template('designer/create_port.html', idp=None,
                             categories=ctrl.categories(), form=request.form,
                             selected_categories=[],
-                            housing_types=ctrl.housing_options()[0],
-                            housing_subtypes=ctrl.housing_options()[1])
+                            property_types=ctrl.property_options()[0],
+                            property_subtypes=ctrl.property_options()[1])
 
 
     @bp.route('/portfolio/<int:idp_id>')
@@ -107,8 +106,8 @@ class designer_boundary():
         return render_template('designer/create_port.html', idp=idp,
                             categories=ctrl.categories(), form=request.form,
                             selected_categories=ctrl.get_category_ids(idp_id, g.user['id']),
-                            housing_types=ctrl.housing_options()[0],
-                            housing_subtypes=ctrl.housing_options()[1])
+                            property_types=ctrl.property_options()[0],
+                            property_subtypes=ctrl.property_options()[1])
 
 
     @bp.route('/portfolio/<int:idp_id>/delete', methods=('POST',))
@@ -192,4 +191,25 @@ class designer_boundary():
             form=request.form,
             profile=ctrl.get_profile(g.user['id'])
         )
-    
+
+    # ID19: add a bulk page to the existing designer_boundary class.
+    @bp.route('/portfolio/categories', methods=('GET', 'POST'))
+    @login_required
+    @designer_required
+    def update_selected_categories():
+        from idfinder.boundaries.form_security import form_token, validate_form_token
+        ctrl = designer_boundary.controller()
+        if request.method == 'POST':
+            validate_form_token()
+            try:
+                count = ctrl.update_selected_categories(
+                    g.user['id'], request.form.getlist('idp_ids'), request.form.getlist('category_ids'))
+            except ValidationError as error:
+                flash(str(error))
+            else:
+                flash(f'Categories updated for {count} project(s).')
+                return redirect(url_for('designer.update_selected_categories'))
+        return render_template('designer/bulk_categories.html',
+                               idps=ctrl.list_portfolio(g.user['id']), categories=ctrl.categories(),
+                               form_token=form_token(), selected_projects=request.form.getlist('idp_ids'),
+                               selected_categories=request.form.getlist('category_ids'))

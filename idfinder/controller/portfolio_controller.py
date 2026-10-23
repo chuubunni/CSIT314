@@ -12,12 +12,7 @@ from idfinder.entities.user import designers
 # Each upload type has its own whitelist so a PDF can't end up as an image
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
 IDP_STATUSES = ("ongoing", "completed")
-# Property types and their subtypes now live in the property_type / property_subtype tables
-# (see schema.sql) and are read through the Housing entity, so this file no longer keeps its
-# own copy of the lists. The codes below are only here for modules that still import them
-# (customer / auth controllers).
 PROPERTY_TYPES = ("HDB", "Condo", "Landed")
-HOUSE_TYPES = PROPERTY_TYPES   # old name for the same three codes
 
 MAX_PRICE = 1_000_000_000
 
@@ -45,16 +40,14 @@ class PortfolioController:
     def categories(self):
         return Category.find_all_active()
 
-    def create_idp(self, designer_id, title, description, propertyType, price, status,
-                   category_ids=(), property_subtype_id=None, houseType=None):
-        """houseType is ignored (accepted only so older callers don't break): the form now
-        sends a subtype, and the old houseType column is filled from the subtype's name."""
-        title, description, propertyType, price, status = self._clean_idp(
-            title, description, propertyType, price, status)
-        property_subtype_id, houseType = self._clean_housing(propertyType, property_subtype_id)
+    def create_idp(self, designer_id, title, description, property_type, price, status,
+                   category_ids=(), property_subtype_id=None):
+        title, description, property_type, price, status = self._clean_idp(
+            title, description, property_type, price, status)
+        property_subtype_id = self._clean_housing(property_type, property_subtype_id)
         category_ids = self._clean_category_ids(category_ids)
         return IDP.create(designer_id=designer_id, title=title, description=description,
-                          propertyType=propertyType, houseType=houseType, price=price,
+                          property_type=property_type, price=price,
                           status=status, category_ids=category_ids,
                           property_subtype_id=property_subtype_id)
 
@@ -71,17 +64,15 @@ class PortfolioController:
         idp = self._owned_idp(idp_id, designer_id)
         return idp, IDPMedia.find_by_idp(idp_id)
 
-    def update_idp(self, idp_id, designer_id, title, description, propertyType, price, status,
-                   category_ids=None, property_subtype_id=None, houseType=None):
-        """category_ids=None leaves the categories alone; a list (even empty) replaces them.
-        houseType is ignored (see create_idp). IDP.update has no houseType parameter."""
+    def update_idp(self, idp_id, designer_id, title, description, property_type, price, status,
+                   category_ids=None, property_subtype_id=None):
         self._owned_idp(idp_id, designer_id)
-        title, description, propertyType, price, status = self._clean_idp(
-            title, description, propertyType, price, status)
-        property_subtype_id, _ = self._clean_housing(propertyType, property_subtype_id)
+        title, description, property_type, price, status = self._clean_idp(
+            title, description, property_type, price, status)
+        property_subtype_id = self._clean_housing(property_type, property_subtype_id)
         if category_ids is not None:
             category_ids = self._clean_category_ids(category_ids)
-        IDP.update(idp_id, title=title, description=description, propertyType=propertyType,
+        IDP.update(idp_id, title=title, description=description, property_type=property_type,
                    status=status, price=price, category_ids=category_ids,
                    property_subtype_id=property_subtype_id)
 
@@ -188,7 +179,7 @@ class PortfolioController:
             raise PermissionDenied("You can only manage your own projects.")
         return idp
 
-    def _clean_idp(self, title, description, propertyType, price, status):
+    def _clean_idp(self, title, description, property_type, price, status):
         title = (title or "").strip()
         description = (description or "").strip()
         if not title:
@@ -196,10 +187,9 @@ class PortfolioController:
         if status not in IDP_STATUSES:
             raise ValidationError("Status must be 'ongoing' or 'completed'.")
 
-        # propertyType must be one of the codes in the property_type table (matching ignores case)
         by_lower = {t["code"].lower(): t["code"] for t in Housing.types()}
-        propertyType = by_lower.get((propertyType or "").strip().lower())
-        if propertyType is None:
+        property_type = by_lower.get((property_type or "").strip().lower())
+        if property_type is None:
             raise ValidationError("Please choose a property type.")
 
         try:
@@ -211,14 +201,14 @@ class PortfolioController:
         if price > MAX_PRICE:
             raise ValidationError("Price is too large.")
 
-        return title, description, propertyType, price, status
+        return title, description, property_type, price, status
 
-    def housing_options(self):
+    def property_options(self):
         """(types, subtypes) for the IDP form's two dropdowns."""
         return Housing.types(), Housing.subtypes()
 
     def _clean_housing(self, property_type, raw_subtype):
-        """Returns (subtype_id, subtype name); the name is also saved in the old houseType column.
+        """Returns the subtype id after checking it belongs to property_type.
         Checked here so the user gets a friendly message instead of the database trigger's error."""
         try:
             subtype_id = int(raw_subtype)
@@ -227,7 +217,7 @@ class PortfolioController:
         subtype = Housing.find_subtype(subtype_id)
         if subtype is None or subtype['type_code'] != property_type:
             raise ValidationError("The subtype must belong to the selected property type.")
-        return subtype_id, subtype['name']
+        return subtype_id
 
     def _clean_category_ids(self, category_ids):
         """List of ids from the form -> sorted unique ints, each an active category."""
@@ -250,3 +240,16 @@ class PortfolioController:
             os.remove(path)
         except FileNotFoundError:
             pass  # row is already gone; nothing left to clean up
+
+    # ID19: validate selection IDs; the entity checks and replaces all links atomically.
+    def update_selected_categories(self, designer_id, idp_ids, category_ids):
+        try:
+            projects = sorted({int(value) for value in (idp_ids or ())})
+        except (ValueError, TypeError):
+            raise ValidationError('Invalid project selection.')
+        if not projects or any(value <= 0 for value in projects):
+            raise ValidationError('Select at least one valid project.')
+        categories = self._clean_category_ids(category_ids)
+        if not categories:
+            raise ValidationError('Select at least one active category.')
+        return IDP.update_categories_bulk(designer_id, projects, categories)

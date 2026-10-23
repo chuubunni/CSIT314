@@ -3,6 +3,8 @@
 {% block header %}
   <h1>{% block title %}My Portfolio{% endblock %}</h1>
   <a href="{{ url_for('home.index') }}">Back to home</a>
+  {# ID19: enter the bulk category editor from the portfolio. #}
+  <a class="action" href="{{ url_for('designer.update_selected_categories') }}">Update categories</a>
   <a class="action" href="{{ url_for('designer.create_idp') }}">New project</a>
 {% endblock %}
 
@@ -30,9 +32,34 @@
              alt="{{ idp['title'] }}" style="max-width:300px; height:auto;">
       {% endif %}
       <p class="desc">{{ idp['description'] }}</p>
+<<<<<<< Updated upstream
+      <p class="property_type"> Property type: {{ idp['property_type'] }} </p>
+      <p class="property_subtype"> Property subtype: {{ idp['property_subtype_name'] or '-' }} </p>
+=======
+<<<<<<< HEAD
       <p class="propertyType"> Property type: {{ idp['propertyType'] }} </p>
-      <p class="houseType"> House type: {{ idp['houseType'] }} </p>
+      <p class="houseType"> House type: {{ idp['houseType'] or "Not specified" }} </p>
+=======
+      <p class="property_type"> Property type: {{ idp['property_type'] }} </p>
+      <p class="property_subtype"> Property subtype: {{ idp['property_subtype_name'] or '-' }} </p>
+>>>>>>> 84d9b5b122c39770b087659e9a8703559280376e
+>>>>>>> Stashed changes
       <p class="price">Price of design: {{ idp['price'] }}</p>
+
+      <div class="project-interest">
+        <div>
+          <span class="interest-label">Views</span>
+                <strong class="interest-count">
+                    {{ idp['view_count'] }}
+                </strong>
+        </div>
+        <div>
+          <span class="interest-label">Favourites</span>
+                <strong class="interest-count">
+                    {{ idp['favourite_count'] }}
+                </strong>
+        </div>
+      </div>
     </article>
     {% if not loop.last %}<hr>{% endif %}
   {% endfor %}

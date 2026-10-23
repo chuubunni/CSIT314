@@ -78,9 +78,7 @@ create table category(
 -- ---------------------------------------------------------------------------
 -- Housing options (managed by platform managers)
 -- A property type (HDB / Condo / Landed) has many subtypes (4-Room, Penthouse...).
--- idp.propertyType stores the type CODE; idp.property_subtype_id points at a subtype.
--- Keep the seed data below in step with HOUSING_OPTIONS in housing_migration.py,
--- which upgrades an existing database that cannot be wiped.
+-- idp.property_type stores the type CODE; idp.property_subtype_id points at a subtype.
 -- ---------------------------------------------------------------------------
 create table property_type(
     id integer primary key,
@@ -116,10 +114,9 @@ create table idp(
     designer_id integer not null,
     title text not null,
     description text,
-    propertyType text not null,
-    houseType text not null,
-    property_subtype_id integer,               -- optional: existing projects have none
-    price integer not null check (price >= 0), -- whole dollars (SGD)
+    property_type text not null,
+    property_subtype_id integer,          
+    price integer not null check (price >= 0), 
     status text not null default 'completed'
         check (status in ('ongoing', 'completed')),
     created timestamp not null default current_timestamp,
@@ -132,7 +129,7 @@ create trigger validate_idp_housing_insert
 before insert on idp
 when new.property_subtype_id is not null and not exists (
     select 1 from property_subtype s join property_type t on t.id = s.property_type_id
-    where s.id = new.property_subtype_id and t.code = new.propertyType
+    where s.id = new.property_subtype_id and t.code = new.property_type
 )
 begin
     select raise(abort, 'Housing subtype does not match property type');
@@ -142,7 +139,7 @@ create trigger validate_idp_housing_update
 before update on idp
 when new.property_subtype_id is not null and not exists (
     select 1 from property_subtype s join property_type t on t.id = s.property_type_id
-    where s.id = new.property_subtype_id and t.code = new.propertyType
+    where s.id = new.property_subtype_id and t.code = new.property_type
 )
 begin
     select raise(abort, 'Housing subtype does not match property type');
@@ -228,7 +225,7 @@ create index ix_user_created         on user (created);
 create index ix_designer_company     on designer (companyID);
 create index ix_idp_designer         on idp (designer_id);
 create index ix_idp_price            on idp (price);
-create index ix_idp_property_type    on idp (propertyType);
+create index ix_idp_property_type    on idp (property_type);
 create index ix_idp_subtype          on idp (property_subtype_id);
 create index ix_idp_created          on idp (created);
 create index ix_idp_category_cat     on idp_category (category_id);
