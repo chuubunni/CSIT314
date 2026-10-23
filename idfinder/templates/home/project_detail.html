@@ -12,6 +12,12 @@
 
 <p>{{ project['description'] or '' }}</p>
 
+<p>Property Type: {{ project['property_type'] }}</p>
+
+<p>Property Subtype: {{ project['property_subtype_name'] }}</p>
+
+<p>Price: {{ project['price'] }}</p>
+
 <p>Status: {{ project['status'] }}</p>
 
 {% if project['category_name'] %}

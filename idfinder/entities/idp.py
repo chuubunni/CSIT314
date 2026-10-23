@@ -16,7 +16,7 @@ class IDP:
         db = get_db()
         try:
             cursor = db.execute(
-                'INSERT INTO idp (designer_id, title, description, property_type,'
+                'INSERT INTO idp (designer_id, title, description, property_type, '
                 ' property_subtype_id, price, status)'
                 ' VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (designer_id, title, description, property_type,
