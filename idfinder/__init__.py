@@ -29,9 +29,6 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    from .housing_migration import migrate_housing_command
-    app.cli.add_command(migrate_housing_command)
-
     from .boundaries import auth
     app.register_blueprint(auth.bp)
 
@@ -46,6 +43,9 @@ def create_app(test_config=None):
 
     from .boundaries import platform
     app.register_blueprint(platform.bp)
+
+    from .boundaries import platform_charts
+    app.register_blueprint(platform_charts.bp)
 
     from .boundaries import customer
     app.register_blueprint(customer.bp)
