@@ -49,6 +49,7 @@ class designer_boundary():
             title=request.form.get('title'),
             description=request.form.get('description'),
             propertyType=request.form.get('propertyType'),
+            houseType=request.form.get('houseType'),
             property_subtype_id=request.form.get('property_subtype_id'),
             price=request.form.get('price'),
             status=request.form.get('status'),
@@ -163,3 +164,32 @@ class designer_boundary():
                 flash(str(error))
         return render_template('designer/profile.html', editing=True, form=request.form,
                                profile=ctrl.get_profile(g.user['id']))
+
+    @bp.route('/profile/company/edit', methods=('GET', 'POST'))
+    @login_required
+    @designer_required
+    def edit_company_profile():
+        ctrl = designer_boundary.controller()
+
+        if request.method == 'POST':
+            try:
+                ctrl.update_company_profile(
+                    g.user['id'],
+                    request.form.get('companyName'),
+                    request.form.get('companyLine'),
+                    request.form.get('companyEmail')
+                )
+            except ValidationError as error:
+                flash(str(error))
+            else:
+                flash('Company profile updated.')
+                return redirect(url_for('designer.profile'))
+
+        return render_template(
+            'designer/profile.html',
+            editing=False,
+            editing_company=True,
+            form=request.form,
+            profile=ctrl.get_profile(g.user['id'])
+        )
+    

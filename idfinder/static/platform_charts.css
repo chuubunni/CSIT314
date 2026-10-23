@@ -1,0 +1,17 @@
+/* Platform manager graphs (PM21, PM23) */
+.chart-section { margin-bottom: 2rem; }
+.chart-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.chart-controls label { margin: 0; font-weight: bold; }
+.chart-controls input { margin: 0; }
+.chart-controls button { padding: 6px 10px; cursor: pointer; }
+.chart-range { color: #667685; font-size: .9rem; }
+.chart-note { color: #667685; font-size: .85rem; margin: 6px 0; }
+.chart-status { color: #cc2f2e; min-height: 1.2em; margin: 4px 0; }
+.chart-box { position: relative; height: 320px; margin: 12px 0; }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 12px 0; }
+.chart-grid h3 { font-size: 1rem; margin: 0 0 4px; }
+.chart-box-small { position: relative; height: 190px; }
+.chart-section .manager-stats { margin-top: 10px; }
+.chart-section .manager-stat small { display: block; margin-top: 4px; font-size: .8rem; color: #667685; }
+.chart-section .manager-stat small.up { color: #1d7a46; }
+.chart-section .manager-stat small.down { color: #b03a2e; }

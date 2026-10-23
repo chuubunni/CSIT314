@@ -12,14 +12,20 @@ _CATEGORY_NAMES = (
 class IDP:
 
     @staticmethod
-    def create(designer_id, title, description, propertyType, price, status, category_ids=(), property_subtype_id=None):
-        """Insert the IDP and its category links in one transaction. Returns the new id."""
+    def create(designer_id, title, description, propertyType, houseType, price, status, category_ids=(), property_subtype_id=None):
+        """Insert the IDP and its category links in one transaction. Returns the new id.
+
+        property_subtype_id is optional. A subtype that doesn't belong to propertyType is
+        rejected by a database trigger (sqlite3.IntegrityError) and nothing is saved.
+        """
         db = get_db()
         try:
             cursor = db.execute(
-                'INSERT INTO idp (designer_id, title, description, propertyType, price, status, property_subtype_id)'
-                ' VALUES (?, ?, ?, ?, ?, ?, ?)',
-                (designer_id, title, description, propertyType, price, status, property_subtype_id),
+                'INSERT INTO idp (designer_id, title, description, propertyType, houseType,'
+                ' property_subtype_id, price, status)'
+                ' VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                (designer_id, title, description, propertyType, houseType or propertyType,
+                 property_subtype_id, price, status),
             )
             IDP._replace_categories(db, cursor.lastrowid, category_ids)
             db.commit()
@@ -91,7 +97,11 @@ class IDP:
     @staticmethod
     def update(idp_id, title, description, propertyType, status, price, category_ids=None, property_subtype_id=None):
         """Update the IDP. If category_ids is given (even empty) the categories are replaced
-        too; None leaves them as they are."""
+        too; None leaves them as they are.
+
+        property_subtype_id is always written: pass None to clear it (for example when the
+        property type changes). A subtype that doesn't belong to propertyType raises
+        sqlite3.IntegrityError and nothing is saved."""
         db = get_db()
         try:
             db.execute(
