@@ -8,6 +8,13 @@ _CATEGORY_NAMES = (
     " WHERE ic.idp_id = p.id) AS category_names"
 )
 
+_INTEREST_COUNTS = (
+    "(SELECT COUNT(*) FROM idp_view v"
+    " WHERE v.idp_id = p.id) AS view_count,"
+    " (SELECT COUNT(*) FROM favourite_idp f"
+    " WHERE f.idp_id = p.id) AS favourite_count"
+)
+
 
 class IDP:
 
@@ -32,13 +39,31 @@ class IDP:
     @staticmethod
     def find(idp_id):
         return get_db().execute(
-            'SELECT p.id, p.designer_id, p.property_type, p.title, p.description,'
-            ' p.price, p.status, p.created, p.property_subtype_id, '
-            " (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name, " + _CATEGORY_NAMES +
-            ' FROM idp p WHERE p.id = ?',
-            (idp_id,),
+            '''
+            SELECT
+                p.id,
+                p.designer_id,
+                p.property_type,
+                p.title,
+                p.description,
+                p.price,
+                p.status,
+                p.created,
+                p.property_subtype_id,
+                (
+                    SELECT name
+                    FROM property_subtype
+                    WHERE id = p.property_subtype_id
+                ) AS property_subtype_name,
+            '''
+            + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS +
+            '''
+            FROM idp p
+            WHERE p.id = ?
+            ''',
+            (idp_id,)
         ).fetchone()
-
+    
     @staticmethod
     def find_category_ids(idp_id):
         """Ids of the categories this IDP is in (for pre-ticking the edit form)."""
@@ -54,7 +79,7 @@ class IDP:
             'SELECT p.id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
             ' p.property_subtype_id,'
             ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
-            ' ' + _CATEGORY_NAMES + ','
+            ' ' + _CATEGORY_NAMES + ','+ _INTEREST_COUNTS + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id '
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p'
@@ -75,11 +100,11 @@ class IDP:
             parameters.append(property_subtype_id)
         where = (' WHERE ' + ' AND '.join(conditions)) if conditions else '' 
         return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
+            'SELECT p.id,p.designer_id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
             ' p.property_subtype_id,'
             ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
             ' u.name AS designer_name, co.companyName AS company_name,'
-            ' ' + _CATEGORY_NAMES + ','
+            ' ' + _CATEGORY_NAMES + ','+ _INTEREST_COUNTS + ','
             ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
             '  ORDER BY m.mediaID LIMIT 1) AS cover'
             ' FROM idp p JOIN user u ON p.designer_id = u.id'
