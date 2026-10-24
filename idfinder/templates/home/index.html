@@ -20,6 +20,9 @@
   </a>
   {% endif %}
   {% if g.user and g.user['Usertype'] == 'customer' %}
+  <a class="action" href="{{ url_for('search.designers') }}">
+    Find Designers
+  </a>
   <a class="action" href="{{ url_for('customer.profile')}}">
     My Profile
   </a>

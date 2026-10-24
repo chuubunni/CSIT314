@@ -50,4 +50,8 @@ def create_app(test_config=None):
     from .boundaries import favourites
     app.register_blueprint(favourites.bp)
 
+    # C19: to search interior designer by name
+    from .boundaries import search
+    app.register_blueprint(search.bp)
+
     return app
