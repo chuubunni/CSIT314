@@ -35,6 +35,21 @@
   {% else %}<tr><td colspan="4">No matching categories.</td></tr>{% endfor %}
   </tbody>
 </table>
+<h2>Property Types</h2>
+<table class="manager-table">
+  <thead><tr><th>Name</th><th>Code</th><th>Subtypes</th><th>Projects</th><th>Customers</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for ptype in property_types %}
+    <tr><td>{{ ptype['name'] }}</td><td>{{ ptype['code'] }}</td><td>{{ ptype['subtype_count'] }}</td>
+      <td>{{ ptype['project_count'] }}</td><td>{{ ptype['customer_count'] }}</td><td>
+      <form method="post" action="{{ url_for('platform.delete_property_type', type_id=ptype['id']) }}"
+            onsubmit="return confirm('Remove property type {{ ptype['name']|e }} and its {{ ptype['subtype_count'] }} subtype(s)?');">
+        <button type="submit">Remove</button>
+      </form>
+    </td></tr>
+  {% else %}<tr><td colspan="6">No property types.</td></tr>{% endfor %}
+  </tbody>
+</table>
 <h2>Platform Activity</h2>
 {# ===== PM21 + PM23 DASHBOARD SUMMARY START: brief numbers; the full graphs are on the next page ===== #}
 <section id="charts-summary" class="chart-summary">

@@ -22,6 +22,29 @@ class PropertyType:
             'SELECT id, code, name FROM property_type WHERE code = ?', (code,)
         ).fetchone()
 
+    @staticmethod
+    def find_all_with_usage():
+        """Every type with how many subtypes, projects and customers use it (PM14)."""
+        return get_db().execute(
+            'SELECT t.id, t.code, t.name,'
+            ' (SELECT COUNT(*) FROM property_subtype s WHERE s.property_type_id = t.id) AS subtype_count,'
+            ' (SELECT COUNT(*) FROM idp p WHERE p.property_type = t.code COLLATE NOCASE) AS project_count,'
+            ' (SELECT COUNT(*) FROM customer c WHERE c.current_property_type = t.code COLLATE NOCASE) AS customer_count'
+            ' FROM property_type t ORDER BY t.id'
+        ).fetchall()
+
+    @staticmethod
+    def delete(property_type_id):
+        """PM14: delete a type and its subtypes together (all or nothing)."""
+        db = get_db()
+        try:
+            db.execute('DELETE FROM property_subtype WHERE property_type_id = ?', (property_type_id,))
+            db.execute('DELETE FROM property_type WHERE id = ?', (property_type_id,))
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+
 
 class PropertySubtype:
     """Entity: a subtype under a property type (for example 4-Room under HDB)."""
@@ -72,6 +95,19 @@ class Housing:
     @staticmethod
     def types():
         return PropertyType.find_all()
+
+    @staticmethod
+    def codes():
+        """Codes of the property types that currently exist, e.g. ['HDB', 'Condo']."""
+        return [t['code'] for t in PropertyType.find_all()]
+
+    @staticmethod
+    def types_with_usage():
+        return PropertyType.find_all_with_usage()
+
+    @staticmethod
+    def delete_type(property_type_id):
+        PropertyType.delete(property_type_id)
 
     @staticmethod
     def subtypes(property_type_id=None):

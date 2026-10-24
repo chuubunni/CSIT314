@@ -44,6 +44,7 @@ class DashboardView(ManagerOnlyView):
             period=period,
             summary=controller.report(period),
             interest=controller.interest(),
+            property_types=controller.property_types(),
             # PM21 / PM23 widget data (always present, never undefined)
             weekly_summary={'total_views': summary['weekly_views'],
                             'total_saves': summary['weekly_saves'],
@@ -126,6 +127,20 @@ class DeleteCategoryView(ManagerOnlyView):
         return redirect(url_for('platform.dashboard'))
 
 
+class DeletePropertyTypeView(ManagerOnlyView):
+    """PM14: remove an obsolete property type."""
+
+    def post(self, type_id):
+        try:
+            name = PlatformController().remove_property_type(type_id)
+            flash(f'Property type {name} removed.')
+        except ValidationError as error:
+            flash(str(error))
+        except NotFoundError:
+            abort(404)
+        return redirect(url_for('platform.dashboard'))
+
+
 # '/dashboard' is listed first so url_for('platform.dashboard') builds /platform/dashboard.
 _dashboard = DashboardView.as_view('dashboard')
 bp.add_url_rule('/dashboard', view_func=_dashboard)
@@ -135,3 +150,4 @@ bp.add_url_rule('/profile/edit', view_func=EditProfileView.as_view('edit_profile
 bp.add_url_rule('/categories/add', view_func=AddCategoryView.as_view('add_category'), methods=('POST',))
 bp.add_url_rule('/categories/<int:category_id>/edit', view_func=EditCategoryView.as_view('edit_category'), methods=('POST',))
 bp.add_url_rule('/categories/<int:category_id>/delete', view_func=DeleteCategoryView.as_view('delete_category'), methods=('POST',))
+bp.add_url_rule('/property-types/<int:type_id>/delete', view_func=DeletePropertyTypeView.as_view('delete_property_type'), methods=('POST',))
