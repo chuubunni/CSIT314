@@ -34,8 +34,8 @@ class PortfolioController:
         self.folders = {"image": upload_folder}
 
     # ----- IDP -----
-    def list_portfolio(self, designer_id):
-        return IDP.find_by_designer(designer_id)
+    def list_portfolio(self, designer_id, category_id=None):
+        return IDP.find_by_designer(designer_id, category_id=category_id)
 
     def categories(self):
         return Category.find_all_active()

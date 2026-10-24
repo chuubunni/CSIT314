@@ -55,22 +55,31 @@ class IDP:
         ).fetchall()
         return [row['category_id'] for row in rows]
 
-    @staticmethod
-    def find_by_designer(designer_id):
-        """A designer's IDPs, newest first, each with a cover image (first image, if any)."""
-        return get_db().execute(
-            'SELECT p.id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
-            ' p.property_subtype_id,'
-            ' (SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name,'
-            ' ' + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS + ','
-            ' (SELECT m.link FROM idp_media m WHERE m.idp_id = p.id'
-            '  ORDER BY m.mediaID LIMIT 1) AS cover'
-            ' FROM idp p'
-            ' WHERE p.designer_id = ?'
-            ' ORDER BY p.created DESC, p.id DESC',
-            (designer_id,),
-        ).fetchall()
 
+    @staticmethod
+    def find_by_designer(designer_id, category_id=None):
+        """Retrieve IDPs for a given designer, optionally filtered by category."""
+
+        query = (
+            'SELECT p.id, p.designer_id, p.title, p.description, p.property_type, '
+            'p.price, p.status, p.created, p.property_subtype_id, '
+            '(SELECT name FROM property_subtype WHERE id = p.property_subtype_id) AS property_subtype_name, '
+            + _CATEGORY_NAMES + ', ' + _INTEREST_COUNTS + ', '
+            '(SELECT m.link FROM idp_media m WHERE m.idp_id = p.id ORDER BY m.mediaID LIMIT 1) AS cover '
+            'FROM idp p '
+            'WHERE p.designer_id = ? '
+            
+        )
+
+        parameters = [designer_id]
+
+        if category_id is not None:
+            query += (' AND EXISTS (SELECT 1 FROM idp_category ic WHERE ic.idp_id = p.id AND ic.category_id = ?) ')
+            parameters.append(category_id)
+
+        query += ' ORDER BY p.created DESC, p.id DESC'
+
+        return get_db().execute(query, parameters).fetchall()
 
     @staticmethod
     def find_all(property_type='', property_subtype_id=None):

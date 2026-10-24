@@ -9,9 +9,48 @@
 {% endblock %}
 
 {% block content %}
-  {% if not idps %}
-    <p>No projects yet.</p>
+  <!-- For interior designers to filter their own projects by category. -->
+  <form method="get" action="{{ url_for('designer.portfolio') }}">
+
+    <h2>Filter by Category:</h2>
+    <div class="category-filter">
+      
+      <select name="category_id" id="category_id">
+        <option value="" {% if not selected_category_id %}selected{% endif %}>All Categories</option>
+
+          {% for category in categories %}
+            <option value="{{ category['id'] }}" {% if selected_category_id == category['id']|string %}selected{% endif %}>
+              {{ category['name'] }}
+            </option>
+          {% endfor %}
+      </select>
+
+      <div class="category-actions">
+        <button type="submit">Apply Filter</button>
+        <a href="{{ url_for('designer.portfolio') }}">Clear Filter</a>
+      </div>
+
+    </div>
+  </form>
+
+  {% if selected_category_id %}
+    <p>Showing projects for category: 
+      {% for category in categories %}
+        {% if category['id']|string == selected_category_id %}
+          <strong>{{ category['name'] }}</strong>
+        {% endif %}
+      {% endfor %}
+    </p>
   {% endif %}
+
+  {% if not idps %}
+    {% if selected_category_id %}
+      <p>No projects found for the selected category.</p>
+    {% else %}
+      <p>No projects yet.</p>
+    {% endif %}
+  {% endif %}
+
   {% for idp in idps %}
     <article class="post">
       <header>
