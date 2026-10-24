@@ -36,6 +36,20 @@
   </tbody>
 </table>
 <h2>Platform Activity</h2>
+{# ===== PM21 + PM23 DASHBOARD SUMMARY START: brief numbers; the full graphs are on the next page ===== #}
+<section id="charts-summary" class="chart-summary">
+  {% if weekly_summary.available %}
+  <div class="manager-stats">
+    <div class="manager-stat">Views (last 7 days)<strong>{{ weekly_summary.total_views }}</strong></div>
+    <div class="manager-stat">Shortlists (last 7 days)<strong>{{ weekly_summary.total_saves }}</strong></div>
+    <div class="manager-stat">Most viewed category<strong>{{ category_summary.top_category or '&ndash;'|safe }}</strong></div>
+  </div>
+  {% else %}
+  <p>Graph summary is not available right now.</p>
+  {% endif %}
+</section>
+{# ===== PM21 + PM23 DASHBOARD SUMMARY END ===== #}
+<p><a class="profile-button" href="{{ url_for('platform_charts.page') }}">View Platform Graphs &raquo;</a></p>
 <form method="get" action="{{ url_for('platform.dashboard') }}">
   <label for="period">Report period</label>
   <select id="period" name="period">
