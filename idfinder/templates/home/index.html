@@ -20,6 +20,9 @@
   </a>
   {% endif %}
   {% if g.user and g.user['Usertype'] == 'customer' %}
+  <a class="action" href="{{ url_for('search.designers') }}">
+    Find Designers
+  </a>
   <a class="action" href="{{ url_for('customer.profile')}}">
     My Profile
   </a>
@@ -154,21 +157,20 @@
 
         <p>
           {{ idp['description'] or '' }}
-          {% if g.user and g.user['Usertype'] == 'designer'and g.user['id'] == idp['designer_id'] %}
-            <div class="project-interest">
-              <div>
-                <span class="interest-label">Views</span>
-                <strong class="interest-count">{{ idp['view_count'] }}</strong>
-              </div>
-
-              <div>
-                <span class="interest-label">Favourites</span>
-                <strong class="interest-count">{{ idp['favourite_count'] }}</strong>
-              </div>
-            </div>
-          {% endif %}
-
         </p>
+
+        {% if g.user and g.user['Usertype'] == 'designer' and g.user['id'] == idp['designer_id'] %}
+          <div class="project-interest">
+            <div>
+              <span class="interest-label">Views</span>
+              <strong class="interest-count">{{ idp['view_count'] }}</strong>
+            </div>
+            <div>
+              <span class="interest-label">Favourites</span>
+              <strong class="interest-count">{{ idp['favourite_count'] }}</strong>
+            </div>
+          </div>
+        {% endif %}
 
         {# C08: place the save action within each existing project card. #}
         {% with project_id=idp['id'], save_return_to='home' %}

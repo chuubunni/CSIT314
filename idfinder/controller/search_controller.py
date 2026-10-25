@@ -1,6 +1,7 @@
 from idfinder.controller.errors import ValidationError
 from idfinder.entities.housing import Housing
 from idfinder.entities.idp import IDP
+from idfinder.entities.search import DesignerSearch
 
 
 class SearchController:
@@ -27,3 +28,15 @@ class SearchController:
             if not property_type or subtype['type_code'] != property_type:
                 raise ValidationError('The subtype must belong to the selected housing type.')
         return IDP.find_all_with_images(property_type, subtype_id)
+
+    
+    MAX_NAME_LENGTH = 100
+
+    @staticmethod
+    def search_designers_by_name(name=''):
+        """C19: designers whose name contains the text. Blank text lists everyone."""
+        name = ' '.join((name or '').split())          # trim and collapse spaces
+        if len(name) > SearchController.MAX_NAME_LENGTH:
+            raise ValidationError(
+                f'Designer name must be {SearchController.MAX_NAME_LENGTH} characters or fewer.')
+        return name, DesignerSearch.find_by_name(name)

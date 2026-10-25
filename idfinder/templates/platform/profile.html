@@ -21,6 +21,15 @@
     </div>
   </div>
 
+  {# Shortcuts for the manager (hidden while editing the profile) #}
+  {% if not editing %}
+    <h2 class="profile-section-title">Shortcuts</h2>
+    <div class="profile-actions">
+      <a class="profile-button" href="{{ url_for('platform.dashboard') }}">Manager Dashboard</a>
+      <a class="profile-button" href="{{ url_for('platform_charts.page') }}">Platform Graphs</a>
+    </div>
+  {% endif %}
+
   <form method="post">
     {# Read-only view and edit form share one layout: the fieldset disables every field until "Edit Profile" #}
     <fieldset class="profile-fieldset" {{ '' if editing else 'disabled' }}>

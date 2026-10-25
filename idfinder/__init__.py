@@ -7,10 +7,11 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',  # change to a random value when deploying
-        DATABASE=os.path.join(app.instance_path, 'idfinder.sqLite'),
+        DATABASE=os.path.join(app.instance_path, 'idfinder.sqlite'),
         # folder INSIDE myfirstapp/static so Flask can serve the files
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
         MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # reject uploads over 15 MB
+        DEMO_DATA=os.environ.get('IDFINDER_DEMO_DATA', '0') == '1',
         #DO NOT REPEAT
     )
 
@@ -24,6 +25,13 @@ def create_app(test_config=None):
 
     from . import db
     db.init_app(app)
+    if app.config['DEMO_DATA']:
+        from .demo_seed import DemoSeeder
+        try:
+            DemoSeeder(app.config['DATABASE']).seed()
+        except Exception:
+            # never stop the site from starting because of demo data
+            app.logger.exception('Demo data could not be created')
 
     from .boundaries import auth
     app.register_blueprint(auth.bp)
@@ -40,8 +48,8 @@ def create_app(test_config=None):
     from .boundaries import platform
     app.register_blueprint(platform.bp)
 
-    from .boundaries import platform_charts
-    app.register_blueprint(platform_charts.bp)
+    from idfinder.boundaries.platform_charts import platform_charts_bp
+    app.register_blueprint(platform_charts_bp)
 
     from .boundaries import customer
     app.register_blueprint(customer.bp)

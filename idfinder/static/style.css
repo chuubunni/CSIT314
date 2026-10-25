@@ -77,10 +77,8 @@ header .action.profile-button { padding: 0.4rem 1.5rem; margin-bottom: 0.25rem; 
 .content [data-housing-selects] select { margin-bottom: 1em; }
 
 
-
 /* Project view and favourite counts */
 .project-interest {display: flex;flex-wrap: wrap;gap: 32px;padding: 14px 18px;margin: 16px 0;background: #f0f5fa;border: 1px solid #d7e3ed;border-radius: 8px;}
 .project-interest > div {display: flex;flex-direction: column;gap: 4px;}
 .interest-label {color: #555;font-size: 0.9rem;}
 .interest-count {color: #377ba8;font-size: 1.5rem;}
-

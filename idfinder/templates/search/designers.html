@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Find Interior Designers{% endblock %}</h1>
+  <a class="action" href="{{ url_for('home.index') }}">Browse Projects</a>
+{% endblock %}
+
+{% block content %}
+  <form method="get" action="{{ url_for('search.designers') }}" class="designer-search">
+    <label for="designer-name">Designer name</label>
+    <div class="designer-search-row">
+      <input type="search" id="designer-name" name="name" value="{{ query }}"
+             maxlength="100" placeholder="e.g. Tan" autofocus>
+      <button type="submit">Search</button>
+      <a href="{{ url_for('search.designers') }}">Clear</a>
+    </div>
+  </form>
+
+  {% if error %}<p class="housing-error" role="alert">{{ error }}</p>{% endif %}
+  {% if not error %}
+    <p aria-live="polite">
+      {{ designers|length }} designer{{ '' if designers|length == 1 else 's' }} found{% if query %} for &ldquo;{{ query }}&rdquo;{% endif %}
+    </p>
+  {% endif %}
+
+  <div class="designer-list">
+    {% for designer in designers %}
+      <article class="designer-card">
+        <h2>{{ designer['name'] }}</h2>
+        <p class="designer-company">{{ designer['company_name'] or 'No company listed' }}</p>
+        <p class="designer-meta">{{ designer['project_count'] }} project{{ '' if designer['project_count'] == 1 else 's' }}</p>
+      </article>
+    {% else %}
+      {% if not error %}<p>No designers match that name. Try a different spelling or clear the search.</p>{% endif %}
+    {% endfor %}
+  </div>
+{% endblock %}

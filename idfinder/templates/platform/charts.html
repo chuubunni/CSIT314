@@ -1,12 +1,18 @@
 {% extends 'base.html' %}
 {% block header %}<h1>{% block title %}Platform Graphs{% endblock %}</h1>{% endblock %}
 {% block content %}
-{# PM21 weekly activity graph and PM23 interest-by-category graph. Data comes from /platform/charts/weekly and /platform/charts/categories (JSON). #}
-<p><a href="{{ url_for('platform.dashboard') }}">&laquo; Back to Platform Management</a></p>
 <link rel="stylesheet" href="{{ url_for('static', filename='platform_charts.css') }}">
 
-<h2>Weekly Activity Graph</h2>
+{# This page is only the layout. platform_charts.js fills in the numbers, the graphs and the
+   tables using the JSON from /platform/charts/weekly (PM21) and /platform/charts/categories (PM23). #}
+
+<p><a href="{{ url_for('platform.dashboard') }}">&laquo; Back to Platform Management</a></p>
+<p class="chart-intro">See how the platform is being used, week by week, and which design categories get the most attention.</p>
+<noscript><p class="chart-status error">These graphs need JavaScript to be switched on.</p></noscript>
+
+{# ========================= PM21 START: weekly platform activity ========================= #}
 <section id="weekly-chart" class="chart-section" data-url="{{ url_for('platform_charts.weekly') }}">
+  <h2 class="chart-section-title">Weekly Activity Graph</h2>
   <div class="chart-controls">
     <label for="weekly-end">Week ending</label>
     <input type="date" id="weekly-end" data-week-end>
@@ -14,7 +20,7 @@
     <button type="button" data-week-next>Next week &raquo;</button>
     <span class="chart-range" data-week-range></span>
   </div>
-  <p class="chart-note">Seven days ending on the chosen date (UTC days, like the report above). Change compares with the 7 days before.</p>
+  <p class="chart-note">Seven days ending on the chosen date (UTC days, like the report on the dashboard). Each figure is compared with the 7 days before it.</p>
   <p class="chart-status" role="status" data-status></p>
   <div class="manager-stats" data-week-stats></div>
   <div class="chart-grid" data-week-charts></div>
@@ -23,17 +29,21 @@
     <tbody></tbody>
   </table>
 </section>
+{# ========================= PM21 END ========================= #}
 
-<h2>Project Interest by Design Category</h2>
+{# ========================= PM23 START: project interest by design category ========================= #}
 <section id="category-chart" class="chart-section" data-url="{{ url_for('platform_charts.categories') }}">
-  <p class="chart-note">All time. A project in several categories counts towards each of them.</p>
+  <h2 class="chart-section-title">Project Interest by Design Category</h2>
+  <p class="chart-note">All time. Interest = project views and shortlists. A project in several categories counts towards each of them.</p>
   <p class="chart-status" role="status" data-status></p>
-  <div class="chart-box"><canvas id="category-canvas" aria-label="Views and shortlists per design category" role="img"></canvas></div>
+  <div class="manager-stats" data-category-stats></div>
+  <div class="chart-box" data-category-box><canvas id="category-canvas" aria-label="Views and shortlists per design category" role="img"></canvas></div>
   <table class="manager-table" data-category-table>
-    <thead><tr><th>Category</th><th>Projects</th><th>Views</th><th>Shortlists</th></tr></thead>
+    <thead><tr><th>Category</th><th>Projects</th><th>Views</th><th>Shortlists</th><th>Share of views</th></tr></thead>
     <tbody></tbody>
   </table>
 </section>
+{# ========================= PM23 END ========================= #}
 
 <script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
 <script src="{{ url_for('static', filename='platform_charts.js') }}"></script>
