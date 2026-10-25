@@ -1,5 +1,5 @@
 # C08: complete the repo's existing favourites boundary using its class convention.
-from flask import Blueprint, abort, flash, g, redirect, request, url_for
+from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 from idfinder.boundaries.auth import auth_boundary
 from idfinder.boundaries.customer import customer_boundary
 from idfinder.boundaries.form_security import validate_form_token
@@ -10,6 +10,14 @@ bp = Blueprint('favourites', __name__, url_prefix='/favourites')
 
 
 class favourites_boundary:
+    @bp.route('/')
+    @auth_boundary.login_required
+    @customer_boundary.customer_required
+    def list_favourites():
+        """C09: the logged-in customer's saved projects."""
+        return render_template('customer/favourites.html',
+                               projects=FavouritesController().list_favourites(g.user['id']))
+
     @bp.route('/projects/<int:idp_id>', methods=('POST',))
     @auth_boundary.login_required
     @customer_boundary.customer_required

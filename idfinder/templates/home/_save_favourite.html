@@ -1,4 +1,4 @@
-{# C08: shared save controls; this is not a separate C09 favourites-list page. #}
+{# C08: shared save controls; the saved list itself is the C09 page (customer/favourites.html). #}
 {% if g.user and g.user['Usertype'] == 'customer' %}
   {% if project_id in favourite_ids %}<p class="c08-saved" role="status">✓ Saved to favourites</p>
   {% else %}<form class="c08-save-form" method="post" action="{{ url_for('favourites.save_favourite', idp_id=project_id) }}">

@@ -71,17 +71,25 @@ class IDP:
             (designer_id,),
         ).fetchall()
 
+
     @staticmethod
     def find_all(property_type='', property_subtype_id=None):
         """Homepage projects, with optional parameterised housing filters."""
-        conditions, parameters = [], []
+        conditions = []
+        parameters = []
+
         if property_type:
             conditions.append('p.property_type = ?')
             parameters.append(property_type)
+
         if property_subtype_id is not None:
             conditions.append('p.property_subtype_id = ?')
             parameters.append(property_subtype_id)
-        where = (' WHERE ' + ' AND '.join(conditions) if conditions else '')
+
+        where = ''
+        if conditions:
+            where = ' WHERE ' + ' AND '.join(conditions)
+
         return get_db().execute(
             'SELECT p.id, p.designer_id, p.title, p.description, p.property_type, p.price, p.status, p.created,'
             ' p.property_subtype_id,'
