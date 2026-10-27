@@ -7,83 +7,163 @@
     <a class="action" href="{{ url_for('designer.portfolio') }}">
       My Portfolio
     </a>
-    <a class="action" href="{{ url_for('designer.profile')}}">
+    <a class="action" href="{{ url_for('designer.profile') }}">
       My Profile
     </a>
   {% endif %}
+
   {% if g.user and g.user['Usertype'] == 'manager' %}
-  <a class="action" href="{{ url_for('platform.dashboard')}}">
-    Dashboard
-  </a>
-  <a class="action" href="{{ url_for('platform.profile')}}">
-    Manager Profile
-  </a>
+    <a class="action" href="{{ url_for('platform.dashboard') }}">
+      Dashboard
+    </a>
+    <a class="action" href="{{ url_for('platform.profile') }}">
+      Manager Profile
+    </a>
   {% endif %}
+
   {% if g.user and g.user['Usertype'] == 'customer' %}
-  <a class="action" href="{{ url_for('search.designers') }}">
-    Find Designers
-  </a>
-  <a class="action" href="{{ url_for('customer.profile')}}">
-    My Profile
-  </a>
-  <a class="action" href="{{ url_for('favourites.list_favourites')}}">
-    My Favourites
-  </a>
+    <a class="action" href="{{ url_for('search.designers') }}">
+      Find Designers
+    </a>
+    <a class="action" href="{{ url_for('customer.profile') }}">
+      My Profile
+    </a>
+    <a
+      class="action"
+      href="{{ url_for('favourites.list_favourites') }}"
+    >
+      My Favourites
+    </a>
   {% endif %}
 {% endblock %}
 
-
 {% block content %}
-{# C08: isolated styles keep this branch independent of ID19. #}
-<link rel="stylesheet" href="{{ url_for('static', filename='c08_favourites.css') }}">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='housing.css') }}">
-<form method="get" action="{{ url_for('home.index') }}" class="housing-filter" data-housing-selects>
-  <h2>Filter projects by housing type</h2>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='c08_favourites.css') }}"
+>
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='housing.css') }}"
+>
+
+<form
+  method="get"
+  action="{{ url_for('home.index') }}"
+  class="housing-filter"
+  data-housing-selects
+>
+  <h2>Filter projects</h2>
+
   <div class="housing-fields">
+
     <div class="housing-field">
       <label for="filter-type">Housing Type</label>
-      <select id="filter-type" name="property_type" data-housing-type>
+
+      <select
+        id="filter-type"
+        name="property_type"
+        data-housing-type
+      >
         <option value="">All housing types</option>
+
         {% for housing in property_types %}
-          <option value="{{ housing.code }}" {% if selected_type == housing.code %}selected{% endif %}>{{ housing.name }}</option>
+          <option
+            value="{{ housing.code }}"
+            {% if selected_type == housing.code %}
+              selected
+            {% endif %}
+          >
+            {{ housing.name }}
+          </option>
         {% endfor %}
       </select>
     </div>
+
     <div class="housing-field">
       <label for="filter-subtype">Housing Subtype</label>
-      <select id="filter-subtype" name="property_subtype_id" data-housing-subtype data-placeholder="All subtypes">
+
+      <select
+        id="filter-subtype"
+        name="property_subtype_id"
+        data-housing-subtype
+        data-placeholder="All subtypes"
+      >
         <option value="">All subtypes</option>
+
         {% for subtype in property_subtypes %}
-          <option value="{{ subtype.id }}" data-type="{{ subtype.type_code }}"
-                  {% if selected_subtype == subtype.id|string %}selected{% endif %}>{{ subtype.name }}</option>
+          <option
+            value="{{ subtype.id }}"
+            data-type="{{ subtype.type_code }}"
+            {% if selected_subtype == subtype.id|string %}
+              selected
+            {% endif %}
+          >
+            {{ subtype.name }}
+          </option>
         {% endfor %}
       </select>
     </div>
+
+    <div class="housing-field">
+      <label for="filter-category">Design Category</label>
+
+      <select id="filter-category" name="category_id">
+        <option value="">All design categories</option>
+
+        {% for category in categories %}
+          <option
+            value="{{ category['id'] }}"
+            {% if selected_category == category['id']|string %}
+              selected
+            {% endif %}
+          >
+            {{ category['name'] }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
     <div class="housing-actions">
       <button type="submit">Apply filters</button>
       <a href="{{ url_for('home.index') }}">Clear filters</a>
     </div>
+
   </div>
 </form>
-{% if filter_error %}<p class="housing-error" role="alert">{{ filter_error }}</p>{% endif %}
-<p aria-live="polite">{{ idps|length }} project{{ '' if idps|length == 1 else 's' }} found</p>
+
+<script
+  src="{{ url_for('static', filename='housing.js') }}"
+  defer
+></script>
+
+{% if filter_error %}
+  <p class="housing-error" role="alert">
+    {{ filter_error }}
+  </p>
+{% endif %}
+
+<p aria-live="polite">
+  {{ idps|length }}
+  project{{ '' if idps|length == 1 else 's' }} found
+</p>
+
 <div class="project-grid">
 
   {% for idp in idps %}
 
     <article class="project-card">
 
-      <!-- Independent image slideshow for each project -->
-      <div class="project-carousel"
-           data-carousel
-           aria-label="Images for {{ idp['title'] }}">
-
+      <div
+        class="project-carousel"
+        data-carousel
+        aria-label="Images for {{ idp['title'] }}"
+      >
         {% if idp['images'] %}
 
-          <!-- Display all uploaded images -->
           {% for img in idp['images'] %}
-
             <img
               class="project-slide{% if loop.first %} active{% endif %}"
               src="{{ url_for('static', filename='uploads/' + img['link']) }}"
@@ -91,17 +171,16 @@
               loading="lazy"
               {% if not loop.first %}hidden{% endif %}
             >
-
           {% endfor %}
 
-          <!-- Show navigation only when multiple images exist -->
           {% if idp['images']|length > 1 %}
 
             <button
               type="button"
               class="carousel-arrow carousel-prev"
               data-direction="-1"
-              aria-label="Previous image">
+              aria-label="Previous image"
+            >
               &#10094;
             </button>
 
@@ -109,11 +188,11 @@
               type="button"
               class="carousel-arrow carousel-next"
               data-direction="1"
-              aria-label="Next image">
+              aria-label="Next image"
+            >
               &#10095;
             </button>
 
-            <!-- Image counter -->
             <span class="carousel-counter" aria-live="polite">
               1 / {{ idp['images']|length }}
             </span>
@@ -127,14 +206,10 @@
           </div>
 
         {% endif %}
-
       </div>
 
-
-      <!-- Project information -->
       <div class="project-info">
 
-        <!-- Click project title to open details and record a view -->
         <h2>
           <a href="{{ url_for('home.project_detail', idp_id=idp['id']) }}">
             {{ idp['title'] }}
@@ -149,91 +224,88 @@
           {{ idp['status'] }}
 
           {% if idp['category_names'] %}
-            · {{ idp['category_names'] }}
+            &middot; {{ idp['category_names'] }}
           {% endif %}
 
-          · {{ (idp['created']|string)[:10] }}
+          &middot; {{ (idp['created']|string)[:10] }}
         </p>
 
-        <p>
-          {{ idp['description'] or '' }}
-        </p>
+        <p>{{ idp['description'] or '' }}</p>
 
         {% if g.user and g.user['Usertype'] == 'designer' and g.user['id'] == idp['designer_id'] %}
           <div class="project-interest">
             <div>
               <span class="interest-label">Views</span>
-              <strong class="interest-count">{{ idp['view_count'] }}</strong>
+              <strong class="interest-count">
+                {{ idp['view_count'] }}
+              </strong>
             </div>
+
             <div>
               <span class="interest-label">Favourites</span>
-              <strong class="interest-count">{{ idp['favourite_count'] }}</strong>
+              <strong class="interest-count">
+                {{ idp['favourite_count'] }}
+              </strong>
             </div>
           </div>
         {% endif %}
 
-        {# C08: place the save action within each existing project card. #}
         {% with project_id=idp['id'], save_return_to='home' %}
           {% include 'home/_save_favourite.html' %}
         {% endwith %}
+
       </div>
-      <p class="housing-project-meta">{{ 'Condominium' if idp['property_type'] == 'Condo' else idp['property_type'] }}
-        {% if idp['property_subtype_name'] %} &middot; {{ idp['property_subtype_name'] }}{% endif %}</p>
+
+      <p class="housing-project-meta">
+        {{ 'Condominium' if idp['property_type'] == 'Condo' else idp['property_type'] }}
+
+        {% if idp['property_subtype_name'] %}
+          &middot; {{ idp['property_subtype_name'] }}
+        {% endif %}
+      </p>
+
     </article>
 
   {% else %}
 
-    <p>No matching projects. Try another housing type or clear the filters.</p>
+    <p>
+      No matching projects. Try another housing type or design category,
+      or clear the filters.
+    </p>
 
   {% endfor %}
 
 </div>
 
-
-<!-- JavaScript: independent slideshow for every project -->
 <script>
-
 document.querySelectorAll('[data-carousel]').forEach(carousel => {
-
     const slides = [
         ...carousel.querySelectorAll('.project-slide')
     ];
 
-    // No slideshow needed if fewer than 2 images
     if (slides.length < 2) return;
 
     let current = 0;
 
-    // Handle previous and next buttons
     carousel.querySelectorAll('[data-direction]').forEach(button => {
-
         button.addEventListener('click', () => {
-
-            // Hide current image
             slides[current].hidden = true;
             slides[current].classList.remove('active');
 
-            // Calculate next image index
             current = (
                 current +
                 Number(button.dataset.direction) +
                 slides.length
             ) % slides.length;
 
-            // Show selected image
             slides[current].hidden = false;
             slides[current].classList.add('active');
 
-            // Update image counter
             carousel.querySelector('.carousel-counter').textContent =
                 `${current + 1} / ${slides.length}`;
-
         });
-
     });
-
 });
-
 </script>
 
 {% endblock %}

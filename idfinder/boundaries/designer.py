@@ -60,9 +60,13 @@ class designer_boundary():
     @login_required
     @designer_required
     def portfolio():
-        """The logged-in designer's IDPs."""
+        """The logged-in designer's IDPs, with optional filtering by category."""
+        selected_category_id = request.args.get('category_id', '')
+
         return render_template('designer/portfolio.html',
-                            idps=designer_boundary.controller().list_portfolio(g.user['id']))
+                            idps=designer_boundary.controller().list_portfolio(g.user['id'], selected_category_id or None),
+                            categories=designer_boundary.controller().categories(),
+                            selected_category_id=selected_category_id)
 
 
     @bp.route('/portfolio/new', methods=('GET', 'POST'))

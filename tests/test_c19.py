@@ -1,13 +1,12 @@
 import os, tempfile, sqlite3
 from idfinder import create_app
 from idfinder.db import init_db, get_db
-from idfinder.housing_migration import migrate_housing
 from idfinder.entities.user import Users, customers, designers, managers
 
 d = tempfile.mkdtemp()
 app = create_app({'TESTING': True, 'DATABASE': os.path.join(d, 't.sqlite'), 'SECRET_KEY': 'x', 'UPLOAD_FOLDER': d})
 with app.app_context():
-    init_db(); migrate_housing(get_db())
+    init_db()   # schema.sql seeds the housing types
     cid = Users.create_user('Cathy', 'customer1', 'c@x.com', '1', 'customer'); customers.create_customer(cid, 'HDB')
     for n, e, co in [('Alice Tan', 'a@x.com', 'Alpha Interiors'), ('bob TANaka', 'b@x.com', 'Beta Design'),
                      ('Carl Lim', 'l@x.com', 'Alpha Interiors'), ('100%_Real', 'r@x.com', 'Gamma')]:
