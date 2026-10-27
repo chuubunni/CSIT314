@@ -1,6 +1,7 @@
 import sqlite3
 
 from idfinder.entities.category import Category
+from idfinder.entities.housing import Housing
 from idfinder.entities.platform_report import PlatformReport
 from idfinder.controller.errors import ValidationError, NotFoundError
 from idfinder.entities.user import managers
@@ -37,6 +38,28 @@ class PlatformController:
         if projects:
             raise ValidationError('Category is assigned to projects. Deactivate it instead.')
         Category.delete(category_id)
+
+    def property_types(self):
+        return Housing.types_with_usage()
+
+    def remove_property_type(self, type_id):
+        """PM14: remove an obsolete property type (and its subtypes). Returns its name.
+
+        Refused while any project or customer still uses the type, so no existing
+        record is left pointing at a classification that no longer exists. The
+        last remaining type can't be removed, otherwise no project could be created.
+        """
+        usage = next((t for t in Housing.types_with_usage() if t['id'] == type_id), None)
+        if usage is None:
+            raise NotFoundError('Property type not found.')
+        if usage['project_count'] or usage['customer_count']:
+            raise ValidationError(
+                f"Cannot remove {usage['name']}: it is used by {usage['project_count']} project(s) "
+                f"and {usage['customer_count']} customer(s). Move or delete those first.")
+        if len(Housing.codes()) <= 1:
+            raise ValidationError('At least one property type must remain on the platform.')
+        Housing.delete_type(type_id)
+        return usage['name']
 
     def report(self, period):
         if period not in ('daily', 'weekly', 'monthly'):
