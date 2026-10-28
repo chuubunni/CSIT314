@@ -10,20 +10,23 @@
 
 {% block content %}
   <!-- For interior designers to filter their own projects by category. -->
-  <form method="get" action="{{ url_for('designer.portfolio') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='category_filter.css') }}">
+  <form method="get" action="{{ url_for('designer.portfolio') }}" class="category-filter" data-category-selects>
 
     <h2>Filter by Category:</h2>
-    <div class="category-filter">
+    <div class="category-fields">
       
-      <select name="category_id" id="category_id">
-        <option value="" {% if not selected_category_id %}selected{% endif %}>All Categories</option>
+      <div class="category-field">
+        <select name="category_id" id="category_id" data-category-select>
+          <option value="" {% if not selected_category_id %}selected{% endif %}>All Categories</option>
 
-          {% for category in categories %}
-            <option value="{{ category['id'] }}" {% if selected_category_id == category['id']|string %}selected{% endif %}>
-              {{ category['name'] }}
-            </option>
-          {% endfor %}
-      </select>
+            {% for category in categories %}
+              <option value="{{ category['id'] }}" {% if selected_category_id == category['id']|string %}selected{% endif %}>
+                {{ category['name'] }}
+              </option>
+            {% endfor %}
+        </select>
+      </div>
 
       <div class="category-actions">
         <button type="submit">Apply Filter</button>

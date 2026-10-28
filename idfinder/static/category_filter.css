@@ -1,0 +1,7 @@
+.category-filter { margin: 1rem 0 1.5rem; padding: 1rem; border: 1px solid #d6d6d6; border-radius: 6px; background: #f8f8f8; }
+.category-fields { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+.category-field { flex: 1 1 210px; }
+.category-field select { width: 50%; box-sizing: border-box; padding: .65rem; }
+.category-actions { display: flex; gap: .8rem; align-items: center; padding-bottom: .2rem; }
+.category-actions button, .category-actions a { padding: .6rem 1rem; }
+@media (max-width: 600px) { .category-field { flex-basis: 100%; } }
