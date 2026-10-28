@@ -3,6 +3,7 @@ from datetime import datetime
 
 import click 
 from flask import current_app, g #g is unique for each request
+from flask.cli import with_appcontext
 #current_app = special object that points to Flask app handling the request
 
 def get_db(): #called when app has been created and is handling a request
@@ -27,11 +28,31 @@ def init_db():
         db.executescript(f.read().decode('utf-8'))
         #use connection from get_db to read commands from schema.sql
 
-@click.command('init-db') #defines command line 'init-db' that called the init-db function 
+@click.command('init-db') #defines command line 'init-db' that called the init-db function
 def init_db_command():
-    #clear existing data and make new tables 
+    #clear existing data and make new tables
     init_db()
-    click.echo('Initialzied the database')#shows success message to user 
+    click.echo('Initialzied the database')#shows success message to user
+
+def load_test_data():
+    db = get_db()
+    with current_app.open_resource('test_data.sql') as f: #sample accounts and projects, made by scripts/generate_test_data.py
+        db.executescript(f.read().decode('utf-8'))
+
+@click.command('load-test-data') #flask --app idfinder load-test-data [--reset]
+@click.option('--reset', is_flag=True, help='Run init-db first (deletes all existing data).')
+@with_appcontext
+def load_test_data_command(reset):
+    if reset:
+        init_db()
+        click.echo('Initialzied the database')
+    try:
+        load_test_data()
+    except sqlite3.IntegrityError as error: #test_data.sql runs as one transaction, so nothing was added
+        get_db().rollback()
+        raise click.ClickException(f'Test data not loaded ({error}). It may already be in the database; '
+                                   'use --reset to start from an empty database.')
+    click.echo('Loaded the test data. Every test account uses the password Test1234!')
 
 sqlite3.register_converter( #tells python how to interpret timestamp values in DB
     "timestamp", lambda v: datetime.fromisoformat(v.decode())
@@ -40,3 +61,4 @@ sqlite3.register_converter( #tells python how to interpret timestamp values in D
 def init_app(app):
     app.teardown_appcontext(close_db) #tells flask to call 'close_db' during cleanup after returning response 
     app.cli.add_command(init_db_command) #adds a new command that can be called with the flask command
+    app.cli.add_command(load_test_data_command)

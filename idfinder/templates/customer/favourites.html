@@ -31,7 +31,7 @@
       <p class="property_type"> Property type: {{ 'Condominium' if project['property_type'] == 'Condo' else project['property_type'] }} </p>
       <p class="property_subtype"> Property subtype: {{ project['property_subtype_name'] or '-' }} </p>
 
-      <p class="price">Price of design: {{ project['price'] }}</p>
+      <p class="price">Price of design: ${{ project['price'] }}</p>
     </article>
     {% if not loop.last %}<hr>{% endif %}
   {% else %}
