@@ -18,7 +18,8 @@
   {% else %}
     {% set chosen = selected_categories|default([]) %}
   {% endif %}
-  <form method="post">
+  {% set removing = form.getlist('remove_media_ids') if form else [] %}
+  <form method="post" enctype="multipart/form-data">
     <label for="title">Title</label>
     <input name="title" id="title" value="{{ v_title }}" required>
 
@@ -64,6 +65,27 @@
       <option value="ongoing" {{ 'selected' if v_status == 'ongoing' else '' }}>Ongoing</option>
       <option value="completed" {{ 'selected' if v_status == 'completed' else '' }}>Completed</option>
     </select>
+
+    <fieldset class="idp-images">
+      <legend>Images</legend>
+      {% if images %}
+        <div class="idp-image-grid">
+          {% for item in images %}
+            <label class="idp-image">
+              <img src="{{ url_for('static', filename='uploads/' + item['link']) }}" alt="Project image {{ loop.index }}">
+              <span>
+                <input type="checkbox" name="remove_media_ids" value="{{ item['mediaID'] }}"
+                       {{ 'checked' if item['mediaID']|string in removing else '' }}>
+                Remove
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <label for="images">{{ 'Add more images' if idp else 'Add images' }} (jpg, jpeg, png, gif)</label>
+      <input type="file" name="images" id="images" accept=".jpg,.jpeg,.png,.gif" multiple>
+      <p class="hint">You can choose several files at once.{% if form %} If the page was shown again because of an error, choose your files again.{% endif %}</p>
+    </fieldset>
 
     <input type="submit" value="Save">
   </form>

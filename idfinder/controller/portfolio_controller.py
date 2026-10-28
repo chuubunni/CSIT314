@@ -41,15 +41,21 @@ class PortfolioController:
         return Category.find_all_active()
 
     def create_idp(self, designer_id, title, description, property_type, price, status,
-                   category_ids=(), property_subtype_id=None):
+                   category_ids=(), property_subtype_id=None, images=()):
+        """images: uploaded files from the same form. Everything is checked before
+        anything is saved, so a bad file never leaves a half-created project."""
         title, description, property_type, price, status = self._clean_idp(
             title, description, property_type, price, status)
         property_subtype_id = self._clean_housing(property_type, property_subtype_id)
         category_ids = self._clean_category_ids(category_ids)
-        return IDP.create(designer_id=designer_id, title=title, description=description,
-                          property_type=property_type, price=price,
-                          status=status, category_ids=category_ids,
-                          property_subtype_id=property_subtype_id)
+        images = self._clean_images(images)
+        idp_id = IDP.create(designer_id=designer_id, title=title, description=description,
+                            property_type=property_type, price=price,
+                            status=status, category_ids=category_ids,
+                            property_subtype_id=property_subtype_id)
+        for fileobj in images:
+            self._save_image(idp_id, fileobj)
+        return idp_id
 
     def get_idp(self, idp_id, designer_id):
         return self._owned_idp(idp_id, designer_id)
@@ -65,16 +71,25 @@ class PortfolioController:
         return idp, IDPMedia.find_by_idp(idp_id)
 
     def update_idp(self, idp_id, designer_id, title, description, property_type, price, status,
-                   category_ids=None, property_subtype_id=None):
+                   category_ids=None, property_subtype_id=None, images=(), remove_media_ids=()):
+        """images are added and remove_media_ids (images of this project) are deleted,
+        after all the fields and files have been checked."""
         self._owned_idp(idp_id, designer_id)
         title, description, property_type, price, status = self._clean_idp(
             title, description, property_type, price, status)
         property_subtype_id = self._clean_housing(property_type, property_subtype_id)
         if category_ids is not None:
             category_ids = self._clean_category_ids(category_ids)
+        images = self._clean_images(images)
+        to_remove = self._clean_media_ids(idp_id, remove_media_ids)
         IDP.update(idp_id, title=title, description=description, property_type=property_type,
                    status=status, price=price, category_ids=category_ids,
                    property_subtype_id=property_subtype_id)
+        for media in to_remove:
+            IDPMedia.delete(media["mediaID"])
+            self._remove_from_disk(media)
+        for fileobj in images:
+            self._save_image(idp_id, fileobj)
 
     def delete_idp(self, idp_id, designer_id):
         self._owned_idp(idp_id, designer_id)
@@ -89,14 +104,8 @@ class PortfolioController:
         self._owned_idp(idp_id, designer_id)
         if fileobj is None or fileobj.filename == "":
             raise ValidationError("No file selected.")
-        if not allowed_file(fileobj.filename, IMAGE_EXTENSIONS):
-            raise ValidationError("Wrong file extension! Allowed: jpg, jpeg, png, gif.")
-
-        ext = fileobj.filename.rsplit(".", 1)[1].lower()
-        # random name: avoids overwriting other uploads and unsafe filenames
-        saved_name = f"{uuid.uuid4().hex}.{ext}"
-        fileobj.save(os.path.join(self.folders["image"], saved_name))
-        return IDPMedia.create(idp_id, saved_name)
+        self._clean_images([fileobj])
+        return self._save_image(idp_id, fileobj)
 
     def remove_media(self, mediaID, designer_id):
         """Delete one image. Returns the idp_id so the boundary can redirect back."""
@@ -232,6 +241,35 @@ class PortfolioController:
                 raise ValidationError("Unknown category.")
             cleaned.add(category_id)
         return sorted(cleaned)
+
+    def _clean_images(self, images):
+        """Uploaded files -> the ones actually chosen (an empty file input sends one
+        blank entry), each with an allowed image extension."""
+        chosen = [f for f in (images or ()) if f is not None and f.filename]
+        for fileobj in chosen:
+            if not allowed_file(fileobj.filename, IMAGE_EXTENSIONS):
+                raise ValidationError("Wrong file extension! Allowed: jpg, jpeg, png, gif.")
+        return chosen
+
+    def _clean_media_ids(self, idp_id, raw_ids):
+        """Ids from the edit form's Remove checkboxes -> media rows, each an image of this IDP."""
+        media = []
+        for raw in (raw_ids or ()):
+            try:
+                row = IDPMedia.find(int(raw))
+            except (TypeError, ValueError):
+                row = None
+            if row is None or row["idp_id"] != idp_id:
+                raise ValidationError("You can only remove images of this project.")
+            media.append(row)
+        return media
+
+    def _save_image(self, idp_id, fileobj):
+        ext = fileobj.filename.rsplit(".", 1)[1].lower()
+        # random name: avoids overwriting other uploads and unsafe filenames
+        saved_name = f"{uuid.uuid4().hex}.{ext}"
+        fileobj.save(os.path.join(self.folders["image"], saved_name))
+        return IDPMedia.create(idp_id, saved_name)
 
     def _remove_from_disk(self, media):
         # basename guards against path tricks

@@ -2,7 +2,7 @@
 
 {% block header %}
   <h1>{% block title %}My Favourites{% endblock %}</h1>
-  <a href="{{ url_for('home.index') }}">Back to home</a>
+  <a class="action" href="{{ url_for('home.index') }}">Back to home</a>
 {% endblock %}
 
 {% block content %}
