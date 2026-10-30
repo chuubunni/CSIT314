@@ -89,7 +89,7 @@ class IDP:
         return [row['category_id'] for row in rows]
 
     @staticmethod
-    def find_by_designer(designer_id, category_id=None):
+    def find_by_designer(designer_id, category_id=None, sort_by='newest'):
         """Get a designer's projects, including interest counts,
         optionally only those in one category."""
         query = (
@@ -120,7 +120,14 @@ class IDP:
             )
             parameters.append(category_id)
 
-        query += ' ORDER BY p.created DESC, p.id DESC'
+        sort_options = {
+            'newest': 'p.created DESC, p.id DESC',
+            'views': 'view_count DESC, p.created DESC, p.id DESC',
+            'favourites': 'favourite_count DESC, p.created DESC, p.id DESC'
+        }
+
+        order_by = sort_options.get(sort_by, sort_options['newest'])
+        query += ' ORDER BY ' + order_by
 
         return get_db().execute(query, parameters).fetchall()
 
