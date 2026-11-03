@@ -35,8 +35,8 @@ class IDP:
             cursor = db.execute(
                 'INSERT INTO idp '
                 '(designer_id, title, description, property_type, '
-                'property_subtype_id, price, status) '
-                'VALUES (?, ?, ?, ?, ?, ?, ?)',
+                'property_subtype_id, price, status, approval_status) '
+                "VALUES (?, ?, ?, ?, ?, ?, ?, 'draft')",
                 (
                     designer_id,
                     title,
@@ -67,7 +67,7 @@ class IDP:
         return get_db().execute(
             'SELECT p.id, p.designer_id, p.property_type, '
             'p.title, p.description, p.price, p.status, p.created, '
-            'p.property_subtype_id, '
+            'p.property_subtype_id, p.approval_status, p.approval_reason, p.image_revision, '
             '(SELECT name FROM property_subtype '
             ' WHERE id = p.property_subtype_id) '
             'AS property_subtype_name, '
@@ -95,7 +95,7 @@ class IDP:
         query = (
             'SELECT p.id, p.designer_id, p.title, p.description, '
             'p.property_type, p.price, p.status, p.created, '
-            'p.property_subtype_id, '
+            'p.property_subtype_id, p.approval_status, p.approval_reason, p.image_revision, '
             '(SELECT name FROM property_subtype '
             ' WHERE id = p.property_subtype_id) '
             'AS property_subtype_name, '
@@ -131,7 +131,7 @@ class IDP:
         category_id=None
     ):
         """Find projects matching all selected homepage filters."""
-        conditions = []
+        conditions = ["p.approval_status = 'approved'"]
         parameters = []
 
         if property_type:
@@ -164,7 +164,7 @@ class IDP:
         return get_db().execute(
             'SELECT p.id, p.designer_id, p.title, p.description, '
             'p.property_type, p.price, p.status, p.created, '
-            'p.property_subtype_id, '
+            'p.property_subtype_id, p.approval_status, p.approval_reason, p.image_revision, '
             '(SELECT name FROM property_subtype '
             ' WHERE id = p.property_subtype_id) '
             'AS property_subtype_name, '

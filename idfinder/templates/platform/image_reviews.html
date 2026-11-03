@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block header %}<h1>{% block title %}Image review queue{% endblock %}</h1><a href="{{ url_for('platform.dashboard') }}">Manager dashboard</a>{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static',filename='image_review.css') }}">
+<p>Possible reuse is a review signal, not proof of plagiarism. Review ownership or permission before deciding.</p>
+{% for project in projects %}
+<article class="review-status">
+<h2><a href="{{ url_for('image_review.project',project_id=project['id']) }}">{{ project['title'] }}</a></h2>
+<p>Designer: {{ project['designer_name'] }} · {{ project['match_count'] }} image match(es) · Revision {{ project['image_revision'] }}</p>
+<strong>Pending approval — potential image reuse</strong>
+</article>
+{% else %}<p>No projects are awaiting image review.</p>{% endfor %}
+{% endblock %}

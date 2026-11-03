@@ -1,0 +1,17 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='image_review.css') }}">
+<div class="review-status review-{{ idp['approval_status'] }}" role="status">
+  {% if idp['approval_status'] == 'pending' %}
+    <strong>Pending approval — potential image reuse</strong>
+    <p>This project is private while a Platform Manager reviews the uploaded images.</p>
+  {% elif idp['approval_status'] == 'rejected' %}
+    <strong>Not approved — private project</strong>
+    <p>Manager’s reason: {{ idp['approval_reason'] }}</p>
+    <p>Revise your images, then resubmit for another check.</p>
+  {% elif idp['approval_status'] == 'draft' %}
+    <strong>Private draft — upload an image to publish</strong>
+    <p>{{ idp['approval_reason'] or 'Your project has not been published.' }}</p>
+  {% else %}
+    <strong>Published</strong>
+    <p>{{ idp['approval_reason'] }}</p>
+  {% endif %}
+</div>

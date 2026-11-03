@@ -327,7 +327,7 @@ class ChatbotController:
             if type(number) is not int or not 1 <= number <= len(results):
                 raise ValidationError('Search for projects first, then choose a result number from the displayed list.')
             project = IDP.find(results[number - 1]['id'])
-            if project is None:
+            if project is None or project['approval_status'] != 'approved':
                 raise ValidationError('That project is no longer available. Please run the search again.')
             answer.update(reply='Open this project to see its details and images.',
                           projects=[{k: project[k] for k in ('id', 'title', 'price', 'property_type', 'status')}])

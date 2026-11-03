@@ -80,7 +80,7 @@ class home_boundary:
         """Display project details and record views."""
         project = IDP.find(idp_id)
 
-        if project is None:
+        if project is None or project['approval_status'] != 'approved':
             abort(404)
 
         images = IDPMedia.find_by_idp(idp_id)

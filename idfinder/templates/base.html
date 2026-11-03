@@ -18,6 +18,7 @@
             {% if g.user['Usertype'] == 'manager' %}
               <li><a href="{{url_for('platform.dashboard')}}">Manager Dashboard</a></li>
               <li><a href="{{url_for('platform_reviews.queue')}}">Review Moderation</a></li>
+              <li><a href="{{ url_for('image_review.queue') }}">Image Reviews{% if pending_image_reviews %} ({{ pending_image_reviews }}){% endif %}</a></li>
             {% elif g.user['Usertype'] == 'customer' %}
               <li><a href="{{url_for('reviews.my_jobs')}}">My Jobs</a></li>
             {% elif g.user['Usertype'] == 'designer' %}

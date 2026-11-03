@@ -24,6 +24,7 @@ def create_app(test_config=None):
             'uploads'
         ),
         MAX_CONTENT_LENGTH=15 * 1024 * 1024,
+        REVIEW_EVIDENCE_FOLDER=os.path.join(app.instance_path, 'review_evidence'),
         DEMO_DATA=(
             os.environ.get('IDFINDER_DEMO_DATA', '0') == '1'
         )
@@ -52,6 +53,8 @@ def create_app(test_config=None):
 
     from .entities import review_schema
     review_schema.init_app(app)
+
+    os.makedirs(app.config['REVIEW_EVIDENCE_FOLDER'], exist_ok=True)
 
     if app.config['DEMO_DATA']:
         from .demo_seed import DemoSeeder
@@ -106,5 +109,11 @@ def create_app(test_config=None):
     from .services.chatbot_state import ChatbotState
     app.extensions['chatbot_state'] = ChatbotState()
     app.register_blueprint(chatbot.bp)
+
+    from .boundaries.image_review import bp as image_review_bp, ReviewBoundary
+    app.register_blueprint(image_review_bp)
+    app.before_request(ReviewBoundary.protect_uploads)
+    app.after_request(ReviewBoundary.private_response)
+    app.context_processor(ReviewBoundary.context)
 
     return app

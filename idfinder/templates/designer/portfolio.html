@@ -15,7 +15,7 @@
 
     <h2>Filter by Category:</h2>
     <div class="category-fields">
-      
+
       <div class="category-field">
         <select name="category_id" id="category_id" data-category-select>
           <option value="" {% if not selected_category_id %}selected{% endif %}>All Categories</option>
@@ -55,7 +55,8 @@
   {% endif %}
 
   {% for idp in idps %}
-    <article class="post">
+    <article class="post{% if idp['approval_status'] != 'approved' %} review-private{% endif %}">
+      {% include 'designer/_approval_status.html' %}
       <header>
         <div>
           <h1>

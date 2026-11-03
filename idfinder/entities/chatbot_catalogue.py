@@ -14,7 +14,7 @@ class ChatbotCatalogue:
         # C18: chat previews are bounded; the results page uses the same predicates.
         if type(limit) is not int or not 1 <= limit <= 50 or type(offset) is not int or offset < 0:
             raise ValueError('Invalid result page.')
-        conditions, values = [], []
+        conditions, values = ["p.approval_status = 'approved'"], []
         # C18: keep each type/subtype pair together, then union alternatives.
         if filters.get('housing_options'):
             alternatives = []
@@ -76,7 +76,7 @@ class ChatbotCatalogue:
         total = db.execute('SELECT COUNT(*) FROM designer d JOIN user u ON u.id=d.userID' + predicate, params).fetchone()[0]
         rows = db.execute(
             'SELECT u.id,u.name,c.companyName AS company_name,'
-            '(SELECT COUNT(*) FROM idp p WHERE p.designer_id=u.id) AS project_count '
+            "(SELECT COUNT(*) FROM idp p WHERE p.designer_id=u.id AND p.approval_status='approved') AS project_count "
             'FROM designer d JOIN user u ON u.id=d.userID '
             'LEFT JOIN company c ON c.companyID=d.companyID' + predicate +
             ' ORDER BY u.name COLLATE NOCASE,u.id LIMIT 6', params).fetchall()

@@ -34,6 +34,7 @@ class IDPMedia:
     @staticmethod
     def delete(mediaID):
         db = get_db()
+        db.execute('DELETE FROM image_fingerprint WHERE media_id = ?', (mediaID,))
         db.execute('DELETE FROM idp_media WHERE mediaID = ?', (mediaID,))
         db.commit()
 
@@ -41,6 +42,7 @@ class IDPMedia:
     def delete_by_idp(idp_id):
         # explicit delete: SQLite only cascades when PRAGMA foreign_keys is on
         db = get_db()
+        db.execute('DELETE FROM image_fingerprint WHERE media_id IN (SELECT mediaID FROM idp_media WHERE idp_id = ?)', (idp_id,))
         db.execute('DELETE FROM idp_media WHERE idp_id = ?', (idp_id,))
         db.commit()
 

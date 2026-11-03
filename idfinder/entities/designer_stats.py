@@ -17,11 +17,11 @@ class DesignerStats:
         params = []
         if category_id:
             sql += (' AND EXISTS (SELECT 1 FROM idp p JOIN idp_category ic ON ic.idp_id = p.id'
-                    ' WHERE p.designer_id = u.id AND ic.category_id = ?)')
+                    " WHERE p.designer_id = u.id AND p.approval_status='approved' AND ic.category_id = ?)")
             params.append(category_id)
         if property_type:
             sql += (' AND EXISTS (SELECT 1 FROM idp p WHERE p.designer_id = u.id'
-                    ' AND p.property_type = ?)')
+                    " AND p.approval_status='approved' AND p.property_type = ?)")
             params.append(property_type)
         return [dict(r) for r in get_db().execute(sql + ' ORDER BY u.name COLLATE NOCASE, u.id', params)]
 
@@ -53,7 +53,7 @@ class DesignerStats:
             ' FROM idp p'
             ' LEFT JOIN (SELECT idp_id, COUNT(*) AS n FROM idp_view GROUP BY idp_id) v ON v.idp_id = p.id'
             ' LEFT JOIN (SELECT idp_id, COUNT(*) AS n FROM favourite_idp GROUP BY idp_id) f ON f.idp_id = p.id'
-            ' GROUP BY p.designer_id')
+            " WHERE p.approval_status='approved' GROUP BY p.designer_id")
         return {r['designer_id']: dict(r) for r in rows}
 
     @staticmethod
@@ -77,5 +77,5 @@ class DesignerStats:
         return [dict(r) for r in get_db().execute(
             'SELECT p.id, p.title, p.property_type, p.price,'
             ' (SELECT link FROM idp_media m WHERE m.idp_id = p.id ORDER BY m.mediaID LIMIT 1) AS image'
-            ' FROM idp p WHERE p.designer_id = ? ORDER BY p.created DESC, p.id DESC LIMIT ?',
+            " FROM idp p WHERE p.designer_id = ? AND p.approval_status='approved' ORDER BY p.created DESC, p.id DESC LIMIT ?",
             (designer_id, limit))]

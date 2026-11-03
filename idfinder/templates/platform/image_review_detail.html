@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block header %}<h1>{% block title %}Review: {{ project['title'] }}{% endblock %}</h1><a href="{{ url_for('image_review.queue') }}">Back to review queue</a>{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static',filename='image_review.css') }}">
+<p>Publication: <strong>{{ project['approval_status'] }}</strong> · Renovation: {{ project['status'] }} · Image revision {{ project['image_revision'] }}</p>
+<p>{{ project['description'] }}</p>
+<h2>Current project images</h2>
+<div class="review-gallery">{% for image in images %}<img src="{{ url_for('static',filename='uploads/'+image['link']) }}" alt="Current project image">{% else %}<p>No current images.</p>{% endfor %}</div>
+<h2>Flagged comparisons</h2>
+<p>Similarity is a fingerprint agreement score, not a probability of plagiarism. These are snapshots captured when the submission was checked.</p>
+{% for case in cases %}
+<article class="review-status">
+<h3>{{ case['score'] }}% fingerprint similarity · {{ case['kind'] }}</h3>
+<div class="review-comparison">
+<figure><img src="{{ url_for('image_review.evidence',case_id=case['id'],side='uploaded') }}" alt="Submitted image snapshot"><figcaption>Uploaded to this project</figcaption></figure>
+<figure><img src="{{ url_for('image_review.evidence',case_id=case['id'],side='matched') }}" alt="Matching image snapshot"><figcaption>{{ case['matched_title'] }} · {{ case['matched_designer'] }}<br><a href="{{ url_for('image_review.project',project_id=case['matched_project_id']) }}">View matching project (if still available)</a></figcaption></figure>
+</div>
+<p>Algorithm: {{ case['algorithm'] }} · pHash distance: {{ case['phash_distance'] }}/64 · dHash distance: {{ case['dhash_distance'] }}/64</p>
+</article>
+{% else %}<p>No flagged comparisons for this revision.</p>{% endfor %}
+{% if project['approval_status']=='pending' %}
+<form method="post">
+<input type="hidden" name="form_token" value="{{ review_token }}">
+<input type="hidden" name="revision" value="{{ project['image_revision'] }}">
+<label for="reason">Decision reason (visible to the designer)</label>
+<textarea id="reason" name="reason" required maxlength="2000" rows="4"></textarea>
+<button name="decision" value="approved">Approve publication</button>
+<button name="decision" value="rejected">Reject publication</button>
+</form>
+{% endif %}
+<h2>Decision history</h2>
+{% for decision in history %}<p><strong>{{ decision['decision'] }}</strong> · Revision {{ decision['revision'] }} · {{ decision['manager_name'] }} · {{ decision['created'] }}<br>{{ decision['reason'] }}</p>{% else %}<p>No manager decisions yet.</p>{% endfor %}
+{% endblock %}

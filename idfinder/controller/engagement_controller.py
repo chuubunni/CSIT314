@@ -40,7 +40,7 @@ class EngagementController:
             except (TypeError, ValueError):
                 raise ValidationError('Please choose a valid project.')
             project = IDP.find(idp_id)
-            if project is None or project['designer_id'] != designer_id:
+            if project is None or project['designer_id'] != designer_id or project['approval_status'] != 'approved':
                 raise ValidationError('That project does not belong to this designer.')
         else:
             idp_id = None

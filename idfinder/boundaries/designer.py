@@ -7,6 +7,7 @@ from werkzeug.exceptions import abort
 
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.controller.portfolio_controller import PortfolioController
+from idfinder.boundaries.form_security import form_token, validate_form_token
 
 bp = Blueprint('designer', __name__)
 
@@ -30,7 +31,7 @@ class designer_boundary():
 
 
     def controller():
-        return PortfolioController(current_app.config['UPLOAD_FOLDER'])
+        return PortfolioController(current_app.config['UPLOAD_FOLDER'], current_app.config['REVIEW_EVIDENCE_FOLDER'])
 
 
     @bp.errorhandler(NotFoundError)
@@ -76,8 +77,8 @@ class designer_boundary():
         ctrl = designer_boundary.controller()
         if request.method == 'POST':
             try:
-                idp_id = ctrl.create_idp(g.user['id'], **designer_boundary._idp_form_fields(),
-                                         images=request.files.getlist('images'))
+                idp_id = ctrl.create_idp(g.user['id'], **designer_boundary._idp_form_fields())
+                flash('Private draft saved. Upload an image to check and publish your project.')
                 return redirect(url_for('designer.view_idp', idp_id=idp_id))
             except ValidationError as error:
                 flash(str(error))
@@ -93,7 +94,7 @@ class designer_boundary():
     @designer_required
     def view_idp(idp_id):
         idp, images = designer_boundary.controller().get_idp_with_media(idp_id, g.user['id'])
-        return render_template('designer/idp_detail.html', idp=idp, images=images)
+        return render_template('designer/idp_detail.html', idp=idp, images=images, review_token=form_token())
 
 
     @bp.route('/portfolio/<int:idp_id>/edit', methods=('GET', 'POST'))
@@ -104,14 +105,11 @@ class designer_boundary():
         idp = ctrl.get_idp(idp_id, g.user['id'])          # 404 / 403 if not found or not yours
         if request.method == 'POST':
             try:
-                ctrl.update_idp(idp_id, g.user['id'], **designer_boundary._idp_form_fields(),
-                                images=request.files.getlist('images'),
-                                remove_media_ids=request.form.getlist('remove_media_ids'))
+                ctrl.update_idp(idp_id, g.user['id'], **designer_boundary._idp_form_fields())
                 return redirect(url_for('designer.view_idp', idp_id=idp_id))
             except ValidationError as error:
                 flash(str(error))
         return render_template('designer/create_port.html', idp=idp,
-                            images=ctrl.get_idp_with_media(idp_id, g.user['id'])[1],
                             categories=ctrl.categories(), form=request.form,
                             selected_categories=ctrl.get_category_ids(idp_id, g.user['id']),
                             property_types=ctrl.property_options()[0],
@@ -122,6 +120,7 @@ class designer_boundary():
     @login_required
     @designer_required
     def delete_idp(idp_id):
+        validate_form_token()
         designer_boundary.controller().delete_idp(idp_id, g.user['id'])
         return redirect(url_for('designer.portfolio'))
 
@@ -130,8 +129,13 @@ class designer_boundary():
     @login_required
     @designer_required
     def upload_image(idp_id):
+        validate_form_token()
         try:
             designer_boundary.controller().add_image(idp_id, g.user['id'], request.files.get('file'))
+            project = designer_boundary.controller().get_idp(idp_id, g.user['id'])
+            flash('Potential image reuse detected. Your project is pending approval.'
+                  if project['approval_status'] == 'pending' else 'Image check passed. Your project is published.'
+                  if project['approval_status'] == 'approved' else 'Your project is private.')
         except ValidationError as error:
             flash(str(error))
         return redirect(url_for('designer.view_idp', idp_id=idp_id))
@@ -141,6 +145,7 @@ class designer_boundary():
     @login_required
     @designer_required
     def remove_media(mediaID):
+        validate_form_token()
         idp_id = designer_boundary.controller().remove_media(mediaID, g.user['id'])
         return redirect(url_for('designer.view_idp', idp_id=idp_id))
 

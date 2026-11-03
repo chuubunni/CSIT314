@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block header %}<h1>{% block title %}Platform Management{% endblock %}</h1>{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='image_review.css') }}">
 <h2>Category Management</h2>
 <div class="manager-tools">
   <form method="get" action="{{ url_for('platform.dashboard') }}">
@@ -64,6 +65,7 @@
   {% endif %}
 </section>
 {# ===== PM21 + PM23 DASHBOARD SUMMARY END ===== #}
+<div class="review-alert"><strong>{{ pending_image_reviews }} pending project{{ '' if pending_image_reviews == 1 else 's' }} for image review</strong> <a href="{{ url_for('image_review.queue') }}">Open image review queue</a></div>
 <p><a class="profile-button" href="{{ url_for('platform_charts.page') }}">View Platform Graphs &raquo;</a>
    <a class="profile-button" href="{{ url_for('platform_reviews.queue') }}">Review Moderation &raquo;</a></p>
 <form method="get" action="{{ url_for('platform.dashboard') }}">

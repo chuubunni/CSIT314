@@ -14,7 +14,7 @@ class Favourites:
                                   "WHERE c.cust_id=? AND u.Usertype='customer'", (customer_id,)).fetchone()
             if customer is None:
                 raise PermissionDenied('A customer profile is required to save projects.')
-            if db.execute('SELECT id FROM idp WHERE id=?', (idp_id,)).fetchone() is None:
+            if db.execute("SELECT id FROM idp WHERE id=? AND approval_status='approved'", (idp_id,)).fetchone() is None:
                 raise NotFoundError('This project no longer exists.')
             cursor = db.execute('INSERT INTO favourite_idp(customer_id,idp_id) VALUES (?,?) '
                                 'ON CONFLICT(customer_id,idp_id) DO NOTHING', (customer_id, idp_id))
@@ -41,7 +41,7 @@ class Favourites:
             ' JOIN user u ON u.id = p.designer_id'
             ' LEFT JOIN designer d ON d.userID = p.designer_id'
             ' LEFT JOIN company co ON co.companyID = d.companyID'
-            ' WHERE f.customer_id = ?'
+            " WHERE f.customer_id = ? AND p.approval_status = 'approved'"
             ' ORDER BY f.created DESC, p.id DESC',
             (customer_id,)).fetchall()
 
@@ -49,4 +49,4 @@ class Favourites:
     def find_project_ids(customer_id):
         # C08: return only this customer's saved IDs to mark project cards.
         return {row['idp_id'] for row in get_db().execute(
-            'SELECT idp_id FROM favourite_idp WHERE customer_id=?', (customer_id,))}
+            "SELECT f.idp_id FROM favourite_idp f JOIN idp p ON p.id=f.idp_id WHERE f.customer_id=? AND p.approval_status='approved'", (customer_id,))}

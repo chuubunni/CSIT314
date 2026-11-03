@@ -15,7 +15,7 @@ class DesignerSearch:
         escaped = name.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
         return get_db().execute(
             'SELECT u.id, u.name, co.companyName AS company_name,'
-            ' (SELECT COUNT(*) FROM idp p WHERE p.designer_id = u.id) AS project_count'
+            " (SELECT COUNT(*) FROM idp p WHERE p.designer_id = u.id AND p.approval_status='approved') AS project_count"
             ' FROM designer d'
             ' JOIN user u ON u.id = d.userID'
             ' LEFT JOIN company co ON co.companyID = d.companyID'
