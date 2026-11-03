@@ -47,6 +47,9 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
+    from .entities import review_schema
+    review_schema.init_app(app)
+
     if app.config['DEMO_DATA']:
         from .demo_seed import DemoSeeder
 
@@ -87,5 +90,12 @@ def create_app(test_config=None):
 
     from .boundaries import favourites
     app.register_blueprint(favourites.bp)
+
+    # designer ratings: profile + leaderboard, jobs, reviews, and the manager's moderation page
+    from .boundaries import reviews
+    app.register_blueprint(reviews.bp)
+
+    from .boundaries.platform_reviews import platform_reviews_bp
+    app.register_blueprint(platform_reviews_bp)
 
     return app

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}{{ 'Edit your review' if existing else 'Review ' ~ job['designer_name'] }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='reviews.css') }}">
+<p>Job: <strong>{{ job['title'] }}</strong> with
+  <a href="{{ url_for('reviews.designer_profile', designer_id=job['designer_id']) }}">{{ job['designer_name'] }}</a></p>
+
+{% set current = form.get('rating', existing['rating'] if existing else '') %}
+<form method="post" class="rv-form">
+  <input type="hidden" name="form_token" value="{{ form_token }}">
+  <fieldset class="rv-rate">
+    <legend>Your rating</legend>
+    {# five radio buttons drawn as stars; they work with the keyboard too #}
+    {% for n in [5, 4, 3, 2, 1] %}
+      <input type="radio" id="star{{ n }}" name="rating" value="{{ n }}" {{ 'checked' if current|string == n|string }} required>
+      <label for="star{{ n }}" title="{{ n }} star{{ '' if n == 1 else 's' }}">&#9733;</label>
+    {% endfor %}
+  </fieldset>
+  <label for="comment">Tell others about your experience (optional)</label>
+  <textarea id="comment" name="comment" maxlength="1000" rows="6"
+            placeholder="How was the communication, timing, budget and the final result?">{{ form.get('comment', existing['comment'] if existing else '') }}</textarea>
+  <p class="muted small">Your first name and last initial are shown. Words like &ldquo;communication&rdquo;, &ldquo;on time&rdquo; or &ldquo;budget&rdquo; help other customers find what matters to them.</p>
+  <div class="profile-actions">
+    <button type="submit" class="profile-button">{{ 'Save changes' if existing else 'Post review' }}</button>
+    <a class="profile-button" href="{{ url_for('reviews.my_jobs') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

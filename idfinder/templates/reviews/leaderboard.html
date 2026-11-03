@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% from 'reviews/_macros.html' import stars %}
+
+{% block header %}
+  <h1>{% block title %}Designer Leaderboard{% endblock %}</h1>
+  <a class="action" href="{{ url_for('search.designers') }}">Find designers</a>
+  <a class="action" href="{{ url_for('home.index') }}">Browse projects</a>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='reviews.css') }}">
+
+<form method="get" action="{{ url_for('reviews.leaderboard') }}" class="rv-filters">
+  <div><label for="lb-category">Design category</label>
+    <select id="lb-category" name="category_id"><option value="">All categories</option>
+      {% for c in categories %}<option value="{{ c['id'] }}" {{ 'selected' if selected['category_id'] == c['id']|string }}>{{ c['name'] }}</option>{% endfor %}
+    </select></div>
+  <div><label for="lb-type">Housing type</label>
+    <select id="lb-type" name="property_type"><option value="">All housing types</option>
+      {% for t in property_types %}<option value="{{ t['code'] }}" {{ 'selected' if selected['property_type'] == t['code'] }}>{{ t['name'] }}</option>{% endfor %}
+    </select></div>
+  <div><label for="lb-min">Minimum reviews</label>
+    <input id="lb-min" type="number" name="min_reviews" min="0" max="50" value="{{ selected['min_reviews'] or 0 }}"></div>
+  <div class="rv-filter-actions"><button type="submit">Apply</button>
+    <a href="{{ url_for('reviews.leaderboard') }}">Clear</a></div>
+</form>
+{% if error %}<p class="housing-error" role="alert">{{ error }}</p>{% endif %}
+
+<section class="rv-card rv-wide">
+  <h2>What matters to you?</h2>
+  <p class="muted small">Move a slider and the ranking re-sorts instantly. The score is the weighted average of the five parts below.</p>
+  <div class="rv-sliders" data-sliders>
+    {% for key in board['components'] %}
+      <label class="rv-slider">
+        <span>{{ board['labels'][key] }} <output data-weight-out="{{ key }}">{{ board['weights'][key]|int }}</output></span>
+        <input type="range" min="0" max="100" step="5" value="{{ board['weights'][key]|int }}" data-weight="{{ key }}">
+      </label>
+    {% endfor %}
+    <button type="button" data-reset-weights>Reset</button>
+  </div>
+</section>
+
+<script type="application/json" id="leaderboard-data">{{ {'rows': board['rows'], 'weights': board['weights'], 'components': board['components'], 'labels': board['labels']}|tojson }}</script>
+
+<div class="rv-lb-layout">
+  <div>
+    <table class="manager-table rv-table" data-leaderboard>
+      <thead><tr><th>#</th><th>Designer</th><th>Score</th><th>Rating</th><th>Interest</th><th>Jobs</th><th title="Tick up to 3 to compare">Compare</th></tr></thead>
+      <tbody>
+        {# The rows are drawn by leaderboard.js. This copy is what you see without JavaScript. #}
+        {% for r in board['rows'] %}
+          <tr><td>{{ r['rank'] }}</td>
+              <td><a href="{{ url_for('reviews.designer_profile', designer_id=r['id']) }}">{{ r['name'] }}</a></td>
+              <td>{{ r['score'] }}</td>
+              <td>{% if r['reviews'] %}{{ r['avg_rating'] }} ({{ r['reviews'] }}){% else %}&ndash;{% endif %}</td>
+              <td>{{ r['conversion'] if r['conversion'] is not none else '–' }}{{ '%' if r['conversion'] is not none }}</td>
+              <td>{{ r['completed_jobs'] }}</td><td></td></tr>
+        {% else %}
+          <tr><td colspan="7">No designers match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <aside class="rv-card">
+    <h2>Compare</h2>
+    <p class="muted small" data-compare-hint>Tick up to three designers to compare them on the five parts of the score.</p>
+    <div class="chart-box rv-radar"><canvas id="rv-radar" aria-label="Radar chart comparing designers" role="img"></canvas></div>
+  </aside>
+</div>
+
+<details class="rv-card rv-wide">
+  <summary><strong>How is the score worked out?</strong></summary>
+  <ul>
+    <li><strong>Star rating</strong> &ndash; a <em>Bayesian average</em>: with few reviews a designer stays close to the platform average, so one 5-star review cannot beat a long track record. Newer reviews count more (a review loses half its weight every 60 days).</li>
+    <li><strong>Review sentiment</strong> &ndash; how positive the written reviews are, scored by text analysis ({{ engine }}) and adjusted the same way.</li>
+    <li><strong>Customer interest</strong> &ndash; how often customers shortlist their projects after viewing them, compared with the platform average.</li>
+    <li><strong>Reliability</strong> &ndash; accepts requests, finishes the jobs they accept, and replies to reviews.</li>
+    <li><strong>Experience</strong> &ndash; completed jobs, with diminishing returns.</li>
+  </ul>
+  <p class="muted small">Only visible reviews count. Reviews hidden by the platform manager are ignored, and only customers with a completed job can review.</p>
+</details>
+
+<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='leaderboard.js') }}"></script>
+{% endblock %}

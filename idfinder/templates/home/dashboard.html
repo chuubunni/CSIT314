@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block header %}<h1>{% block title %}Platform Management{% endblock %}</h1>{% endblock %}
+{% block content %}
+<h2>Category Management</h2>
+<div class="manager-tools">
+  <form method="get" action="{{ url_for('platform.dashboard') }}">
+    <label for="q">Search</label><input id="q" name="q" value="{{ q }}" placeholder="Category name">
+    <button type="submit">Search</button>
+  </form>
+  <form method="post" action="{{ url_for('platform.add_category') }}">
+    <label for="category-name">New category</label>
+    <input id="category-name" name="name" maxlength="80" required>
+    <button type="submit">Add Category</button>
+  </form>
+</div>
+<table class="manager-table">
+  <thead><tr><th>Name</th><th>Status</th><th>Projects</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for category in categories %}
+    <tr><td>
+      <form id="edit-{{ category['id'] }}" method="post" action="{{ url_for('platform.edit_category', category_id=category['id']) }}">
+        <input aria-label="Category name" name="name" maxlength="80" value="{{ category['name'] }}" required>
+      </form>
+    </td><td>
+      <select aria-label="Category status" name="active" form="edit-{{ category['id'] }}">
+        <option value="1" {% if category['active'] %}selected{% endif %}>Active</option>
+        <option value="0" {% if not category['active'] %}selected{% endif %}>Inactive</option>
+      </select>
+    </td><td>{{ category['project_count'] }}</td><td>
+      <button type="submit" form="edit-{{ category['id'] }}">Save</button>
+      <form method="post" action="{{ url_for('platform.delete_category', category_id=category['id']) }}" onsubmit="return confirm('Delete this category?');">
+        <button type="submit">Delete</button>
+      </form>
+    </td></tr>
+  {% else %}<tr><td colspan="4">No matching categories.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<h2>Property Types</h2>
+<table class="manager-table">
+  <thead><tr><th>Name</th><th>Code</th><th>Subtypes</th><th>Projects</th><th>Customers</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for ptype in property_types %}
+    <tr><td>{{ ptype['name'] }}</td><td>{{ ptype['code'] }}</td><td>{{ ptype['subtype_count'] }}</td>
+      <td>{{ ptype['project_count'] }}</td><td>{{ ptype['customer_count'] }}</td><td>
+      <form method="post" action="{{ url_for('platform.delete_property_type', type_id=ptype['id']) }}"
+            onsubmit="return confirm('Remove property type {{ ptype['name']|e }} and its {{ ptype['subtype_count'] }} subtype(s)?');">
+        <button type="submit">Remove</button>
+      </form>
+    </td></tr>
+  {% else %}<tr><td colspan="6">No property types.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<h2>Platform Activity</h2>
+{# ===== PM21 + PM23 DASHBOARD SUMMARY START: brief numbers; the full graphs are on the next page ===== #}
+<section id="charts-summary" class="chart-summary">
+  {% if weekly_summary.available %}
+  <div class="manager-stats">
+    <div class="manager-stat">Views (last 7 days)<strong>{{ weekly_summary.total_views }}</strong></div>
+    <div class="manager-stat">Shortlists (last 7 days)<strong>{{ weekly_summary.total_saves }}</strong></div>
+    <div class="manager-stat">Most viewed category<strong>{{ category_summary.top_category or '&ndash;'|safe }}</strong></div>
+  </div>
+  {% else %}
+  <p>Graph summary is not available right now.</p>
+  {% endif %}
+</section>
+{# ===== PM21 + PM23 DASHBOARD SUMMARY END ===== #}
+<p><a class="profile-button" href="{{ url_for('platform_charts.page') }}">View Platform Graphs &raquo;</a>
+   <a class="profile-button" href="{{ url_for('platform_reviews.queue') }}">Review Moderation &raquo;</a></p>
+<form method="get" action="{{ url_for('platform.dashboard') }}">
+  <label for="period">Report period</label>
+  <select id="period" name="period">
+    {% for option in ('daily', 'weekly', 'monthly') %}
+      <option value="{{ option }}" {% if option == period %}selected{% endif %}>{{ option|capitalize }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Generate Report</button>
+</form>
+<p>Rolling {{ {'daily':'24 hours', 'weekly':'7 days', 'monthly':'1 month'}[period] }} (UTC).</p>
+<div class="manager-stats">
+  <div class="manager-stat">New projects<strong>{{ summary['projects'] }}</strong></div>
+  <div class="manager-stat">Project views<strong>{{ summary['views'] }}</strong></div>
+  <div class="manager-stat">New favourites<strong>{{ summary['favourites'] }}</strong></div>
+  <div class="manager-stat">New users<strong>{{ summary['users'] }}</strong></div>
+</div>
+<h2>Project Interest Statistics (All Time)</h2>
+<table class="manager-table">
+  <thead><tr><th>Project</th><th>Views</th><th>Shortlists</th></tr></thead>
+  <tbody>{% for project in interest %}
+    <tr><td>{{ project['title'] }}</td><td>{{ project['views'] }}</td><td>{{ project['favourites'] }}</td></tr>
+  {% else %}<tr><td colspan="3">No projects available.</td></tr>{% endfor %}</tbody>
+</table>
+{% endblock %}

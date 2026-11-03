@@ -3,47 +3,111 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='platform_charts.css') }}">
 
-{# This page is only the layout. platform_charts.js fills in the numbers, the graphs and the
-   tables using the JSON from /platform/charts/weekly (PM21) and /platform/charts/categories (PM23). #}
+{# This page is only the layout. platform_charts.js fills in the numbers, graphs and tables using
+   the JSON routes in boundaries/platform_charts.py (weekly, trend, heatmap, categories,
+   category-trend, ratings). Search this page for "PM21 START", "PM23 START" or "RATINGS START". #}
 
 <p><a href="{{ url_for('platform.dashboard') }}">&laquo; Back to Platform Management</a></p>
-<p class="chart-intro">See how the platform is being used, week by week, and which design categories get the most attention.</p>
+<p class="chart-intro">How the platform is being used, what is likely to happen next, and which design categories earn the most attention.</p>
 <noscript><p class="chart-status error">These graphs need JavaScript to be switched on.</p></noscript>
 
 {# ========================= PM21 START: weekly platform activity ========================= #}
-<section id="weekly-chart" class="chart-section" data-url="{{ url_for('platform_charts.weekly') }}">
-  <h2 class="chart-section-title">Weekly Activity Graph</h2>
+<section id="weekly-chart" class="chart-section" data-weekly-url="{{ url_for('platform_charts.weekly') }}"
+         data-trend-url="{{ url_for('platform_charts.trend') }}" data-heatmap-url="{{ url_for('platform_charts.heatmap') }}">
+  <h2 class="chart-section-title">Weekly Activity</h2>
   <div class="chart-controls">
     <label for="weekly-end">Week ending</label>
     <input type="date" id="weekly-end" data-week-end>
     <button type="button" data-week-prev>&laquo; Previous week</button>
     <button type="button" data-week-next>Next week &raquo;</button>
     <span class="chart-range" data-week-range></span>
+    <label class="live-toggle"><input type="checkbox" data-live> Live updates (every 30 seconds)</label>
+    <span class="chart-range" data-updated aria-live="polite"></span>
   </div>
-  <p class="chart-note">Seven days ending on the chosen date (UTC days, like the report on the dashboard). Each figure is compared with the 7 days before it.</p>
+  <p class="chart-note">Seven days ending on the chosen date (UTC days, like the report on the dashboard). Each figure is compared with the 7 days before it. Choose a figure to see it day by day.</p>
   <p class="chart-status" role="status" data-status></p>
-  <div class="manager-stats" data-week-stats></div>
-  <div class="chart-grid" data-week-charts></div>
-  <table class="manager-table" data-week-table>
-    <thead><tr><th>Date</th><th>New projects</th><th>Project views</th><th>New favourites</th><th>New users</th></tr></thead>
-    <tbody></tbody>
-  </table>
+
+  <div class="kpi-row" data-week-stats role="group" aria-label="Choose what to plot"></div>
+
+  <div class="chart-card">
+    <h3 data-trend-title>Project views, last 28 days</h3>
+    <div class="chart-box tall"><canvas id="trend-canvas" role="img" aria-label="Daily activity with a 7-day average, last week and a forecast"></canvas></div>
+    <p class="chart-note" data-trend-note></p>
+    <ul class="insights" data-trend-insights></ul>
+  </div>
+
+  <div class="chart-card">
+    <h3>When are projects viewed?</h3>
+    <p class="chart-note" data-heatmap-note>Views per weekday and hour over the 28 days ending on the chosen date.</p>
+    <div class="heatmap" data-heatmap role="img" aria-label="Heatmap of project views by weekday and hour"></div>
+    <div class="heat-legend" data-heat-legend aria-hidden="true"></div>
+  </div>
+
+  <details class="chart-card">
+    <summary>Show the numbers for this week</summary>
+    <table class="manager-table" data-week-table>
+      <thead><tr><th>Date</th><th>New projects</th><th>Project views</th><th>New favourites</th><th>New users</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </details>
 </section>
 {# ========================= PM21 END ========================= #}
 
 {# ========================= PM23 START: project interest by design category ========================= #}
-<section id="category-chart" class="chart-section" data-url="{{ url_for('platform_charts.categories') }}">
+<section id="category-chart" class="chart-section" data-url="{{ url_for('platform_charts.categories') }}"
+         data-trend-url="{{ url_for('platform_charts.category_trend') }}">
   <h2 class="chart-section-title">Project Interest by Design Category</h2>
-  <p class="chart-note">All time. Interest = project views and shortlists. A project in several categories counts towards each of them.</p>
+  <p class="chart-note">Interest = project views and shortlists. A project in several categories counts towards each of them.</p>
   <p class="chart-status" role="status" data-status></p>
-  <div class="manager-stats" data-category-stats></div>
-  <div class="chart-box" data-category-box><canvas id="category-canvas" aria-label="Views and shortlists per design category" role="img"></canvas></div>
-  <table class="manager-table" data-category-table>
-    <thead><tr><th>Category</th><th>Projects</th><th>Views</th><th>Shortlists</th><th>Share of views</th></tr></thead>
-    <tbody></tbody>
-  </table>
+  <div class="kpi-row" data-category-stats></div>
+  <ul class="insights" data-category-insights></ul>
+
+  <div class="chart-card">
+    <h3>Which categories are looked at but not saved?</h3>
+    <p class="chart-note">Each dot is a category. Further right = more views. Higher = a bigger share of views end in a shortlist. Dot size = number of projects.</p>
+    <div class="chart-box tall"><canvas id="bubble-canvas" role="img" aria-label="Views against shortlist rate for each design category"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>How category views changed over the last 8 weeks</h3>
+    <div class="chart-box tall"><canvas id="area-canvas" role="img" aria-label="Weekly views per design category"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>Growing and cooling categories</h3>
+    <p class="chart-note">Views in the last 4 weeks compared with the 4 weeks before.</p>
+    <div class="chart-box" data-growth-box><canvas id="growth-canvas" role="img" aria-label="Change in views per category"></canvas></div>
+  </div>
+
+  <details class="chart-card">
+    <summary>Show the numbers for every category</summary>
+    <table class="manager-table" data-category-table>
+      <thead><tr><th>Category</th><th>Projects</th><th>Views</th><th>Shortlists</th><th>Shortlist rate</th><th>Share of views</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </details>
 </section>
 {# ========================= PM23 END ========================= #}
+
+{# ========================= RATINGS START: designer reviews at a glance ========================= #}
+<section id="ratings-chart" class="chart-section" data-url="{{ url_for('platform_charts.ratings') }}">
+  <h2 class="chart-section-title">Designer Ratings</h2>
+  <p class="chart-status" role="status" data-status></p>
+  <div class="kpi-row" data-ratings-stats></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>How customers rate their designers</h3>
+      <div class="chart-box"><canvas id="ratings-dist-canvas" role="img" aria-label="Number of reviews per star rating"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Average rating by month</h3>
+      <div class="chart-box"><canvas id="ratings-month-canvas" role="img" aria-label="Average review rating per month"></canvas></div>
+    </div>
+  </div>
+  <p><a class="profile-button" href="{{ url_for('reviews.leaderboard') }}">Designer leaderboard &raquo;</a>
+     <a class="profile-button" href="{{ url_for('platform_reviews.queue') }}">Review moderation &raquo;</a></p>
+</section>
+{# ========================= RATINGS END ========================= #}
 
 <script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
 <script src="{{ url_for('static', filename='platform_charts.js') }}"></script>

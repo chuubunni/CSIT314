@@ -1,17 +1,48 @@
-/* Platform manager graphs (PM21, PM23) */
-.chart-section { margin-bottom: 2rem; }
+/* Platform manager graphs (PM21, PM23, ratings). Colours follow one fixed palette:
+   blue, orange, aqua, yellow for the four measures; blue -> red for growth / decline. */
+.chart-section { margin-bottom: 2.2rem; }
+.chart-intro { color: #52514e; }
+.chart-section-title { margin: 1.5rem 0 .6rem; }
 .chart-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .chart-controls label { margin: 0; font-weight: bold; }
 .chart-controls input { margin: 0; }
 .chart-controls button { padding: 6px 10px; cursor: pointer; }
-.chart-range { color: #667685; font-size: .9rem; }
-.chart-note { color: #667685; font-size: .85rem; margin: 6px 0; }
-.chart-status { color: #cc2f2e; min-height: 1.2em; margin: 4px 0; }
-.chart-box { position: relative; height: 320px; margin: 12px 0; }
-.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 12px 0; }
-.chart-grid h3 { font-size: 1rem; margin: 0 0 4px; }
-.chart-box-small { position: relative; height: 190px; }
-.chart-section .manager-stats { margin-top: 10px; }
-.chart-section .manager-stat small { display: block; margin-top: 4px; font-size: .8rem; color: #667685; }
-.chart-section .manager-stat small.up { color: #1d7a46; }
-.chart-section .manager-stat small.down { color: #b03a2e; }
+.chart-range { color: #52514e; font-size: .9rem; }
+.chart-note { color: #52514e; font-size: .85rem; margin: 6px 0; }
+.chart-status { color: #b03a2e; min-height: 1.2em; margin: 4px 0; }
+.chart-box { position: relative; height: 280px; margin: 10px 0; }
+.chart-box.tall { height: 360px; }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 12px 0; }
+.chart-card { border: 1px solid #e1e0d9; border-radius: 12px; padding: 12px 16px; margin: 14px 0; background: #fcfcfb; }
+.chart-card h3 { font-size: 1rem; margin: 2px 0 4px; }
+.chart-card summary { cursor: pointer; font-weight: bold; }
+
+/* KPI cards: the four measures, each is a button that picks what the trend chart plots */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+.kpi { text-align: left; padding: 12px 14px; border: 1px solid #e1e0d9; border-left: 5px solid var(--kpi, #2a78d6);
+       border-radius: 10px; background: #fcfcfb; font: inherit; color: #0b0b0b; }
+button.kpi { cursor: pointer; }
+button.kpi:hover { background: #f4f3ef; }
+button.kpi[aria-pressed="true"] { background: #eef4fc; box-shadow: 0 0 0 2px var(--kpi, #2a78d6) inset; }
+.kpi .kpi-label { display: block; font-size: .85rem; color: #52514e; }
+.kpi strong { display: block; font-size: 1.6rem; margin: 4px 0 2px; }
+.kpi small { display: block; font-size: .8rem; color: #52514e; }
+.kpi small.up { color: #006300; } .kpi small.down { color: #b03a2e; }
+
+.insights { margin: 8px 0 0; padding-left: 1.2rem; color: #0b0b0b; }
+.insights li { margin: 4px 0; }
+.insights:empty { display: none; }
+
+/* Heatmap: one hue, light to dark = fewer to more views */
+.heatmap { display: grid; grid-template-columns: 2.4rem repeat(24, minmax(0, 1fr)); gap: 2px; margin: 8px 0; }
+.heatmap .day, .heatmap .hour { font-size: .7rem; color: #52514e; display: flex; align-items: center; }
+.heatmap .hour { justify-content: center; }
+.heatmap .cell { aspect-ratio: 1 / 1; border-radius: 3px; min-height: 12px; }
+.heatmap .cell:hover { outline: 2px solid #0b0b0b; outline-offset: 1px; }
+.heat-legend { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: #52514e; }
+.heat-legend .swatch { width: 22px; height: 10px; border-radius: 2px; }
+.heat-tip { position: fixed; z-index: 20; pointer-events: none; background: #0b0b0b; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: .8rem; }
+@media (max-width: 640px) { .heatmap .hour:nth-child(odd) { visibility: hidden; } }
+.manager-table tr.total-row td { font-weight: bold; }
+.live-toggle { margin: 0; font-weight: normal; display: inline-flex; align-items: center; gap: 4px; }
+.live-toggle input { width: auto; margin: 0; }

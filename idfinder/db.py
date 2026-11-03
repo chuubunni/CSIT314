@@ -27,6 +27,10 @@ def init_db():
         db.executescript(f.read().decode('utf-8'))
         #use connection from get_db to read commands from schema.sql
 
+    # ratings feature: its tables live in review_schema.sql; recreate them with everything else
+    from idfinder.entities import review_schema
+    review_schema.reset(db)
+
 @click.command('init-db') #defines command line 'init-db' that called the init-db function 
 def init_db_command():
     #clear existing data and make new tables 

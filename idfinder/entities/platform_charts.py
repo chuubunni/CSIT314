@@ -102,3 +102,64 @@ class PlatformCharts:
         return [dict(row) for row in rows]
 
     # ======================= PM23 END (entity part) =======================
+
+    # ======================================================================
+    # PM21 (extra): when are projects viewed?  weekday x hour grid
+    # ======================================================================
+    @staticmethod
+    def views_by_weekday_hour(start, end, offset_minutes=0):
+        """Project views from `start` to `end` inclusive (UTC days), counted per weekday and hour.
+
+        `offset_minutes` shifts the clock to the viewer's time zone (Singapore = 480), so
+        "8 pm" on the grid is 8 pm on the manager's own clock.
+        Returns a 7 x 24 list of lists: row 0 = Monday ... row 6 = Sunday, column = hour 0-23.
+        """
+        modifier = f'{int(offset_minutes):+d} minutes'          # e.g. '+480 minutes'; an int, never user text
+        rows = get_db().execute(
+            "SELECT CAST(strftime('%w', datetime(viewed_at, ?)) AS INTEGER) AS dow,"
+            " CAST(strftime('%H', datetime(viewed_at, ?)) AS INTEGER) AS hour, COUNT(*) AS n"
+            " FROM idp_view WHERE viewed_at >= ? AND viewed_at < ? GROUP BY dow, hour",
+            (modifier, modifier, start.isoformat(), (end + timedelta(days=1)).isoformat())).fetchall()
+        grid = [[0] * 24 for _ in range(7)]
+        for row in rows:
+            grid[(row['dow'] + 6) % 7][row['hour']] = row['n']      # SQLite: 0 = Sunday -> we want Monday first
+        return grid
+
+    # ======================================================================
+    # PM23 (extra): weekly views per category (for the area chart and the growth chart)
+    # ======================================================================
+    @staticmethod
+    def weekly_category_views(last_day, weeks=8):
+        """Views per category in each of the last `weeks` weeks; the last week ends on `last_day`.
+
+        Returns (week_start_dates, {category_id: {'name': ..., 'weeks': [n, n, ...]}}).
+        A project in several categories counts towards each, like the rest of PM23.
+        """
+        first_day = last_day - timedelta(days=weeks * 7 - 1)
+        rows = get_db().execute(
+            "SELECT CAST((julianday(date(v.viewed_at)) - julianday(?)) / 7 AS INTEGER) AS week,"
+            " c.id, c.name, COUNT(*) AS n"
+            " FROM idp_view v JOIN idp_category ic ON ic.idp_id = v.idp_id"
+            " JOIN category c ON c.id = ic.category_id"
+            " WHERE v.viewed_at >= ? AND v.viewed_at < ? GROUP BY week, c.id",
+            (first_day.isoformat(), first_day.isoformat(), (last_day + timedelta(days=1)).isoformat())).fetchall()
+        starts = [(first_day + timedelta(days=7 * i)) for i in range(weeks)]
+        series = {}
+        for row in rows:
+            entry = series.setdefault(row['id'], {'name': row['name'], 'weeks': [0] * weeks})
+            if 0 <= row['week'] < weeks:
+                entry['weeks'][row['week']] = row['n']
+        return starts, series
+
+    # ======================================================================
+    # Ratings overview for the manager (from the review tables)
+    # ======================================================================
+    @staticmethod
+    def visible_review_ratings():
+        """[(rating, created)] of every visible review. Empty if the review tables do not exist yet."""
+        try:
+            return [(r['rating'], r['created']) for r in get_db().execute(
+                "SELECT rating, created FROM review WHERE status = 'visible'")]
+        except Exception:
+            return []
+

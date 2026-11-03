@@ -10,12 +10,18 @@
 
 <!--after page title and before content, template loops over each message returned by get_flashed_messages()-->
 <nav>
-    <h1>Find your ID</h1>
+    <h1><a href="/" title="Back to the home page">Find your ID</a></h1>
     <ul>
+        <li><a href="{{url_for('reviews.leaderboard')}}">Leaderboard</a></li>
         {% if g.user %}
             <li><span>{{g.user['name']}}</span></li>
             {% if g.user['Usertype'] == 'manager' %}
               <li><a href="{{url_for('platform.dashboard')}}">Manager Dashboard</a></li>
+              <li><a href="{{url_for('platform_reviews.queue')}}">Review Moderation</a></li>
+            {% elif g.user['Usertype'] == 'customer' %}
+              <li><a href="{{url_for('reviews.my_jobs')}}">My Jobs</a></li>
+            {% elif g.user['Usertype'] == 'designer' %}
+              <li><a href="{{url_for('reviews.client_requests')}}">Client Requests</a></li>
             {% endif %}
             <li><a href="{{url_for('auth.log_out_user')}}">log out</a></li>
         {% else %}

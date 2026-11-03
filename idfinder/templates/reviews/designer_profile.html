@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% from 'reviews/_macros.html' import stars, short_name, aspect_chip %}
+
+{% block header %}
+  <h1>{% block title %}{{ designer['name'] }}{% endblock %}</h1>
+  <a class="action" href="{{ url_for('reviews.leaderboard') }}">Leaderboard</a>
+  <a class="action" href="{{ url_for('search.designers') }}">Find designers</a>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='reviews.css') }}">
+
+<section class="rv-hero">
+  <div class="profile-avatar" aria-hidden="true">{{ (designer['name'] or '?')[:1]|upper }}</div>
+  <div class="rv-hero-main">
+    <div class="profile-name">{{ designer['name'] }}</div>
+    <div class="profile-role">Interior Designer{% if designer['company'] %} &middot; {{ designer['company'] }}{% endif %}</div>
+    {% if stats and stats['reviews'] %}
+      <div class="rv-headline">
+        {{ stars(stats['avg_rating'], 'big') }}
+        <strong>{{ '%.1f'|format(stats['avg_rating']) }}</strong>
+        <span class="muted">from {{ stats['reviews'] }} review{{ '' if stats['reviews'] == 1 else 's' }}</span>
+        {% if stats['trend'] == 'rising' %}<span class="chip good">&#9650; rising</span>{% elif stats['trend'] == 'falling' %}<span class="chip bad">&#9660; falling</span>{% endif %}
+      </div>
+    {% else %}
+      <div class="rv-headline muted">No reviews yet</div>
+    {% endif %}
+  </div>
+  {% if stats %}
+  <div class="rv-rank" title="Leaderboard score with the default weights">
+    <span class="rv-rank-num">#{{ stats['rank'] }}</span>
+    <span class="muted">of {{ rank_total }}</span>
+    <strong>{{ stats['score'] }}</strong><span class="muted">score / 100</span>
+  </div>
+  {% endif %}
+</section>
+
+{% if stats %}
+<section class="rv-grid">
+  <div class="rv-card">
+    <h2>Rating breakdown</h2>
+    {% set total = stats['reviews'] %}
+    <div class="rv-bars" aria-label="Number of reviews per star rating">
+      {% for star, count in distribution.items() %}
+        <div class="rv-bar-row">
+          <span>{{ star }} &#9733;</span>
+          <div class="rv-bar"><div style="width: {{ (count / total * 100) if total else 0 }}%"></div></div>
+          <span class="muted">{{ count }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    {% if stats['reviews'] %}
+      <p class="muted small">{{ stats['positive_share'] }}% of reviews are 4&ndash;5 stars. We are 95% sure the true share is at least <strong>{{ stats['wilson'] }}%</strong>
+        (it is lower when there are few reviews).</p>
+    {% endif %}
+  </div>
+
+  <div class="rv-card">
+    <h2>Why this score?</h2>
+    {% for key, label in [('rating','Star rating'),('sentiment','Review sentiment'),('interest','Customer interest'),('reliability','Reliability'),('experience','Experience')] %}
+      <div class="rv-bar-row wide">
+        <span>{{ label }}</span>
+        <div class="rv-bar"><div style="width: {{ (stats['components'][key] * 100)|round(0)|int }}%"></div></div>
+        <span class="muted">{{ (stats['components'][key] * 100)|round(0)|int }}</span>
+      </div>
+    {% endfor %}
+    <p class="muted small">Ratings are adjusted so that a few reviews cannot beat a long track record, and recent reviews count more.
+      <a href="{{ url_for('reviews.leaderboard') }}">See how scores are worked out</a>.</p>
+  </div>
+
+  <div class="rv-card">
+    <h2>Rating over the last 6 months</h2>
+    {% set ns = namespace(points='', dots=[]) %}
+    {% for m in monthly %}
+      {% if m['average'] is not none %}
+        {% set x = 20 + loop.index0 * 52 %}{% set y = 70 - ((m['average'] - 1) / 4 * 60) %}
+        {% set ns.points = ns.points ~ x ~ ',' ~ y ~ ' ' %}
+        {% set ns.dots = ns.dots + [(x, y, m['average'], m['count'])] %}
+      {% endif %}
+    {% endfor %}
+    <svg class="rv-trend" viewBox="0 0 300 100" role="img" aria-label="Average rating per month">
+      <line x1="10" y1="10" x2="290" y2="10" class="grid"/><line x1="10" y1="40" x2="290" y2="40" class="grid"/><line x1="10" y1="70" x2="290" y2="70" class="grid"/>
+      <text x="0" y="13" class="axis">5</text><text x="0" y="43" class="axis">3</text><text x="0" y="73" class="axis">1</text>
+      {% if ns.dots|length > 1 %}<polyline points="{{ ns.points }}" class="line"/>{% endif %}
+      {% for x, y, avg, count in ns.dots %}<circle cx="{{ x }}" cy="{{ y }}" r="4"><title>{{ avg }} ({{ count }} review{{ '' if count == 1 else 's' }})</title></circle>{% endfor %}
+      {% for m in monthly %}<text x="{{ 20 + loop.index0 * 52 }}" y="94" class="axis mid">{{ m['label'][5:] }}</text>{% endfor %}
+    </svg>
+  </div>
+
+  <div class="rv-card">
+    <h2>What customers say</h2>
+    {% if aspects['praised'] or aspects['criticised'] %}
+      {% if aspects['praised'] %}<p><strong>Praised for:</strong>
+        {% for name, count in aspects['praised'] %}<span class="chip good">{{ name }} &times;{{ count }}</span>{% endfor %}</p>{% endif %}
+      {% if aspects['criticised'] %}<p><strong>Criticised for:</strong>
+        {% for name, count in aspects['criticised'] %}<span class="chip bad">{{ name }} &times;{{ count }}</span>{% endfor %}</p>{% endif %}
+      <p class="muted small">Picked out of the review text automatically; a topic needs at least two mentions.</p>
+    {% else %}
+      <p class="muted">Not enough written reviews yet to pick out themes.</p>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{# ---------------- customers: hire this designer / write a review ---------------- #}
+{% if is_customer %}
+<section class="rv-card rv-wide">
+  {% if reviewable %}
+    <h2>Review your finished job{{ '' if reviewable|length == 1 else 's' }}</h2>
+    {% for job in reviewable %}
+      <p>&ldquo;{{ job['title'] }}&rdquo; is completed.
+        <a class="profile-button" href="{{ url_for('reviews.review_job', engagement_id=job['id']) }}">Write a review</a></p>
+    {% endfor %}
+  {% endif %}
+  <h2>Hire {{ designer['name'] }}</h2>
+  <form method="post" action="{{ url_for('reviews.hire', designer_id=designer['id']) }}" class="rv-form">
+    <input type="hidden" name="form_token" value="{{ form_token }}">
+    <label for="job-title">What do you need done?</label>
+    <input id="job-title" name="title" maxlength="100" required placeholder="e.g. Full renovation of my 4-room HDB">
+    <label for="job-message">Message (optional)</label>
+    <textarea id="job-message" name="message" maxlength="1000" rows="3" placeholder="Budget, timeline, style you like&hellip;"></textarea>
+    {% if projects %}
+      <label for="job-project">A project of theirs you liked (optional)</label>
+      <select id="job-project" name="idp_id"><option value="">None</option>
+        {% for p in projects %}<option value="{{ p['id'] }}">{{ p['title'] }}</option>{% endfor %}</select>
+    {% endif %}
+    <button type="submit" class="profile-button">Send request</button>
+  </form>
+  {% if my_jobs %}<p class="muted">Your jobs with this designer are listed under <a href="{{ url_for('reviews.my_jobs') }}">My jobs</a>.</p>{% endif %}
+</section>
+{% endif %}
+
+{# ---------------- the reviews ---------------- #}
+<h2>Reviews</h2>
+{% for review in reviews %}
+  <article class="rv-review" id="review-{{ review['id'] }}">
+    <header>
+      {{ stars(review['rating']) }}
+      <strong>{{ short_name(review['customer_name']) }}</strong>
+      <span class="muted">&middot; {{ review['job_title'] }} &middot; {{ review['created'].strftime('%d %b %Y') if review['created'].strftime is defined else review['created'] }}
+        {% if review['edit_count'] %}&middot; edited{% endif %}</span>
+    </header>
+    {% if review['comment'] %}<p class="rv-comment">{{ review['comment'] }}</p>{% endif %}
+    {% if review['aspects_list'] %}<p>{% for item in review['aspects_list'] %}{{ aspect_chip(item) }}{% endfor %}</p>{% endif %}
+    {% if review['designer_reply'] %}
+      <blockquote class="rv-reply"><strong>Reply from {{ designer['name'] }}</strong><br>{{ review['designer_reply'] }}</blockquote>
+    {% endif %}
+
+    {% if is_owner %}
+      <details class="rv-tools"><summary>Reply or report</summary>
+        <form method="post" action="{{ url_for('reviews.reply_review', review_id=review['id']) }}">
+          <input type="hidden" name="form_token" value="{{ form_token }}">
+          <input type="hidden" name="next" value="{{ url_for('reviews.designer_profile', designer_id=designer['id']) }}#review-{{ review['id'] }}">
+          <label>Your public reply (empty removes it)</label>
+          <textarea name="reply" maxlength="500" rows="2">{{ review['designer_reply'] or '' }}</textarea>
+          <button type="submit">Save reply</button>
+        </form>
+        <form method="post" action="{{ url_for('reviews.report_review', review_id=review['id']) }}">
+          <input type="hidden" name="form_token" value="{{ form_token }}">
+          <input type="hidden" name="next" value="{{ url_for('reviews.designer_profile', designer_id=designer['id']) }}#review-{{ review['id'] }}">
+          <label>Report this review to the platform manager (fake, abusive&hellip;)</label>
+          <input name="reason" maxlength="300" required placeholder="Why?">
+          <button type="submit">Report</button>
+          {% if review['reported_reason'] %}<span class="chip bad">already reported</span>{% endif %}
+        </form>
+      </details>
+    {% endif %}
+    {% if g.user and g.user['id'] == review['customer_id'] %}
+      <p class="rv-tools">
+        <a href="{{ url_for('reviews.review_job', engagement_id=review['engagement_id']) }}">Edit your review</a>
+      </p>
+    {% endif %}
+  </article>
+{% else %}
+  <p class="muted">No reviews yet.{% if is_customer %} Hire this designer and finish a job to leave the first one.{% endif %}</p>
+{% endfor %}
+
+{% if projects %}
+<h2>Recent projects</h2>
+<div class="rv-projects">
+  {% for p in projects %}
+    <a class="rv-project" href="{{ url_for('home.project_detail', idp_id=p['id']) }}">
+      {% if p['image'] %}<img src="{{ url_for('static', filename='uploads/' + p['image']) }}" alt="{{ p['title'] }}" loading="lazy">{% endif %}
+      <span>{{ p['title'] }}</span>
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -51,7 +51,48 @@ class CategoryInterestView(ChartsJsonView):
 
 # ======================= PM23 END (boundary part) =====================
 
+# ======================================================================
+# PM21 / PM23 (extra graphs): trend + forecast, heatmap, category trend, ratings
+# ======================================================================
+class TrendView(ChartsJsonView):
+    def get(self):
+        """?metric=views|projects|favourites|users&end=YYYY-MM-DD (both optional)."""
+        try:
+            data = PlatformChartsController().trend(request.args.get('metric', 'views'), request.args.get('end'))
+        except ValidationError as error:
+            return jsonify(error=str(error)), 400
+        return jsonify(data)
+
+
+class HeatmapView(ChartsJsonView):
+    def get(self):
+        """?end=YYYY-MM-DD&tz=480 (tz = minutes east of UTC, so hours match the manager's clock)."""
+        try:
+            data = PlatformChartsController().heatmap(request.args.get('end'), request.args.get('tz'))
+        except ValidationError as error:
+            return jsonify(error=str(error)), 400
+        return jsonify(data)
+
+
+class CategoryTrendView(ChartsJsonView):
+    def get(self):
+        try:
+            data = PlatformChartsController().category_trend(request.args.get('end'))
+        except ValidationError as error:
+            return jsonify(error=str(error)), 400
+        return jsonify(data)
+
+
+class RatingsOverviewView(ChartsJsonView):
+    def get(self):
+        return jsonify(PlatformChartsController().ratings_overview())
+
+
 # endpoints keep the names the templates use: platform_charts.page / .weekly / .categories
 platform_charts_bp.add_url_rule('/', view_func=ChartsPageView.as_view('page'))
 platform_charts_bp.add_url_rule('/weekly', view_func=WeeklyActivityView.as_view('weekly'))
 platform_charts_bp.add_url_rule('/categories', view_func=CategoryInterestView.as_view('categories'))
+platform_charts_bp.add_url_rule('/trend', view_func=TrendView.as_view('trend'))
+platform_charts_bp.add_url_rule('/heatmap', view_func=HeatmapView.as_view('heatmap'))
+platform_charts_bp.add_url_rule('/category-trend', view_func=CategoryTrendView.as_view('category_trend'))
+platform_charts_bp.add_url_rule('/ratings', view_func=RatingsOverviewView.as_view('ratings'))

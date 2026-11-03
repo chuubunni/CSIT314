@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% from 'reviews/_macros.html' import stars, aspect_chip %}
+
+{% block header %}<h1>{% block title %}Review Moderation{% endblock %}</h1>{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='reviews.css') }}">
+<p><a href="{{ url_for('platform.dashboard') }}">&laquo; Back to Platform Management</a></p>
+<p class="muted">Each review is checked automatically for signs of being fake or abusive (copied wording, bursts of reviews,
+  brand-new accounts, jobs finished within an hour, stars that disagree with the words) and for reports from designers.
+  Hidden reviews no longer count towards ratings or the leaderboard. Sentiment engine: {{ engine }}.</p>
+<p>
+  <a href="{{ url_for('platform_reviews.queue', show='attention') }}" {{ 'class=on' if show == 'attention' }}>Needs attention</a> |
+  <a href="{{ url_for('platform_reviews.queue', show='all') }}" {{ 'class=on' if show == 'all' }}>All reviews</a>
+</p>
+
+{% for r in reviews %}
+  <article class="rv-review {{ 'is-hidden' if r['status'] == 'hidden' }}">
+    <header>
+      {{ stars(r['rating']) }} <strong>{{ r['customer_name'] }}</strong> &rarr;
+      <a href="{{ url_for('reviews.designer_profile', designer_id=r['designer_id']) }}">{{ r['designer_name'] }}</a>
+      <span class="muted">&middot; {{ r['job_title'] }} &middot; {{ r['created'].strftime('%d %b %Y %H:%M') }}
+        &middot; sentiment {{ '%+.2f'|format(r['sentiment']) if r['sentiment'] is not none else 'n/a' }}</span>
+      {% if r['status'] == 'hidden' %}<span class="badge badge-declined">Hidden</span>{% endif %}
+    </header>
+    {% if r['comment'] %}<p class="rv-comment">{{ r['comment'] }}</p>{% endif %}
+    {% if r['aspects_list'] %}<p>{% for item in r['aspects_list'] %}{{ aspect_chip(item) }}{% endfor %}</p>{% endif %}
+    {% if r['flags'] %}
+      <ul class="rv-flags">{% for flag in r['flags'] %}<li>&#9888; {{ flag }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if r['status'] == 'hidden' and r['hidden_reason'] %}<p class="muted">Hidden because: {{ r['hidden_reason'] }}</p>{% endif %}
+    <div class="rv-actions">
+      {% if r['status'] == 'visible' %}
+        <form method="post" action="{{ url_for('platform_reviews.action', review_id=r['id'], action='hide') }}">
+          <input type="hidden" name="form_token" value="{{ form_token }}"><input type="hidden" name="show" value="{{ show }}">
+          <input name="reason" maxlength="300" placeholder="Reason for hiding" required><button type="submit">Hide</button></form>
+      {% else %}
+        <form method="post" action="{{ url_for('platform_reviews.action', review_id=r['id'], action='restore') }}">
+          <input type="hidden" name="form_token" value="{{ form_token }}"><input type="hidden" name="show" value="{{ show }}">
+          <button type="submit">Restore</button></form>
+      {% endif %}
+      {% if r['reported_reason'] %}
+        <form method="post" action="{{ url_for('platform_reviews.action', review_id=r['id'], action='dismiss') }}">
+          <input type="hidden" name="form_token" value="{{ form_token }}"><input type="hidden" name="show" value="{{ show }}">
+          <button type="submit">Dismiss report</button></form>
+      {% endif %}
+    </div>
+  </article>
+{% else %}
+  <p>{{ 'Nothing needs attention.' if show == 'attention' else 'No reviews yet.' }}</p>
+{% endfor %}
+{% endblock %}

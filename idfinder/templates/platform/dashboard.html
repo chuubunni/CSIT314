@@ -64,7 +64,8 @@
   {% endif %}
 </section>
 {# ===== PM21 + PM23 DASHBOARD SUMMARY END ===== #}
-<p><a class="profile-button" href="{{ url_for('platform_charts.page') }}">View Platform Graphs &raquo;</a></p>
+<p><a class="profile-button" href="{{ url_for('platform_charts.page') }}">View Platform Graphs &raquo;</a>
+   <a class="profile-button" href="{{ url_for('platform_reviews.queue') }}">Review Moderation &raquo;</a></p>
 <form method="get" action="{{ url_for('platform.dashboard') }}">
   <label for="period">Report period</label>
   <select id="period" name="period">

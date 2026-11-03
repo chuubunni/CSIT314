@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% from 'reviews/_macros.html' import stars, status_badge, short_name %}
+
+{% block header %}
+  <h1>{% block title %}Client Requests{% endblock %}</h1>
+  <a class="action" href="{{ url_for('reviews.designer_profile', designer_id=g.user['id']) }}">My public profile</a>
+  <a class="action" href="{{ url_for('designer.portfolio') }}">My Portfolio</a>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='reviews.css') }}">
+<p class="muted">Accept or decline requests from customers. Mark a job completed when it is finished: that lets the customer review you.</p>
+<table class="manager-table">
+  <thead><tr><th>Job</th><th>Customer</th><th>Status</th><th>Sent</th><th></th></tr></thead>
+  <tbody>
+  {% for job in jobs %}
+    <tr>
+      <td><strong>{{ job['title'] }}</strong>{% if job['message'] %}<br><small class="muted">{{ job['message'] }}</small>{% endif %}</td>
+      <td>{{ short_name(job['customer_name']) }}</td>
+      <td>{{ status_badge(job['status']) }}</td>
+      <td>{{ job['created'].strftime('%d %b %Y') }}</td>
+      <td>
+        {% for action, label in ([('accept', 'Accept'), ('decline', 'Decline')] if job['status'] == 'requested'
+                                  else [('complete', 'Mark completed')] if job['status'] == 'ongoing' else []) %}
+          <form method="post" action="{{ url_for('reviews.' ~ action ~ '_job', engagement_id=job['id']) }}">
+            <input type="hidden" name="form_token" value="{{ form_token }}"><button type="submit">{{ label }}</button></form>
+        {% endfor %}
+        {% if job['review_id'] %}{{ stars(job['review_rating']) }}
+          <a href="{{ url_for('reviews.designer_profile', designer_id=g.user['id']) }}#review-{{ job['review_id'] }}">See review</a>{% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">No requests yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

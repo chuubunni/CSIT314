@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% from 'reviews/_macros.html' import stars, status_badge %}
+
+{% block header %}
+  <h1>{% block title %}My Jobs{% endblock %}</h1>
+  <a class="action" href="{{ url_for('search.designers') }}">Find designers</a>
+  <a class="action" href="{{ url_for('reviews.leaderboard') }}">Leaderboard</a>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='reviews.css') }}">
+<p class="muted">Jobs you have asked designers to do. When a designer marks a job completed you can rate and review them.</p>
+<table class="manager-table">
+  <thead><tr><th>Job</th><th>Designer</th><th>Status</th><th>Sent</th><th></th></tr></thead>
+  <tbody>
+  {% for job in jobs %}
+    <tr>
+      <td>{{ job['title'] }}</td>
+      <td><a href="{{ url_for('reviews.designer_profile', designer_id=job['designer_id']) }}">{{ job['designer_name'] }}</a></td>
+      <td>{{ status_badge(job['status']) }}</td>
+      <td>{{ job['created'].strftime('%d %b %Y') }}</td>
+      <td>
+        {% if job['status'] == 'completed' %}
+          {% if job['review_id'] %}{{ stars(job['review_rating']) }}
+            <a href="{{ url_for('reviews.review_job', engagement_id=job['id']) }}">Edit review</a>
+            <form method="post" action="{{ url_for('reviews.delete_review', review_id=job['review_id']) }}" onsubmit="return confirm('Delete your review?');">
+              <input type="hidden" name="form_token" value="{{ form_token }}"><button type="submit">Delete</button></form>
+          {% else %}<a class="profile-button" href="{{ url_for('reviews.review_job', engagement_id=job['id']) }}">Write a review</a>{% endif %}
+        {% elif job['status'] in ('requested', 'ongoing') %}
+          <form method="post" action="{{ url_for('reviews.cancel_job', engagement_id=job['id']) }}" onsubmit="return confirm('Cancel this job?');">
+            <input type="hidden" name="form_token" value="{{ form_token }}"><button type="submit">Cancel</button></form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">You have no jobs yet. Open a designer&rsquo;s profile and press &ldquo;Send request&rdquo;.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
