@@ -335,6 +335,7 @@ class IDP:
             )
 
     @staticmethod
+    # ID19: keep atomic category replacement while retaining newer filtering and upload changes.
     def update_categories_bulk(
         designer_id,
         idp_ids,

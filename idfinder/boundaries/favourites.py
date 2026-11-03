@@ -49,6 +49,7 @@ class favourites_boundary:
     )
     @auth_boundary.login_required
     @customer_boundary.customer_required
+    # C08: preserve session identity, token validation and the latest category-filter redirect.
     def save_favourite(idp_id):
         validate_form_token()
 

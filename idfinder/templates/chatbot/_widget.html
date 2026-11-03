@@ -1,0 +1,33 @@
+{# C18: one shared widget for all pages rendered for a customer. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
+<aside id="chatbot" class="chatbot-widget" aria-label="Uncle David"
+       data-message-url="{{ url_for('chatbot.message') }}" data-reset-url="{{ url_for('chatbot.reset') }}"
+       data-history-url="{{ url_for('chatbot.history') }}" data-token="{{ chat_widget_token }}"
+       data-storage-key="{{ chat_widget_storage_key }}" data-configured="{{ 'true' if chat_widget_configured else 'false' }}"
+       data-force-open="{{ 'true' if request.endpoint == 'chatbot.chat' else 'false' }}">
+  <button id="chat-launcher" class="chat-launcher" type="button" aria-controls="chat-panel" aria-expanded="false">Chat with Uncle David</button>
+  <section id="chat-panel" class="chat-panel" aria-labelledby="chat-panel-title" hidden>
+    <header class="chat-widget-header"><div><h2 id="chat-panel-title">Uncle David</h2><p>Find a design. Find your designer.</p></div>
+      <button id="chat-minimise" type="button" aria-label="Minimise chat">&#8722;</button></header>
+    <p class="chat-privacy">AI powered by Google Gemini. Avoid sharing private details.</p>
+    {% if not chat_widget_configured %}<p class="chat-notice" role="status">Uncle David is not available yet. You can still browse projects normally.</p>{% endif %}
+    <div class="chat-suggestions" aria-label="Example questions">
+      <button type="button" data-prompt="Show projects below $50,000">Projects under $50k</button>
+      <button type="button" data-prompt="Find interior designers">Find designers</button>
+      {# C18: natural-language entry into the existing designer leaderboard. #}
+      <button type="button" data-prompt="Show the top 5 designers on the leaderboard">Top designers</button>
+      <button type="button" data-prompt="Open my favourites">My favourites</button>
+    </div>
+    <div id="chat-log" class="chat-log" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions"></div>
+    <p id="chat-status" class="chat-status" role="status" aria-live="polite"></p>
+    <form id="chat-form" class="chat-form">
+      <label class="chat-input-label" for="chat-input">Message Uncle David</label>
+      <div class="chat-compose"><textarea id="chat-input" name="message" rows="2" maxlength="600" placeholder="Ask about projects or designers…" required></textarea>
+        <button id="chat-send" type="submit" {% if not chat_widget_configured %}disabled{% endif %}>Send</button></div>
+      <div class="chat-bottom"><span>Enter to send</span><button id="new-chat" type="button">New chat</button></div>
+    </form>
+    <noscript>Enable JavaScript to chat with Uncle David.</noscript>
+  </section>
+</aside>
+{# C18: refresh the client when multi-style/content search becomes available. #}
+<script src="{{ url_for('static', filename='chatbot.js', v='c18-leaderboard-v1') }}" defer></script>

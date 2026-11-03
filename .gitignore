@@ -1,3 +1,16 @@
 # Python bytecode cache
 __pycache__/
 *.py[cod]
+
+# C18: local credentials/configuration must not be committed.
+.env
+.env.*
+!.env.example
+instance/config.py
+.venv/
+.pytest_cache/
+*.sqlite-wal
+*.sqlite-shm
+*.sqLite-wal
+*.sqLite-shm
+API Key.txt

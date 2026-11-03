@@ -1,0 +1,10 @@
+/* C18: readable complete search results using the site's existing colours. */
+.c18-search-results { padding: 0 0 1.5rem; }
+.c18-search-filters { display: grid; grid-template-columns: minmax(130px, auto) 1fr; gap: .4rem 1rem; padding: 1rem; background: #edf5f8; border-radius: 6px; }
+.c18-search-filters dt { font-weight: bold; }
+.c18-search-filters dd { margin: 0; overflow-wrap: anywhere; }
+.c18-search-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr)); gap: 1rem; }
+.c18-project-result { border: 1px solid #d8e2e8; border-radius: 8px; padding: 1rem; background: white; overflow-wrap: anywhere; }
+.c18-project-result h2 { font-size: 1.1rem; margin-top: 0; }
+.c18-project-result p { line-height: 1.5; }
+.c18-search-pagination { display: flex; justify-content: center; align-items: center; gap: 1.25rem; background: transparent; padding: 1.25rem 0; flex-wrap: wrap; }

@@ -10,7 +10,10 @@ def create_app(test_config=None):
     )
 
     app.config.from_mapping(
-        SECRET_KEY='dev',
+        # C18: private credentials and the session secret stay on the server.
+        SECRET_KEY=os.environ.get('IDFINDER_SECRET_KEY', 'dev'),
+        GEMINI_API_KEY=os.environ.get('GEMINI_API_KEY', ''),
+        GEMINI_MODEL=os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
         DATABASE=os.path.join(
             app.instance_path,
             'idfinder.sqlite'
@@ -97,5 +100,11 @@ def create_app(test_config=None):
 
     from .boundaries.platform_reviews import platform_reviews_bp
     app.register_blueprint(platform_reviews_bp)
+
+    # C18: keep the latest review/analytics routes and add customer chat memory.
+    from .boundaries import chatbot
+    from .services.chatbot_state import ChatbotState
+    app.extensions['chatbot_state'] = ChatbotState()
+    app.register_blueprint(chatbot.bp)
 
     return app

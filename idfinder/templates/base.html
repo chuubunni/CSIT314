@@ -42,3 +42,7 @@
     {% block content %}{% endblock %}
     <!--content of each page-->
 </section>
+{# C18: keep the latest navigation and show Uncle David on every customer page. #}
+{% if g.user and g.user['Usertype'] == 'customer' %}
+  {% include 'chatbot/_widget.html' %}
+{% endif %}

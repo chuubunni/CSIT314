@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{# C18: one shared query powers the chat preview and the complete results list. #}
+{% block title %}Project search results{% endblock %}
+{% block header %}<h1>Project search results</h1>{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='chatbot_results.css') }}">
+<div class="c18-search-results">
+  <p><a href="{{ url_for('home.index') }}">Browse projects</a> · <a href="{{ url_for('chatbot.chat') }}">Ask Uncle David</a></p>
+  {% if error %}<p role="alert">{{ error }}</p>{% else %}
+    <p role="status">{{ total }} matching project{{ '' if total == 1 else 's' }}. Page {{ page }} of {{ pages }}.</p>
+    <dl class="c18-search-filters">
+      {% if filters.get('categories') %}<dt>Styles</dt><dd>{{ filters['categories'] | join(' AND ' if filters.get('category_mode') == 'all' else ' OR ') }}</dd>{% endif %}
+      {% if filters.get('keywords') %}<dt>Title or description contains</dt><dd>{{ filters['keywords'] | join(' AND ' if filters.get('keyword_mode') == 'all' else ' OR ') }}</dd>{% elif filters.get('keyword') %}<dt>Title or description contains</dt><dd>{{ filters['keyword'] }}</dd>{% endif %}
+      {% if filters.get('housing_options') %}<dt>Housing options</dt><dd>{% for option in filters['housing_options'] %}{{ option['property_type'] }}{% if option.get('subtype_name') %} {{ option['subtype_name'] }}{% endif %}{% if not loop.last %} OR {% endif %}{% endfor %}</dd>
+      {% elif filters.get('property_type') %}<dt>Property type</dt><dd>{{ filters['property_type'] }}{% if filters.get('subtype_name') %} · {{ filters['subtype_name'] }}{% endif %}</dd>{% endif %}
+      {% if filters.get('min_price') is not none %}<dt>Minimum price</dt><dd>S${{ '{:,.0f}'.format(filters['min_price']) }}</dd>{% endif %}
+      {% if filters.get('max_price') is not none %}<dt>Maximum price</dt><dd>S${{ '{:,.0f}'.format(filters['max_price']) }}</dd>{% endif %}
+    </dl>
+    <div class="c18-search-grid">
+      {% for project in projects %}
+      <article class="c18-project-result">
+        <h2><a href="{{ url_for('home.project_detail', idp_id=project['id']) }}">{{ project['title'] }}</a></h2>
+        <p>{{ project['property_type'] }}{% if project['subtype_name'] %} · {{ project['subtype_name'] }}{% endif %} · S${{ '{:,.0f}'.format(project['price']) }}</p>
+        <p>{{ project['company_name'] or project['designer_name'] }}</p>
+        {% if project['category_names'] %}<p><strong>Styles:</strong> {{ project['category_names'] }}</p>{% endif %}
+        {% if project['description'] %}<p>{{ project['description'] | truncate(300) }}</p>{% endif %}
+      </article>
+      {% else %}<p>No projects match these filters. Ask Uncle David to change the styles, budget or keyword.</p>{% endfor %}
+    </div>
+    <nav class="c18-search-pagination" aria-label="Search result pages">
+      {% if previous %}<a rel="prev" href="{{ previous }}">Previous page</a>{% endif %}
+      <span>Page {{ page }} of {{ pages }}</span>
+      {% if next_page %}<a rel="next" href="{{ next_page }}">Next page</a>{% endif %}
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}
