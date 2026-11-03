@@ -1,101 +1,313 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}{{ 'Edit project' if idp else 'New project' }}{% endblock %}</h1>
+  <h1>
+    {% block title %}
+      {{ 'Edit project' if idp else 'New project' }}
+    {% endblock %}
+  </h1>
 {% endblock %}
 
 {% block content %}
+
   {% set v_title = form.get('title', idp['title'] if idp else '') %}
+
   {% set v_desc = form.get('description', idp['description'] if idp else '') %}
+
   {% set v_type = (form.get('property_type', idp['property_type'] if idp else 'HDB'))|lower %}
+
   {% set v_subtype = form.get('property_subtype_id', (idp['property_subtype_id'] or '') if idp else '')|string %}
+
   {% set v_price = form.get('price', idp['price'] if idp else '') %}
+
   {% set v_status = form.get('status', idp['status'] if idp else 'completed') %}
-  {# Ticked categories: what the user just submitted (form re-shown after an error),
-     otherwise the IDP's saved categories (selected_categories, a list of ids from the boundary) #}
+
   {% if form %}
     {% set chosen = form.getlist('category_ids')|map('int')|list %}
   {% else %}
     {% set chosen = selected_categories|default([]) %}
   {% endif %}
-  <form method="post">
+
+  {% set removing = form.getlist('remove_media_ids') if form else [] %}
+
+  <form method="post" enctype="multipart/form-data">
+
     <label for="title">Title</label>
-    <input name="title" id="title" value="{{ v_title }}" required>
+    <input
+      name="title"
+      id="title"
+      value="{{ v_title }}"
+      required
+    >
 
     <label for="description">Description</label>
-    <textarea name="description" id="description">{{ v_desc }}</textarea>
+    <textarea
+      name="description"
+      id="description"
+    >{{ v_desc }}</textarea>
 
     <div data-housing-selects>
-      <label for="property_type">Property Type</label>
-      <select id="property_type" name="property_type" data-housing-type required>
-        <option value="">Choose property type</option>
+
+      <label for="property_type">
+        Property Type
+      </label>
+
+      <select
+        id="property_type"
+        name="property_type"
+        data-housing-type
+        required
+      >
+
+        <option value="">
+          Choose property type
+        </option>
+
         {% for housing in property_types %}
-          <option value="{{ housing.code }}" {% if v_type == housing.code|lower %}selected{% endif %}>{{ housing.name }}</option>
+
+          <option
+            value="{{ housing.code }}"
+            {% if v_type == housing.code|lower %}
+              selected
+            {% endif %}
+          >
+            {{ housing.name }}
+          </option>
+
         {% endfor %}
+
       </select>
-      <label for="property_subtype_id">Property Subtype</label>
-      <select id="property_subtype_id" name="property_subtype_id" data-housing-subtype
-              data-placeholder="Choose property subtype" required>
-        <option value="">Choose property subtype</option>
+
+      <label for="property_subtype_id">
+        Property Subtype
+      </label>
+
+      <select
+        id="property_subtype_id"
+        name="property_subtype_id"
+        data-housing-subtype
+        data-placeholder="Choose property subtype"
+        required
+      >
+
+        <option value="">
+          Choose property subtype
+        </option>
+
         {% for subtype in property_subtypes %}
-          <option value="{{ subtype.id }}" data-type="{{ subtype.type_code }}"
-                  {% if v_subtype == subtype.id|string %}selected{% endif %}>{{ subtype.name }}</option>
+
+          <option
+            value="{{ subtype.id }}"
+            data-type="{{ subtype.type_code }}"
+            {% if v_subtype == subtype.id|string %}
+              selected
+            {% endif %}
+          >
+            {{ subtype.name }}
+          </option>
+
         {% endfor %}
+
       </select>
+
     </div>
 
-    <label for="price">Price (SGD)</label>
-    <input type="number" name="price" id="price" min="0" step="1" value="{{ v_price }}" required>
+    <label for="price">
+      Price (SGD)
+    </label>
+
+    <input
+      type="number"
+      name="price"
+      id="price"
+      min="0"
+      step="1"
+      value="{{ v_price }}"
+      required
+    >
 
     <fieldset>
+
       <legend>Categories</legend>
+
       {% for c in categories %}
+
         <label>
-          <input type="checkbox" name="category_ids" value="{{ c['id'] }}" {{ 'checked' if c['id'] in chosen else '' }}>
+          <input
+            type="checkbox"
+            name="category_ids"
+            value="{{ c['id'] }}"
+            {{ 'checked' if c['id'] in chosen else '' }}
+          >
           {{ c['name'] }}
         </label>
+
       {% else %}
+
         <p>No categories available yet.</p>
+
       {% endfor %}
+
     </fieldset>
 
     <label for="status">Status</label>
+
     <select name="status" id="status">
-      <option value="ongoing" {{ 'selected' if v_status == 'ongoing' else '' }}>Ongoing</option>
-      <option value="completed" {{ 'selected' if v_status == 'completed' else '' }}>Completed</option>
+
+      <option
+        value="ongoing"
+        {{ 'selected' if v_status == 'ongoing' else '' }}
+      >
+        Ongoing
+      </option>
+
+      <option
+        value="completed"
+        {{ 'selected' if v_status == 'completed' else '' }}
+      >
+        Completed
+      </option>
+
     </select>
 
-    <p class="hint">Save the project first, then upload images from its detail page. Each image will be checked for possible reuse before publication.</p>
+    <fieldset class="idp-images">
+
+      <legend>Images</legend>
+
+      {% if images %}
+
+        <div class="idp-image-grid">
+
+          {% for item in images %}
+
+            <label class="idp-image">
+
+              <img
+                src="{{ url_for('static', filename='uploads/' + item['link']) }}"
+                alt="Project image {{ loop.index }}"
+              >
+
+              <span>
+
+                <input
+                  type="checkbox"
+                  name="remove_media_ids"
+                  value="{{ item['mediaID'] }}"
+                  {{ 'checked' if item['mediaID']|string in removing else '' }}
+                >
+
+                Remove
+
+              </span>
+
+            </label>
+
+          {% endfor %}
+
+        </div>
+
+      {% endif %}
+
+      <label for="images">
+        {{ 'Add more images' if idp else 'Add images' }}
+        (jpg, jpeg, png, gif)
+      </label>
+
+      <input
+        type="file"
+        name="images"
+        id="images"
+        accept=".jpg,.jpeg,.png,.gif"
+        multiple
+      >
+
+      <p class="hint">
+        You can choose several genuine image files at once.
+        Every uploaded image will be checked for possible reuse
+        before the project is published.
+
+        If a potential match is found, the project will remain
+        private until the Platform Manager approves it.
+
+        {% if form %}
+          If a validation error occurred, choose your files again.
+        {% endif %}
+      </p>
+
+    </fieldset>
 
     <input type="submit" value="Save">
+
   </form>
-  <p><a class="action" href="{{ url_for('designer.portfolio') }}">Back to portfolio</a></p>
+
+  <p>
+    <a
+      class="action"
+      href="{{ url_for('designer.portfolio') }}"
+    >
+      Back to portfolio
+    </a>
+  </p>
 
   <script>
-    // The subtype dropdown only offers the subtypes of the selected housing type
-    // (each <option> carries data-type). The choice is kept when the page is re-shown.
-    document.querySelectorAll('[data-housing-selects]').forEach(function (group) {
-      const typeSelect = group.querySelector('[data-housing-type]');
-      const subtypeSelect = group.querySelector('[data-housing-subtype]');
-      const placeholder = subtypeSelect.querySelector('option[value=""]');
-      const allOptions = Array.from(subtypeSelect.querySelectorAll('option[data-type]'));
+    document.querySelectorAll(
+      '[data-housing-selects]'
+    ).forEach(function (group) {
+
+      const typeSelect = group.querySelector(
+        '[data-housing-type]'
+      );
+
+      const subtypeSelect = group.querySelector(
+        '[data-housing-subtype]'
+      );
+
+      const placeholder = subtypeSelect.querySelector(
+        'option[value=""]'
+      );
+
+      const allOptions = Array.from(
+        subtypeSelect.querySelectorAll('option[data-type]')
+      );
 
       function refreshSubtypes(keepSelection) {
+
         const type = typeSelect.value;
-        const current = keepSelection ? subtypeSelect.value : '';
+
+        const current = keepSelection
+          ? subtypeSelect.value
+          : '';
+
         subtypeSelect.innerHTML = '';
+
         subtypeSelect.appendChild(placeholder);
+
         allOptions.forEach(function (option) {
+
           if (option.dataset.type === type) {
+
             option.selected = option.value === current;
+
             subtypeSelect.appendChild(option);
+
           }
+
         });
+
         subtypeSelect.disabled = !type;
+
       }
 
-      typeSelect.addEventListener('change', function () { refreshSubtypes(false); });
-      refreshSubtypes(true);   // also on page load: edit form, or form re-shown after an error
+      typeSelect.addEventListener(
+        'change',
+        function () {
+          refreshSubtypes(false);
+        }
+      );
+
+      refreshSubtypes(true);
+
     });
   </script>
+
 {% endblock %}

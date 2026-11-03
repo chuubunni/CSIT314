@@ -1,183 +1,399 @@
 import functools
 
 from flask import (
-    Blueprint, current_app, flash, g, redirect, render_template, request, url_for
+    Blueprint,
+    current_app,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    url_for
 )
 from werkzeug.exceptions import abort
 
-from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
+from idfinder.controller.errors import (
+    NotFoundError,
+    PermissionDenied,
+    ValidationError
+)
 from idfinder.controller.portfolio_controller import PortfolioController
-from idfinder.boundaries.form_security import form_token, validate_form_token
+from idfinder.boundaries.form_security import (
+    form_token,
+    validate_form_token
+)
+
 
 bp = Blueprint('designer', __name__)
 
-class designer_boundary():
+
+class designer_boundary:
+
     def login_required(view):
         @functools.wraps(view)
         def wrapped_view(**kwargs):
             if g.user is None:
                 return redirect(url_for('auth.login'))
             return view(**kwargs)
+
         return wrapped_view
 
     def designer_required(view):
-        """Use under @login_required: only Interior Designers may manage IDPs."""
+        """Only Interior Designers may manage IDPs."""
+
         @functools.wraps(view)
         def wrapped_view(**kwargs):
             if g.user['Usertype'] != 'designer':
                 abort(403)
             return view(**kwargs)
+
         return wrapped_view
 
-
     def controller():
-        return PortfolioController(current_app.config['UPLOAD_FOLDER'], current_app.config['REVIEW_EVIDENCE_FOLDER'])
-
+        return PortfolioController(
+            current_app.config['UPLOAD_FOLDER'],
+            current_app.config['REVIEW_EVIDENCE_FOLDER']
+        )
 
     @bp.errorhandler(NotFoundError)
     def handle_not_found(error):
         return str(error), 404
 
-
     @bp.errorhandler(PermissionDenied)
     def handle_permission_denied(error):
         return str(error), 403
 
-
     def _idp_form_fields():
-        """The fields shared by the create and edit forms, by name (so the order can't get mixed up)."""
         return dict(
             title=request.form.get('title'),
             description=request.form.get('description'),
             property_type=request.form.get('property_type'),
-            property_subtype_id=request.form.get('property_subtype_id'),
+            property_subtype_id=request.form.get(
+                'property_subtype_id'
+            ),
             price=request.form.get('price'),
             status=request.form.get('status'),
-            category_ids=request.form.getlist('category_ids'),   # one value per ticked checkbox
+            category_ids=request.form.getlist('category_ids'),
         )
 
+    # ----- PORTFOLIO -----
 
     @bp.route('/portfolio')
     @login_required
     @designer_required
     def portfolio():
-        """The logged-in designer's IDPs, with optional filtering by category."""
-        selected_category_id = request.args.get('category_id', '')
+        selected_category_id = request.args.get(
+            'category_id',
+            ''
+        )
 
-        return render_template('designer/portfolio.html',
-                            idps=designer_boundary.controller().list_portfolio(g.user['id'], selected_category_id or None),
-                            categories=designer_boundary.controller().categories(),
-                            selected_category_id=selected_category_id)
+        ctrl = designer_boundary.controller()
 
+        return render_template(
+            'designer/portfolio.html',
+            idps=ctrl.list_portfolio(
+                g.user['id'],
+                selected_category_id or None
+            ),
+            categories=ctrl.categories(),
+            selected_category_id=selected_category_id
+        )
+
+    # ----- CREATE PROJECT -----
 
     @bp.route('/portfolio/new', methods=('GET', 'POST'))
     @login_required
     @designer_required
     def create_idp():
         ctrl = designer_boundary.controller()
+
         if request.method == 'POST':
             try:
-                idp_id = ctrl.create_idp(g.user['id'], **designer_boundary._idp_form_fields())
-                flash('Private draft saved. Upload an image to check and publish your project.')
-                return redirect(url_for('designer.view_idp', idp_id=idp_id))
+                idp_id = ctrl.create_idp(
+                    g.user['id'],
+                    **designer_boundary._idp_form_fields(),
+                    images=request.files.getlist('images')
+                )
+
+                status = ctrl.get_idp(
+                    idp_id,
+                    g.user['id']
+                )['approval_status']
+
+                if status == 'pending':
+                    flash(
+                        'Potential image reuse detected. '
+                        'Your project is pending approval.'
+                    )
+
+                elif status == 'approved':
+                    flash(
+                        'Image check passed. '
+                        'Your project is published.'
+                    )
+
+                else:
+                    flash(
+                        'Private draft saved. '
+                        'Upload an image to publish your project.'
+                    )
+
+                return redirect(
+                    url_for(
+                        'designer.view_idp',
+                        idp_id=idp_id
+                    )
+                )
+
             except ValidationError as error:
                 flash(str(error))
-        return render_template('designer/create_port.html', idp=None,
-                            categories=ctrl.categories(), form=request.form,
-                            selected_categories=[],
-                            property_types=ctrl.property_options()[0],
-                            property_subtypes=ctrl.property_options()[1])
 
+        return render_template(
+            'designer/create_port.html',
+            idp=None,
+            categories=ctrl.categories(),
+            form=request.form,
+            selected_categories=[],
+            property_types=ctrl.property_options()[0],
+            property_subtypes=ctrl.property_options()[1]
+        )
+
+    # ----- PROJECT DETAILS -----
 
     @bp.route('/portfolio/<int:idp_id>')
     @login_required
     @designer_required
     def view_idp(idp_id):
-        idp, images = designer_boundary.controller().get_idp_with_media(idp_id, g.user['id'])
-        return render_template('designer/idp_detail.html', idp=idp, images=images, review_token=form_token())
+        idp, images = (
+            designer_boundary.controller().get_idp_with_media(
+                idp_id,
+                g.user['id']
+            )
+        )
 
+        return render_template(
+            'designer/idp_detail.html',
+            idp=idp,
+            images=images,
+            review_token=form_token()
+        )
 
-    @bp.route('/portfolio/<int:idp_id>/edit', methods=('GET', 'POST'))
+    # ----- EDIT PROJECT -----
+
+    @bp.route(
+        '/portfolio/<int:idp_id>/edit',
+        methods=('GET', 'POST')
+    )
     @login_required
     @designer_required
     def edit_idp(idp_id):
         ctrl = designer_boundary.controller()
-        idp = ctrl.get_idp(idp_id, g.user['id'])          # 404 / 403 if not found or not yours
+
+        idp = ctrl.get_idp(
+            idp_id,
+            g.user['id']
+        )
+
         if request.method == 'POST':
             try:
-                ctrl.update_idp(idp_id, g.user['id'], **designer_boundary._idp_form_fields())
-                return redirect(url_for('designer.view_idp', idp_id=idp_id))
+                ctrl.update_idp(
+                    idp_id,
+                    g.user['id'],
+                    **designer_boundary._idp_form_fields(),
+                    images=request.files.getlist('images'),
+                    remove_media_ids=request.form.getlist(
+                        'remove_media_ids'
+                    )
+                )
+
+                status = ctrl.get_idp(
+                    idp_id,
+                    g.user['id']
+                )['approval_status']
+
+                if status == 'pending':
+                    flash(
+                        'Changes saved. Potential image reuse '
+                        'detected; review pending.'
+                    )
+                else:
+                    flash('Project changes saved.')
+
+                return redirect(
+                    url_for(
+                        'designer.view_idp',
+                        idp_id=idp_id
+                    )
+                )
+
             except ValidationError as error:
                 flash(str(error))
-        return render_template('designer/create_port.html', idp=idp,
-                            categories=ctrl.categories(), form=request.form,
-                            selected_categories=ctrl.get_category_ids(idp_id, g.user['id']),
-                            property_types=ctrl.property_options()[0],
-                            property_subtypes=ctrl.property_options()[1])
 
+        return render_template(
+            'designer/create_port.html',
+            idp=idp,
+            images=ctrl.get_idp_with_media(
+                idp_id,
+                g.user['id']
+            )[1],
+            categories=ctrl.categories(),
+            form=request.form,
+            selected_categories=ctrl.get_category_ids(
+                idp_id,
+                g.user['id']
+            ),
+            property_types=ctrl.property_options()[0],
+            property_subtypes=ctrl.property_options()[1]
+        )
 
-    @bp.route('/portfolio/<int:idp_id>/delete', methods=('POST',))
+    # ----- DELETE PROJECT -----
+
+    @bp.route(
+        '/portfolio/<int:idp_id>/delete',
+        methods=('POST',)
+    )
     @login_required
     @designer_required
     def delete_idp(idp_id):
         validate_form_token()
-        designer_boundary.controller().delete_idp(idp_id, g.user['id'])
-        return redirect(url_for('designer.portfolio'))
 
+        designer_boundary.controller().delete_idp(
+            idp_id,
+            g.user['id']
+        )
 
-    @bp.route('/portfolio/<int:idp_id>/images', methods=('POST',))
+        return redirect(
+            url_for('designer.portfolio')
+        )
+
+    # ----- UPLOAD INDIVIDUAL IMAGE -----
+
+    @bp.route(
+        '/portfolio/<int:idp_id>/images',
+        methods=('POST',)
+    )
     @login_required
     @designer_required
     def upload_image(idp_id):
         validate_form_token()
+
         try:
-            designer_boundary.controller().add_image(idp_id, g.user['id'], request.files.get('file'))
-            project = designer_boundary.controller().get_idp(idp_id, g.user['id'])
-            flash('Potential image reuse detected. Your project is pending approval.'
-                  if project['approval_status'] == 'pending' else 'Image check passed. Your project is published.'
-                  if project['approval_status'] == 'approved' else 'Your project is private.')
+            designer_boundary.controller().add_image(
+                idp_id,
+                g.user['id'],
+                request.files.get('file')
+            )
+
+            project = (
+                designer_boundary.controller().get_idp(
+                    idp_id,
+                    g.user['id']
+                )
+            )
+
+            if project['approval_status'] == 'pending':
+                flash(
+                    'Potential image reuse detected. '
+                    'Your project is pending approval.'
+                )
+
+            elif project['approval_status'] == 'approved':
+                flash(
+                    'Image check passed. '
+                    'Your project is published.'
+                )
+
+            else:
+                flash('Your project is private.')
+
         except ValidationError as error:
             flash(str(error))
-        return redirect(url_for('designer.view_idp', idp_id=idp_id))
 
+        return redirect(
+            url_for(
+                'designer.view_idp',
+                idp_id=idp_id
+            )
+        )
 
-    @bp.route('/portfolio/media/<int:mediaID>/remove', methods=('POST',))
+    # ----- REMOVE INDIVIDUAL IMAGE -----
+
+    @bp.route(
+        '/portfolio/media/<int:mediaID>/remove',
+        methods=('POST',)
+    )
     @login_required
     @designer_required
     def remove_media(mediaID):
         validate_form_token()
-        idp_id = designer_boundary.controller().remove_media(mediaID, g.user['id'])
-        return redirect(url_for('designer.view_idp', idp_id=idp_id))
 
+        idp_id = (
+            designer_boundary.controller().remove_media(
+                mediaID,
+                g.user['id']
+            )
+        )
+
+        return redirect(
+            url_for(
+                'designer.view_idp',
+                idp_id=idp_id
+            )
+        )
+
+    # ----- DESIGNER PROFILE -----
 
     @bp.route('/profile')
     @login_required
     @designer_required
     def profile():
-        return render_template('designer/profile.html', editing=False, form={},
-                        profile=designer_boundary.controller().get_profile(g.user['id']))
+        return render_template(
+            'designer/profile.html',
+            editing=False,
+            form={},
+            profile=designer_boundary.controller().get_profile(
+                g.user['id']
+            )
+        )
 
-    @bp.route('/profile/edit', methods=('GET', 'POST'))
+    @bp.route(
+        '/profile/edit',
+        methods=('GET', 'POST')
+    )
     @login_required
     @designer_required
     def edit_profile():
         ctrl = designer_boundary.controller()
+
         if request.method == 'POST':
             try:
                 ctrl.update_profile(
                     g.user['id'],
                     request.form.get('name'),
                     request.form.get('email'),
-                    request.form.get('phone'),
+                    request.form.get('phone')
                 )
+
                 flash('Profile updated.')
-                return redirect(url_for('designer.profile'))
+
+                return redirect(
+                    url_for('designer.profile')
+                )
+
             except ValidationError as error:
                 flash(str(error))
-        return render_template('designer/profile.html', editing=True, form=request.form,
-                               profile=ctrl.get_profile(g.user['id']))
 
-    @bp.route('/profile/company/edit', methods=('GET', 'POST'))
+        return render_template(
+            'designer/profile.html',
+            editing=True,
+            form=request.form,
+            profile=ctrl.get_profile(g.user['id'])
+        )
+
+    @bp.route(
+        '/profile/company/edit',
+        methods=('GET', 'POST')
+    )
     @login_required
     @designer_required
     def edit_company_profile():
@@ -191,11 +407,16 @@ class designer_boundary():
                     request.form.get('companyLine'),
                     request.form.get('companyEmail')
                 )
+
             except ValidationError as error:
                 flash(str(error))
+
             else:
                 flash('Company profile updated.')
-                return redirect(url_for('designer.profile'))
+
+                return redirect(
+                    url_for('designer.profile')
+                )
 
         return render_template(
             'designer/profile.html',
@@ -205,24 +426,46 @@ class designer_boundary():
             profile=ctrl.get_profile(g.user['id'])
         )
 
-    # ID19: add a bulk page to the existing designer_boundary class.
-    @bp.route('/portfolio/categories', methods=('GET', 'POST'))
+    # ----- ID19 BULK CATEGORY EDITING -----
+
+    @bp.route(
+        '/portfolio/categories',
+        methods=('GET', 'POST')
+    )
     @login_required
     @designer_required
     def update_selected_categories():
-        from idfinder.boundaries.form_security import form_token, validate_form_token
         ctrl = designer_boundary.controller()
+
         if request.method == 'POST':
             validate_form_token()
+
             try:
                 count = ctrl.update_selected_categories(
-                    g.user['id'], request.form.getlist('idp_ids'), request.form.getlist('category_ids'))
+                    g.user['id'],
+                    request.form.getlist('idp_ids'),
+                    request.form.getlist('category_ids')
+                )
+
             except ValidationError as error:
                 flash(str(error))
+
             else:
-                flash(f'Categories updated for {count} project(s).')
-                return redirect(url_for('designer.update_selected_categories'))
-        return render_template('designer/bulk_categories.html',
-                               idps=ctrl.list_portfolio(g.user['id']), categories=ctrl.categories(),
-                               form_token=form_token(), selected_projects=request.form.getlist('idp_ids'),
-                               selected_categories=request.form.getlist('category_ids'))
+                flash(
+                    f'Categories updated for {count} project(s).'
+                )
+
+                return redirect(
+                    url_for(
+                        'designer.update_selected_categories'
+                    )
+                )
+
+        return render_template(
+            'designer/bulk_categories.html',
+            idps=ctrl.list_portfolio(g.user['id']),
+            categories=ctrl.categories(),
+            form_token=form_token(),
+            selected_projects=request.form.getlist('idp_ids'),
+            selected_categories=request.form.getlist('category_ids')
+        )
