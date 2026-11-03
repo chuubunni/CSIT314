@@ -76,7 +76,8 @@ class designer_boundary():
         ctrl = designer_boundary.controller()
         if request.method == 'POST':
             try:
-                idp_id = ctrl.create_idp(g.user['id'], **designer_boundary._idp_form_fields())
+                idp_id = ctrl.create_idp(g.user['id'], **designer_boundary._idp_form_fields(),
+                                         images=request.files.getlist('images'))
                 return redirect(url_for('designer.view_idp', idp_id=idp_id))
             except ValidationError as error:
                 flash(str(error))
@@ -103,11 +104,14 @@ class designer_boundary():
         idp = ctrl.get_idp(idp_id, g.user['id'])          # 404 / 403 if not found or not yours
         if request.method == 'POST':
             try:
-                ctrl.update_idp(idp_id, g.user['id'], **designer_boundary._idp_form_fields())
+                ctrl.update_idp(idp_id, g.user['id'], **designer_boundary._idp_form_fields(),
+                                images=request.files.getlist('images'),
+                                remove_media_ids=request.form.getlist('remove_media_ids'))
                 return redirect(url_for('designer.view_idp', idp_id=idp_id))
             except ValidationError as error:
                 flash(str(error))
         return render_template('designer/create_port.html', idp=idp,
+                            images=ctrl.get_idp_with_media(idp_id, g.user['id'])[1],
                             categories=ctrl.categories(), form=request.form,
                             selected_categories=ctrl.get_category_ids(idp_id, g.user['id']),
                             property_types=ctrl.property_options()[0],

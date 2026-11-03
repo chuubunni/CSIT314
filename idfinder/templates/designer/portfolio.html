@@ -2,7 +2,7 @@
 
 {% block header %}
   <h1>{% block title %}My Portfolio{% endblock %}</h1>
-  <a href="{{ url_for('home.index') }}">Back to home</a>
+  <a class="action" href="{{ url_for('home.index') }}">Back to home</a>
   {# ID19: enter the bulk category editor from the portfolio. #}
   <a class="action" href="{{ url_for('designer.update_selected_categories') }}">Update categories</a>
   <a class="action" href="{{ url_for('designer.create_idp') }}">New project</a>
