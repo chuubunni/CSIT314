@@ -80,6 +80,15 @@ header .action.profile-button { padding: 0.4rem 1.5rem; margin-bottom: 0.25rem; 
 .content [data-category-selects] select { margin-bottom: 1em; }
 
 
+/* IDP form: current images (tick to remove) and the multi-file picker */
+.idp-images { margin-bottom: 1em; }
+.idp-images > label, .idp-images > input[type=file] { display: block; }
+.idp-image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1em; }
+.content label.idp-image { display: flex; flex-direction: column; gap: 6px; margin: 0; font-weight: normal; }
+.idp-image img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid #ddd; }
+.idp-image input { margin: 0; }
+.idp-images .hint { margin: 0; color: #667685; font-size: 0.85rem; }
+
 /* Project view and favourite counts */
 .project-interest {display: flex;flex-wrap: wrap;gap: 32px;padding: 14px 18px;margin: 16px 0;background: #f0f5fa;border: 1px solid #d7e3ed;border-radius: 8px;}
 .project-interest > div {display: flex;flex-direction: column;gap: 4px;}
