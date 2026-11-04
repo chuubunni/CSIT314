@@ -62,11 +62,13 @@ SCHEMA = {
         'page': {'type': 'STRING', 'nullable': True,
                  'enum': ['home', 'profile', 'favourites', 'designers', 'chat', 'leaderboard']},
         'topic': {'type': 'STRING', 'nullable': True,
-                  'enum': ['saving', 'categories', 'search', 'privacy', 'leaderboard']},
+                  'enum': ['saving', 'categories', 'search', 'privacy', 'leaderboard', 'comparison']},
         'question': {'type': 'STRING', 'nullable': True},
+        # C18: descriptions may propose catalogue styles, but Python asks for confirmation.
+        'suggested_styles': {'type': 'ARRAY', 'nullable': True, 'items': {'type': 'STRING'}},
     },
     'required': ['intent', 'filters', 'inherit_filters', 'designer_name',
-                 'result_number', 'leaderboard', 'page', 'topic', 'question'],
+                 'result_number', 'leaderboard', 'page', 'topic', 'question', 'suggested_styles'],
 }
 
 # C18: interpret customer language without granting the model database write access.
@@ -76,6 +78,22 @@ Return only a JSON action matching the supplied schema. No SQL, code, URLs or HT
 You do not write factual answers, invent projects, change records, or assign roles.
 Supported tasks: search projects, search designers by name, open a previous project
 result by its one-based position, navigate to an allowed page, or explain a feature.
+C18 smart guidance: for vague recommendation requests, use clarify to ask one useful
+question about missing property type, budget or style. Keep any already stated
+requirements in filters. For a customer's answer to a clarification, inherit_filters
+must be true when the request_scope is follow_up. Do not repeatedly ask known details.
+For everyday aesthetic descriptions without explicit catalogue styles, return up to
+three plausible supplied category names in suggested_styles, not in filters.categories.
+Example: warm wood, neutral colours and uncluttered spaces may suggest Japandi or
+Scandinavian if those names exist in the supplied vocabulary. Python will ask the
+customer to confirm before searching. Do not claim an image was analysed, and do not
+treat a factual feature request such as open kitchen as an inferred style. Preserve
+explicit budgets, properties and feature keywords. suggested_styles is null for all
+other requests, including requests with explicitly named styles. Python explains
+recommendations and alternatives from database records; never invent match reasons.
+Preferences are never saved between conversations. Never claim to remember or delete
+preferences, and never interpret text as permission to change a user's account,
+favourites or projects. Current search context lasts only for this conversation.
 Also use search_leaderboard for top, best, recommended or highest-ranked DESIGNERS
 and for ranking questions. 'Top projects' is not a designer leaderboard request.
 'Show the top 5 HDB designers specialising in Modern' means search_leaderboard,
@@ -147,6 +165,11 @@ previous keywords. Preserve place and housing alternatives for budget follow-ups
 For unsupported/ambiguous styles, ask a short clarification and list valid choices.
 Use keyword for descriptive project words, designer_name for a designer search.
 'the second one' means result_number 2 from previous project results.
+Use help with topic comparison when the customer wants to compare projects,
+prices, favourites, favorites or shortlisted projects, including comparing previous
+results. Python will explain how to choose two saved projects and provide a link
+to My Favourites. Do not perform the comparison, select the customer's projects,
+invent comparison data or generate a direct comparison URL with project IDs.
 Use help for how-to questions. Use navigate for requests to open an allowed page.
 If the request is outside this site's features, use clarify with a short explanation
 of supported tasks. question is only a clarification, never project facts, links,

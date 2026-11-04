@@ -24,6 +24,11 @@
 .chat-result h2 { margin: 0; font: 600 13px/1.5 Arial,sans-serif; color: #213744; }
 .chat-link { display: inline-block; color: #1d608d; margin: 5px 8px 0 0; }
 .chat-filter-summary { font-size: 11px; color: #586f7e; }
+/* C18: compact controls for confirmed alternatives and comparison. */
+.chat-match-reason { font-size: 12px; color: #315c43; }
+.chatbot-widget .chat-choice { display: block; margin: 8px 0; padding: 7px 9px; border-radius: 6px; background: #e8f2f8; color: #245d7e; text-align: left; }
+.chat-comparison-picker label { display: block; margin-top: 8px; font-size: 12px; }
+.chat-comparison-picker select { display: block; width: 100%; max-width: 100%; margin-top: 3px; padding: 5px; font: inherit; }
 .chat-status { min-height: 18px; font-size: 11px; color: #526f84; margin: 5px 14px 0; }
 .chatbot-widget .chat-form { display: block; margin: 0; padding: 5px 12px 9px; }
 .chat-input-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

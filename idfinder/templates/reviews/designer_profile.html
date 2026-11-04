@@ -4,7 +4,10 @@
 {% block header %}
   <h1>{% block title %}{{ designer['name'] }}{% endblock %}</h1>
   <a class="action" href="{{ url_for('reviews.leaderboard') }}">Leaderboard</a>
+  {# Designer search is customer-only; public review pages must respect that role. #}
+  {% if g.user and g.user['Usertype'] == 'customer' %}
   <a class="action" href="{{ url_for('search.designers') }}">Find designers</a>
+  {% endif %}
 {% endblock %}
 
 {% block content %}

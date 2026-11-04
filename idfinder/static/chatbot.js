@@ -71,6 +71,8 @@
       if (project.category_names) node('p', 'Styles: ' + project.category_names, card);
       if (project.description) node('p', project.description.length > 180 ? project.description.slice(0, 180) + '…' : project.description, card);
       node('p', `Recorded price: S$${Number(project.price).toLocaleString()}`, card);
+      // C18: factual match reasons come from the database-backed search, not model prose.
+      (project.match_reasons || []).forEach(reason => node('p', reason, card, 'chat-match-reason'));
       link(card, 'View project', project.url);
     });
     // C18: display server-calculated ranks, evidence and existing designer-profile links.
@@ -93,6 +95,46 @@
       node('p', `${designer.company_name || 'No company listed'} · ${designer.project_count} project(s)`, row);
     });
     (data.actions || []).forEach(action => link(box, action.label, action.url));
+    // C18: alternatives and inferred styles require a deliberate customer selection.
+    (data.suggestions || []).forEach(option => {
+      const button = node('button', option.label, box, 'chat-choice');
+      button.type = 'button';
+      button.addEventListener('click', () => submit(option.message, option.label));
+    });
+    // C18: select the customer's saved projects explicitly; no automatic pair or AI-selected IDs.
+    if ((data.comparison_choices || []).length >= 2) {
+      const picker = node('form', undefined, box, 'chat-comparison-picker');
+      const selectors = ['First saved project', 'Second saved project'].map(title => {
+        const label = node('label', title, picker);
+        const select = node('select', undefined, label);
+        select.required = true;
+        const blank = node('option', 'Choose a project', select); blank.value = '';
+        data.comparison_choices.forEach(project => {
+          const option = node('option', project.title, select); option.value = String(project.id);
+        });
+        return select;
+      });
+      const compare = node('button', 'Compare projects', picker, 'chat-choice'); compare.type = 'submit';
+      picker.addEventListener('submit', event => {
+        event.preventDefault();
+        if (selectors[0].value === selectors[1].value) {
+          selectors[1].setCustomValidity('Choose two different projects.'); selectors[1].reportValidity(); return;
+        }
+        submit(`Compare saved projects ${selectors[0].value} and ${selectors[1].value}`,
+          `Compare ${selectors[0].selectedOptions[0].textContent} and ${selectors[1].selectedOptions[0].textContent}`);
+      });
+      selectors.forEach(select => select.addEventListener('change', () => selectors[1].setCustomValidity('')));
+    }
+    // C18: show current prices and visible-review statistics for the chosen pair.
+    (data.comparison || []).forEach(project => {
+      const card = node('div', undefined, box, 'chat-result');
+      node('h2', project.title, card);
+      node('p', `Listed price: S$${Number(project.price).toLocaleString()}`, card);
+      node('p', [project.property_type, project.property_subtype_name, project.category_names].filter(Boolean).join(' · '), card);
+      node('p', `${project.designer_name} · ${project.favourite_count} favourites`, card);
+      node('p', project.review_count ? `${Number(project.average_rating).toFixed(2)} / 5 from ${project.review_count} visible reviews` : 'No visible designer reviews', card);
+    });
+    (data.comparison_summary || []).forEach(item => node('p', item, box));
     if (data.login_url) link(box, 'Log in', data.login_url);
     log.scrollTop = log.scrollHeight;
   }
@@ -116,10 +158,10 @@
     } finally { clearTimeout(timeout); }
   }
   // C18: send customer queries and show helpful feedback if a request fails.
-  async function submit(text) {
+  async function submit(text, displayText = text) {
     text = text.trim();
     if (busy || !configured || !text || text.length > 600) return;
-    message('user', text);
+    message('user', displayText);
     input.value = '';
     setBusy(true);
     try { display((await request(root.dataset.messageUrl, text)).data); }

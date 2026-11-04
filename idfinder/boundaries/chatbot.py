@@ -10,6 +10,7 @@ from idfinder.controller.chatbot_controller import ChatbotController
 from idfinder.controller.errors import ValidationError
 from idfinder.entities.chatbot_catalogue import ChatbotCatalogue
 from idfinder.services.gemini_chat import ChatbotUnavailable, GeminiChat
+from idfinder.services.chatbot_advisor import ChatbotAdvisor  # C18: validated smart-assistant flows.
 
 bp = Blueprint('chatbot', __name__, url_prefix='/chat')
 DESTINATIONS = {
@@ -178,8 +179,10 @@ class chatbot_boundary:
             return jsonify(reply=str(error)), error.status
         updated = None
         try:
-            answer, updated = ChatbotController(GeminiChat(
-                current_app.config['GEMINI_API_KEY'], current_app.config['GEMINI_MODEL'])).reply(text, state)
+            # C18: account identity comes only from login; the AI cannot pick saved projects.
+            controller = ChatbotController(GeminiChat(
+                current_app.config['GEMINI_API_KEY'], current_app.config['GEMINI_MODEL']))
+            answer, updated = ChatbotAdvisor.reply(text, state, user_id, controller)
             # C18: derive every URL from known endpoints and actual database IDs.
             for project in answer['projects']:
                 project['url'] = url_for('home.project_detail', idp_id=project['id'])
@@ -196,7 +199,8 @@ class chatbot_boundary:
                 action.update(label=label, url=url_for(endpoint, **params))
             # C18: retain only validated display data across page loads.
             updated['transcript'] = (state.get('transcript', []) + [
-                {'role': 'user', 'text': text}, {'role': 'assistant', 'data': answer}])[-16:]
+                {'role': 'user', 'text': ChatbotAdvisor.display_message(text, state, answer)},
+                {'role': 'assistant', 'data': answer}])[-16:]
             return jsonify(answer)
         except ValidationError as error:
             return jsonify(reply=str(error), recoverable=True), 422

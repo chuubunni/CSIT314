@@ -17,6 +17,8 @@
       {# C18: natural-language entry into the existing designer leaderboard. #}
       <button type="button" data-prompt="Show the top 5 designers on the leaderboard">Top designers</button>
       <button type="button" data-prompt="Open my favourites">My favourites</button>
+      {# C18: comparison uses an explicit saved-project picker in the conversation. #}
+      <button type="button" data-prompt="Compare my favourites">Compare favourites</button>
     </div>
     <div id="chat-log" class="chat-log" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions"></div>
     <p id="chat-status" class="chat-status" role="status" aria-live="polite"></p>
@@ -30,4 +32,4 @@
   </section>
 </aside>
 {# C18: refresh the client when multi-style/content search becomes available. #}
-<script src="{{ url_for('static', filename='chatbot.js', v='c18-leaderboard-v1') }}" defer></script>
+<script src="{{ url_for('static', filename='chatbot.js', v='c18-smart-advisor-v2') }}" defer></script>

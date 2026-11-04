@@ -14,6 +14,9 @@ HELP = {
     'leaderboard': ('The designer leaderboard combines star ratings, review sentiment, customer interest, '
                     'reliability and experience. You can filter by one design category, housing type and '
                     'minimum visible reviews, or change the five ranking weights. Ask for the top 5 HDB designers.', 'leaderboard'),
+    # C18: comparison is performed from the customer's saved-project page.
+    'comparison': ('You can compare two saved projects from My Favourites. Open the page, choose two different projects, '
+                   'then select Compare projects. Save at least two projects first if you have not already.', 'favourites'),
     'saving': ('Open a project or browse the project cards, then choose Save to favourites. '
                'Saved projects are available from My Favourites.', 'favourites'),
     'categories': ('Design categories are style labels such as Modern or Minimalist. '
@@ -22,7 +25,8 @@ HELP = {
                'For example: Modern or Japandi projects in Bishan. Say both styles to require both tags. '
                'You can also ask for a designer by name.', 'designers'),
     'privacy': ('Your message and brief conversation context go to Google Gemini. '
-                'Do not share passwords or private account details. This assistant only reads catalogue data.', 'chat'),
+                'Do not share passwords or private account details. Catalogue access is read-only. '
+                'Requirements are kept only in the current conversation, not saved as preferences.', 'chat'),
 }
 PAGES = {'home', 'profile', 'favourites', 'designers', 'chat', 'leaderboard'}  # C18: safe board navigation.
 
@@ -30,6 +34,14 @@ PAGES = {'home', 'profile', 'favourites', 'designers', 'chat', 'leaderboard'}  #
 class ChatbotController:
     def __init__(self, interpreter):
         self.interpreter = interpreter
+
+    @staticmethod
+    def is_comparison_request(message):
+        # C18: make the existing comparison page reliably reachable without an AI call.
+        text = ' '.join(message.casefold().split())
+        if re.search(r"\b(?:do not|don't|dont|not|never|stop|no)\s+(?:want to\s+)?compar(?:e|ing|ison)\b", text):
+            return False
+        return bool(re.search(r'\bcompar(?:e|ed|es|ing|ison|isons)\b', text))
 
     @staticmethod
     # C18: a fresh query must not inherit constraints just because Gemini says so.
@@ -249,7 +261,10 @@ class ChatbotController:
 
     # C18: dispatch interpreted requests to permitted catalogue and navigation actions.
     def reply(self, message, state):
-        follow_up = self.is_follow_up(message)
+        # C18: answers to a clarification continue the brief, even without "also" or "only".
+        follow_up = self.is_follow_up(message) or bool(state.get('awaiting_requirements'))
+        if re.search(r'\b(?:start over|new search|fresh search|reset|clear all filters)\b', message.casefold()):
+            follow_up = False
         context = self.vocabulary()
         context.update(previous_filters=state.get('filters', {}) if follow_up else {},
                        previous_results=state.get('results', []) if follow_up else [],
@@ -259,7 +274,9 @@ class ChatbotController:
         context.update(previous_intent=state.get('last_intent') if follow_up else None,
                        previous_leaderboard=state.get('leaderboard_filters', {})
                        if follow_up and state.get('last_intent') == 'search_leaderboard' else {})
-        action = self.interpreter.interpret(message, context)
+        # C18: always return a server-generated My Favourites link for comparison requests.
+        action = ({'intent': 'help', 'topic': 'comparison'} if self.is_comparison_request(message)
+                  else self.interpreter.interpret(message, context))
         if not isinstance(action, dict):
             raise ValidationError('Please rephrase that request.')
         for name, limit in [('page', 30), ('topic', 30), ('question', 400), ('designer_name', 100)]:
@@ -268,6 +285,26 @@ class ChatbotController:
         intent = action.get('intent')
         answer = {'reply': '', 'projects': [], 'designers': [], 'actions': [], 'filters': {}}
         updated = dict(state)
+        updated['awaiting_requirements'] = False
+        # C18: inferred styles are proposals; never apply them without customer confirmation.
+        proposed = action.get('suggested_styles')
+        if proposed:
+            if intent not in ('search_projects', 'clarify'):
+                raise ValidationError('Style suggestions belong to a project search.')
+            if not isinstance(proposed, list) or len(proposed) > 3:
+                raise ValidationError('Please describe the style you have in mind.')
+            proposal = self.clean_filters({'categories': proposed}, {}, False)
+            explicit = any(re.search(r'(?<!\w)' + re.escape(name.casefold()) + r'(?!\w)', message.casefold())
+                           for name in context['categories'])
+            if not explicit:
+                incoming = action.get('filters', {})
+                if not isinstance(incoming, dict):
+                    raise ValidationError('Please rephrase the requirements.')
+                # C18: retain explicit budget/property/content; hold inferred tags separately.
+                incoming = {k: v for k, v in incoming.items() if k not in ('category', 'categories', 'category_mode')}
+                base = self.clean_filters(incoming, state.get('filters', {}) if follow_up else {}, follow_up)
+                answer.update(style_proposal=proposal['categories'], filters=base)
+                return answer, updated
         if intent == 'search_projects':
             inherit = action.get('inherit_filters')
             if type(inherit) is not bool:
@@ -292,7 +329,7 @@ class ChatbotController:
             reply = (f'I found {total} matching project(s). Showing {len(projects)} here.' if total
                      else 'No projects match those requirements.')
             if not total and len(styles) > 1 and filters.get('category_mode') == 'all':
-                reply += ' No project has every requested style tag. Try either style instead.'
+                reply += ' No project has every requested style tag within those filters. Try either style instead.'
             elif not total:
                 reply += ' Try a wider budget, a different style or another keyword.'
             answer.update(projects=projects, filters=filters, total=total,
@@ -341,6 +378,9 @@ class ChatbotController:
             answer.update(reply=text, actions=[{'page': page}])
         elif intent == 'clarify':
             answer['reply'] = self.text(action.get('question'), 400) or 'Would you like to search projects, find designers or open a page?'
+            # C18: preserve a partially supplied brief for the customer's next answer.
+            updated['filters'] = self.clean_filters(action.get('filters', {}), state.get('filters', {}) if follow_up else {}, follow_up)
+            updated['awaiting_requirements'] = True
         else:
             raise ValidationError('I can search projects, find or rank designers, explain features and open customer pages.')
         updated['last_intent'] = intent  # C18: retain ranking context only for explicit continuations.
