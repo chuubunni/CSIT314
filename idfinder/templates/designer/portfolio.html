@@ -28,18 +28,9 @@
         </select>
       </div>
 
-      <div class="category-field">
-        <label for="sort_by">Sort projects by:</label>
-        <select name="sort_by" id="sort_by">
-          <option value="newest"{% if selected_sort == 'newest' %}selected{% endif %}>Sort by Newest</option>
-          <option value="views" {% if selected_sort == 'views' %}selected{% endif %}>Sort by Views</option>
-          <option value="favourites" {% if selected_sort == 'favourites' %}selected{% endif %}>Sort by Favourites</option>
-        </select>
-      </div>
-
       <div class="category-actions">
-        <button type="submit">Apply Filter and sort</button>
-        <a href="{{ url_for('designer.portfolio') }}">Clear Filter and Reset</a>
+        <button type="submit">Apply Filter</button>
+        <a href="{{ url_for('designer.portfolio') }}">Clear Filter</a>
       </div>
 
     </div>
