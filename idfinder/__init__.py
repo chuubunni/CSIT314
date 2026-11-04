@@ -14,6 +14,7 @@ def create_app(test_config=None):
         SECRET_KEY=os.environ.get('IDFINDER_SECRET_KEY', 'dev'),
         GEMINI_API_KEY=os.environ.get('GEMINI_API_KEY', ''),
         GEMINI_MODEL=os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
+        GEMINI_IMAGE_MODEL=os.environ.get('GEMINI_IMAGE_MODEL', ''),
         DATABASE=os.path.join(
             app.instance_path,
             'idfinder.sqlite'
@@ -115,5 +116,10 @@ def create_app(test_config=None):
     app.before_request(ReviewBoundary.protect_uploads)
     app.after_request(ReviewBoundary.private_response)
     app.context_processor(ReviewBoundary.context)
+
+    # AI image analysis only suggests form details; saving still runs duplicate review.
+    from .boundaries.image_analysis import bp as image_analysis_bp, AnalysisRateLimit
+    app.extensions['image_analysis_rate_limit'] = AnalysisRateLimit()
+    app.register_blueprint(image_analysis_bp)
 
     return app

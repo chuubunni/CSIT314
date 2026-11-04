@@ -1,0 +1,26 @@
+{
+  "base_commit": "b0e1a21da0e4c8304108b8fc7980c5a030eb2c95",
+  "incoming_zip_sha256": "c36f16abfdbe2d475055bb2c7d2e323dfb1be1b80446a523c3b476bacb6d6aa2",
+  "sha256": {
+    "idfinder/__init__.py": "6713fabebc41c0d9920a76371e070044307afa3fd82f63a64cf9f2912f343384",
+    "idfinder/boundaries/designer.py": "558c90fbccb480a04e9fbd7a75815b0e103bb8067f73762f52c536eb93357ac7",
+    "idfinder/boundaries/favourites.py": "49cddf546711d1dca9435411912ceee15cf60b604e6ff0f37e3ff9266d5425f5",
+    "idfinder/controller/favourites_controller.py": "76029d00d4661f4935440b9b05f403a71f09332ded74f52c135638f7afe21e6c",
+    "idfinder/controller/portfolio_controller.py": "89fe0f1138588ad3e6e02480f3f4c96097199c6a06ee03caa0200053c14ded6b",
+    "idfinder/entities/favourites.py": "aabbe519a374a004fad4726914352d4fe2aff300cc94c146b978c0445f154e4c",
+    "idfinder/entities/idp.py": "c03c29411fbdc5579e6f173faa836e8fbea69319c7a0d8db439d792b4538c15c",
+    "idfinder/static/style.css": "c38cd4dd23f1d08f675a098c0f0467b4ba74ed16f2f9ae12c035e25ec11afaee",
+    "idfinder/templates/customer/favourites.html": "28771820add7399e65f904b526577a00c6787f029a5817112141bd0db7dc7490",
+    "idfinder/templates/designer/create_port.html": "796a2b9460cdc5b79544a602cdffe7dec3c31352f76236f62fe53c169bf4ac05",
+    "idfinder/templates/designer/portfolio.html": "ddb0b0ee45e30de85dc490cc6568f25083b6b984dccb58f95be4eb5ef4f2b901",
+    "requirements.txt": "a6a032010905f4a100b68863e055ba2a4a5ff1914b3feaca5d607694a2c101d3",
+    "idfinder/boundaries/image_analysis.py": "2abdb1d6efb82c27a9e7434c594534d164ec931296bdb34e3ad88e4c1a89570e",
+    "idfinder/services/image_analysis.py": "a36d6378aab38d4d0110fb56d350ea764b0279388859e889d710f7ec9cc44392",
+    "idfinder/static/image_analysis.css": "78974fb83d1290d406dd381698c84a1782baa9909d9663507d762134bb60555e",
+    "idfinder/static/image_analysis.js": "136f737ddc25d139afcb43dd784a552a06169f6262763aa156d806bec4800447",
+    "tests/test_image_analysis.py": "abdf7f034fb283538317905722f36e28e39f4b083cd6e2d5b85775cad4ea669d",
+    "tests/test_image_analysis_client.cjs": "5a336e1d51aeb7a08928b033e46a77d3e1ba69c71cec2421043b20ccd250e558",
+    "tests/test_merge_current_features.py": "8875f26de5ef9f558b598a5184526cd0e974bb7eba5ff7740d4d48849e2be35c",
+    "idfinder/templates/customer/compare_favourites.html": "513ac6e65a0a7abf7cca1595aa867a277263ff2edc0cf43a569e3023e82d0417"
+  }
+}
