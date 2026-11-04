@@ -68,10 +68,11 @@ class PortfolioController:
 
     # ----- PROJECTS -----
 
-    def list_portfolio(self, designer_id, category_id=None):
+    def list_portfolio(self, designer_id, category_id=None, sort_by='newest'):
         return IDP.find_by_designer(
             designer_id,
-            category_id=category_id
+            category_id=category_id,
+            sort_by=sort_by
         )
 
     def categories(self):
