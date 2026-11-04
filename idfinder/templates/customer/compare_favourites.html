@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Compare Projects{% endblock %}</h1>
+  <a class="action"
+     href="{{ url_for('favourites.list_favourites') }}">
+    Back to favourites
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div style="overflow-x: auto;">
+    <table class="comparison-table">
+      <caption>Comparison of your two saved projects</caption>
+
+      <thead>
+        <tr>
+          <th scope="col">Criteria</th>
+          {% for project in projects %}
+            <th scope="col">
+              <a href="{{ url_for(
+                  'home.project_detail',
+                  idp_id=project['id']
+              ) }}">
+                {{ project['title'] }}
+              </a>
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <th scope="row">Price</th>
+          {% for project in projects %}
+            <td>S${{ '{:,.0f}'.format(project['price']) }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th scope="row">Property category</th>
+          {% for project in projects %}
+            <td>
+              {{ 'Condominium'
+                 if project['property_type'] == 'Condo'
+                 else project['property_type'] }}
+              /
+              {{ project['property_subtype_name']
+                 or 'Not specified' }}
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th scope="row">Design style</th>
+          {% for project in projects %}
+            <td>{{ project['category_names'] or 'Not specified' }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th scope="row">Interior designer</th>
+          {% for project in projects %}
+            <td>{{ project['designer_name'] }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th scope="row">Designer reviews</th>
+          {% for project in projects %}
+            <td>
+              {% if project['review_count'] %}
+                {{ '%.2f'|format(project['average_rating']) }} / 5
+                <br>
+                {{ project['review_count'] }} visible review(s)
+              {% else %}
+                No visible reviews yet
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th scope="row">Project favourites</th>
+          {% for project in projects %}
+            <td>{{ project['favourite_count'] }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Comparison summary</h2>
+  <ul>
+    {% for item in summary %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <p>
+    A lower listed price does not necessarily mean better value.
+    Work scope, materials and property size may differ.
+    Favourite totals indicate interest within this app.
+  </p>
+{% endblock %}

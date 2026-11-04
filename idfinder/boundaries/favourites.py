@@ -96,3 +96,22 @@ class favourites_boundary:
         return redirect(
             url_for('home.index', **filters)
         )
+
+    @bp.route('/compare')
+    @auth_boundary.login_required
+    @customer_boundary.customer_required
+    def compare():
+        try:
+            projects, summary = FavouritesController().compare_projects(
+                g.user['id'],
+                request.args.getlist('project_ids')
+            )
+        except ValidationError as error:
+            flash(str(error))
+            return redirect(url_for('favourites.list_favourites'))
+
+        return render_template(
+            'customer/compare_favourites.html',
+            projects=projects,
+            summary=summary
+        ) 

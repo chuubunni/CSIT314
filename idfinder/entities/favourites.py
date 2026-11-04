@@ -24,6 +24,61 @@ class Favourites:
             db.rollback()
             raise
         return added
+    
+    @staticmethod
+    def find_comparison(customer_id, first_id, second_id):
+        return get_db().execute(
+            '''
+            SELECT
+                p.id,
+                p.title,
+                p.price,
+                p.property_type,
+                p.property_subtype_id,
+                p.designer_id,
+                u.name AS designer_name,
+                (
+                    SELECT name
+                    FROM property_subtype
+                    WHERE id = p.property_subtype_id
+                ) AS property_subtype_name,
+                (
+                    SELECT GROUP_CONCAT(c.name, ', ')
+                    FROM idp_category ic
+                    JOIN category c ON c.id = ic.category_id
+                    WHERE ic.idp_id = p.id
+                ) AS category_names,
+                (
+                    SELECT COUNT(*)
+                    FROM favourite_idp f
+                    WHERE f.idp_id = p.id
+                ) AS favourite_count,
+                (
+                    SELECT AVG(r.rating)
+                    FROM review r
+                    WHERE r.designer_id = p.designer_id
+                      AND r.status = 'visible'
+                ) AS average_rating,
+                (
+                    SELECT COUNT(*)
+                    FROM review r
+                    WHERE r.designer_id = p.designer_id
+                      AND r.status = 'visible'
+                ) AS review_count
+            FROM idp p
+            JOIN user u ON u.id = p.designer_id
+            WHERE p.id IN (?, ?)
+              AND p.approval_status = 'approved'
+              AND EXISTS (
+                  SELECT 1
+                  FROM favourite_idp own
+                  WHERE own.idp_id = p.id
+                    AND own.customer_id = ?
+              )
+            ''',
+            (first_id, second_id, customer_id)
+        ).fetchall()
+
 
     @staticmethod
     def find_projects(customer_id):
