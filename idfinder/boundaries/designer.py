@@ -87,16 +87,26 @@ class designer_boundary:
             ''
         )
 
+        selected_sort = request.args.get(
+            'sort_by', 
+            'newest'
+        )
+
+        if selected_sort not in ('newest', 'views', 'favourites'):
+            selected_sort = 'newest'
+
         ctrl = designer_boundary.controller()
 
         return render_template(
             'designer/portfolio.html',
             idps=ctrl.list_portfolio(
                 g.user['id'],
-                selected_category_id or None
+                selected_category_id or None,
+                sort_by=selected_sort
             ),
             categories=ctrl.categories(),
-            selected_category_id=selected_category_id
+            selected_category_id=selected_category_id,
+            selected_sort=selected_sort
         )
 
     # ----- CREATE PROJECT -----
