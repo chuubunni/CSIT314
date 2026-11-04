@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Search by Inspiration Photo{% endblock %}
+{% block header %}
+<h1>Find Projects by Inspiration Photo</h1>
+<a class="action" href="{{ url_for('home.index') }}">Back to Browse Projects</a>
+{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='housing.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='image_search.css') }}">
+<section class="image-search-intro">
+  <p>Upload an inspiration photo and discover renovation projects with similar colours and interior design styles.</p>
+  <form method="post" enctype="multipart/form-data" class="image-upload-panel" data-has-results="{{ 'true' if features else 'false' }}">
+    <input type="hidden" name="form_token" value="{{ story_form_token }}">
+    <div class="image-upload-icon" aria-hidden="true">&#128444;</div>
+    <div class="image-upload-control">
+      <label for="photo">Upload an Inspiration Photo</label>
+      <span class="image-search-hint" id="image-upload-help">JPG or PNG · maximum 5 MB</span>
+      <input id="photo" type="file" name="photo" accept="image/jpeg,image/png" aria-describedby="image-upload-help" required>
+    </div>
+    <span id="image-current-photo" class="image-search-current-photo" hidden>Current Inspiration Photo:</span>
+    <img id="photo-preview" alt="Current inspiration photo" hidden width="76" height="76">
+    <button class="image-upload-submit" type="submit">Find Similar Projects</button>
+  </form>
+</section>
+{% if error %}<p class="image-search-error" role="alert">{{ error }}</p>{% endif %}
+{% if features %}
+<section class="image-search-summary" aria-label="Image analysis summary">
+  <h2>Detected Design Categories</h2>
+  <p class="image-search-subtext">Based on the uploaded photo's colour palette and brightness. Select a style to filter the ranked projects.</p>
+  <div class="style-chips">
+  {% for name, confidence in features['styles'].items() %}
+    {% if loop.index <= 5 %}
+      {% for category in categories %}
+        {% if category['name'] == name %}
+          <a {% if selected.category_id == category['id']|string %}aria-current="true"{% endif %} href="{{ url_for('image_search.index', property_type=selected.property_type, property_subtype_id=selected.property_subtype_id, category_id=category['id'], min_price=selected.min_price, max_price=selected.max_price) }}">{{ name }} <span>{{ (confidence * 100)|round|int }}%</span></a>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+  </div>
+  <p class="image-search-method">Upload a new photo to change the search.</p>
+</section>
+<form method="get" action="{{ url_for('image_search.index') }}" class="housing-filter image-search-filter" data-housing-selects>
+  <h2>Filter Projects</h2>
+  <div class="housing-fields">
+    <div class="housing-field">
+      <label for="image-filter-type">Housing Type</label>
+      <select id="image-filter-type" name="property_type" data-housing-type>
+        <option value="">All housing types</option>
+        {% for housing in property_types %}
+          <option value="{{ housing.code }}" {% if selected.property_type == housing.code %}selected{% endif %}>{{ housing.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="housing-field">
+      <label for="image-filter-subtype">Housing Subtype</label>
+      <select id="image-filter-subtype" name="property_subtype_id" data-housing-subtype data-placeholder="All subtypes">
+        <option value="">All subtypes</option>
+        {% for subtype in property_subtypes %}
+          <option value="{{ subtype.id }}" data-type="{{ subtype.type_code }}" {% if selected.property_subtype_id == subtype.id|string %}selected{% endif %}>{{ subtype.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="housing-field">
+      <label for="image-filter-category">Design Category</label>
+      <select id="image-filter-category" name="category_id">
+        <option value="">All design categories</option>
+        {% for category in categories %}
+          <option value="{{ category['id'] }}" {% if selected.category_id == category['id']|string %}selected{% endif %}>{{ category['name'] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="housing-field image-search-price-field">
+      <label for="image-min-price">Min Price ($)</label>
+      <input id="image-min-price" name="min_price" type="number" min="0" step="1" placeholder="No minimum" value="{{ selected.min_price }}">
+    </div>
+    <div class="housing-field image-search-price-field">
+      <label for="image-max-price">Max Price ($)</label>
+      <input id="image-max-price" name="max_price" type="number" min="0" step="1" placeholder="No maximum" value="{{ selected.max_price }}">
+    </div>
+    <div class="housing-actions image-search-filter-actions">
+      <button type="submit">Apply filters</button>
+      <a href="{{ url_for('image_search.index') }}">Clear filters</a>
+    </div>
+  </div>
+</form>
+<section aria-label="Similar project results" class="image-search-results">
+  <div class="image-search-results-heading">
+    <h2>{{ results|length }} Matching {{ 'Result' if results|length == 1 else 'Results' }} Found</h2>
+    <p>Ranked from closest to least similar. The match percentage is an approximate score, not a probability.</p>
+  </div>
+  <div class="project-grid">
+    {% for project in results %}
+      <article class="project-card">
+        {% if project['cover'] %}<img class="image-search-cover" src="{{ url_for('static', filename='uploads/' + project['cover']) }}" alt="{{ project['title'] }}" loading="lazy">{% endif %}
+        <div class="project-info image-search-card-info">
+          <div class="image-search-card-score"><strong>{{ project['match_score'] }}% match</strong><span>{{ project['matched_category'] }}</span></div>
+          <h3><a href="{{ url_for('home.project_detail', idp_id=project['id']) }}">{{ project['title'] }}</a></h3>
+          <p class="image-search-card-reason">{{ project['match_reason'] }}</p>
+          <p>{{ project['category_names'] }} · {{ project['property_type'] }} · ${{ project['price'] }}</p>
+          <p>{{ project['company_name'] or project['designer_name'] }}</p>
+        </div>
+      </article>
+    {% else %}<p>No matching projects found. Try clearing some filters.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<script src="{{ url_for('static', filename='housing.js') }}" defer></script>
+<script src="{{ url_for('static', filename='image_search.js') }}" defer></script>
+{% endblock %}

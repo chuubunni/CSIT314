@@ -22,6 +22,9 @@
   {% endif %}
 
   {% if g.user and g.user['Usertype'] == 'customer' %}
+    <a class="action" href="{{ url_for('image_search.index', new=1) }}">
+      Image Search
+    </a>
     <a class="action" href="{{ url_for('search.designers') }}">
       Find Designers
     </a>

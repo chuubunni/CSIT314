@@ -96,6 +96,9 @@ def create_app(test_config=None):
                 'Demo data could not be created'
             )
 
+    from .entities import image_search_schema
+    image_search_schema.init_app(app)
+
     _register_safety_net(app)
 
     from .boundaries import auth
@@ -125,6 +128,9 @@ def create_app(test_config=None):
 
     from .boundaries import search
     app.register_blueprint(search.bp)
+
+    from .boundaries import image_search
+    app.register_blueprint(image_search.bp)
 
     from .boundaries import favourites
     app.register_blueprint(favourites.bp)
