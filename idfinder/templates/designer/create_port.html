@@ -9,6 +9,8 @@
 {% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='image_analysis.css') }}">
+<script src="{{ url_for('static', filename='image_analysis.js') }}" defer></script>
 
   {% set v_title = form.get('title', idp['title'] if idp else '') %}
 
@@ -234,6 +236,23 @@
         {% endif %}
       </p>
 
+    </fieldset>
+
+    {# AI image analysis uses the first file in the existing upload input. #}
+    <fieldset class="ai-image-analysis" data-image-analysis
+              data-endpoint="{{ url_for('image_analysis.analyze_image') }}"
+              data-form-token="{{ image_analysis_form_token }}">
+      <legend>AI Auto-Fill Assistant</legend>
+      <p>Select a project image above, then analyse it to suggest a title, description and design style.</p>
+      <p class="hint">The first selected image will be sent to Google Gemini. Review the suggestions before saving. Image reuse checks still apply when you save the project.</p>
+      <button type="button" data-analyse-image>Analyse first image</button>
+      <p data-analysis-status role="status" aria-live="polite"></p>
+      <div data-analysis-preview hidden>
+        <p><strong>Suggested title:</strong> <span data-analysis-title></span></p>
+        <p><strong>Description:</strong> <span data-analysis-description></span></p>
+        <p><strong>Design style:</strong> <span data-analysis-category></span></p>
+        <button type="button" data-apply-analysis>Use these suggestions</button>
+      </div>
     </fieldset>
 
     <input type="submit" value="Save">

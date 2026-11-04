@@ -40,8 +40,10 @@ class EngagementController:
             except (TypeError, ValueError):
                 raise ValidationError('Please choose a valid project.')
             project = IDP.find(idp_id)
-            if project is None or project['designer_id'] != designer_id or project['approval_status'] != 'approved':
+            if project is None or project['designer_id'] != designer_id:
                 raise ValidationError('That project does not belong to this designer.')
+            if project['approval_status'] != 'approved':
+                raise ValidationError('That project has not been published yet.')
         else:
             idp_id = None
         if Engagement.count_open(customer_id, designer_id) >= MAX_OPEN_PER_DESIGNER:
@@ -58,7 +60,9 @@ class EngagementController:
     def _move(engagement, new_status):
         if new_status not in TRANSITIONS.get(engagement['status'], ()):
             raise ValidationError(f"A {engagement['status']} job cannot become {new_status}.")
-        Engagement.set_status(engagement['id'], new_status)
+        # C18: preserve newer job updates used by leaderboard reliability and experience.
+        if not Engagement.set_status(engagement['id'], new_status, engagement['status']):
+            raise ValidationError('This job has changed. Refresh the page before trying again.')
 
     def accept(self, designer_id, engagement_id):
         engagement = self._load(engagement_id)

@@ -24,13 +24,19 @@ class Engagement:
             ' WHERE e.id = ?', (engagement_id,)).fetchone()
 
     @staticmethod
-    def set_status(engagement_id, status):
+    def set_status(engagement_id, status, expected_status=None):
         db = get_db()
-        db.execute(
-            "UPDATE engagement SET status = ?, updated = CURRENT_TIMESTAMP,"
-            " completed_at = CASE WHEN ? = 'completed' THEN CURRENT_TIMESTAMP ELSE completed_at END"
-            " WHERE id = ?", (status, status, engagement_id))
-        db.commit()
+        try:
+            cursor = db.execute(
+                "UPDATE engagement SET status=?,updated=CURRENT_TIMESTAMP,"
+                " completed_at=CASE WHEN ?='completed' THEN CURRENT_TIMESTAMP ELSE completed_at END"
+                ' WHERE id=? AND (? IS NULL OR status=?)',
+                (status, status, engagement_id, expected_status, expected_status))
+            db.commit()
+            return cursor.rowcount == 1
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def count_open(customer_id, designer_id):

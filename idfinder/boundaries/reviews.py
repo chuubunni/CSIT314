@@ -10,7 +10,7 @@ from idfinder.controller import review_text
 from idfinder.controller.engagement_controller import EngagementController
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.controller.leaderboard_controller import LeaderboardController
-from idfinder.controller.review_controller import ReviewController
+from idfinder.controller.review_controller import ReviewController, MAX_EDITS
 from idfinder.entities.category import Category
 from idfinder.entities.housing import Housing
 
@@ -29,6 +29,11 @@ def _not_found(error):
 @bp.errorhandler(PermissionDenied)
 def _forbidden(error):
     return str(error), 403
+
+
+@bp.errorhandler(ValidationError)
+def _invalid_change(error):
+    return str(error), 400
 
 
 def _back(default_endpoint, **values):
@@ -137,6 +142,13 @@ def review_job(engagement_id):
     if request.method == 'POST':
         validate_form_token()
         try:
+            if 'review_id' in request.form:
+                expected = str(existing['id']) if existing is not None else ''
+                if request.form.get('review_id') != expected:
+                    raise ValidationError('This job already has a review or the review changed. Reload the page.')
+            if existing is not None and 'review_revision' in request.form:
+                if request.form.get('review_revision') != str(existing['edit_count']):
+                    raise ValidationError('This review has changed. Reload the page before editing.')
             if existing is None:
                 controller.submit(g.user['id'], engagement_id, request.form.get('rating'), request.form.get('comment'))
                 flash('Thank you! Your review has been posted.')
@@ -147,7 +159,7 @@ def review_job(engagement_id):
         except ValidationError as error:
             flash(str(error))
     return render_template('reviews/review_form.html', job=job, existing=existing, form=request.form,
-                           form_token=form_token())
+                           form_token=form_token(), max_edits=MAX_EDITS)
 
 
 @bp.route('/reviews/<int:review_id>/delete', methods=('POST',))

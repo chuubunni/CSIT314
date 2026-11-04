@@ -1,0 +1,7 @@
+/* AI image analysis: preview suggestions without replacing the normal save/upload controls. */
+.ai-image-analysis { border: 1px solid #ccdce7; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #f5f9fc; }
+.ai-image-analysis legend { color: #245c7c; font-weight: bold; padding: 0 .3rem; }
+.ai-image-analysis [data-analysis-status] { color: #245c7c; }
+.ai-image-analysis [data-analysis-preview] { background: #fff; border: 1px solid #d9e4ec; border-radius: 6px; padding: .8rem; margin-top: .8rem; }
+.ai-image-analysis [data-analysis-description] { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ai-image-analysis button { padding: .5rem .8rem; }

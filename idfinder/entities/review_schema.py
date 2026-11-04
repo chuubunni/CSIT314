@@ -36,7 +36,7 @@ def init_app(app):
     @click.command('init-reviews')
     def init_reviews_command():
         """Create the review/engagement tables (keeps existing data)."""
-        connection = sqlite3.connect(app.config['DATABASE'])
+        connection = sqlite3.connect(app.config['DATABASE'], timeout=app.config.get('SQLITE_TIMEOUT', 1.0))
         try:
             ensure(connection)
         finally:
@@ -47,7 +47,7 @@ def init_app(app):
 
     # Create the tables when the site starts. A failure must never stop the site from starting.
     try:
-        connection = sqlite3.connect(app.config['DATABASE'])
+        connection = sqlite3.connect(app.config['DATABASE'], timeout=app.config.get('SQLITE_TIMEOUT', 1.0))
         try:
             ensure(connection)
         finally:

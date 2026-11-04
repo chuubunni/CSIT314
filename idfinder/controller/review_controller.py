@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from datetime import datetime, timezone
 
 from idfinder.controller import review_text
@@ -10,6 +11,7 @@ from idfinder.entities.review import Review
 MAX_COMMENT = 1000
 MAX_REPLY = 500
 MAX_REASON = 300
+MAX_EDITS = 3                 # a review can be changed this many times, then it is final
 
 
 class ReviewController:
@@ -63,19 +65,35 @@ class ReviewController:
         value = self._check_rating(rating)
         comment = self._check_text(comment, MAX_COMMENT, 'The review')
         sentiment, aspects = self._analyse(comment)
-        return Review.create(engagement_id, customer_id, engagement['designer_id'],
-                             value, comment, sentiment, aspects)
+        try:
+            return Review.create(engagement_id, customer_id, engagement['designer_id'],
+                                 value, comment, sentiment, aspects)
+        except sqlite3.IntegrityError:
+            # two quick clicks (UNIQUE engagement_id) or the job stopped being completed (trigger)
+            raise ValidationError('This job already has a review, or it is no longer completed.')
 
     def edit(self, customer_id, review_id, rating, comment):
-        self._own_review(customer_id, review_id)
+        review = self._own_review(customer_id, review_id)
+        if review['status'] == 'hidden':
+            raise ValidationError('This review was hidden by the platform manager and cannot be changed.')
+        if review['edit_count'] >= MAX_EDITS:
+            raise ValidationError(f'A review can only be edited {MAX_EDITS} times.')
         value = self._check_rating(rating)
         comment = self._check_text(comment, MAX_COMMENT, 'The review')
         sentiment, aspects = self._analyse(comment)
-        Review.update_content(review_id, value, comment, sentiment, aspects)
+        if review['rating'] == value and review['comment'] == comment:
+            return
+        if not Review.update_content(review_id, value, comment, sentiment, aspects,
+                                     review['edit_count'], MAX_EDITS, customer_id):
+            raise ValidationError('This review has changed, was hidden, or reached its edit limit. Reload the page.')
 
     def delete(self, customer_id, review_id):
-        self._own_review(customer_id, review_id)
-        Review.delete(review_id)
+        # C18: keep moderated reviews from being deleted and reposted into rankings.
+        review = self._own_review(customer_id, review_id)
+        if review['status'] == 'hidden':
+            raise ValidationError('This review is hidden by moderation. Contact the platform manager.')
+        if not Review.delete(review_id):
+            raise ValidationError('This review has changed. Refresh the page before trying again.')
 
     def for_review_form(self, customer_id, engagement_id):
         """The job (and existing review, if any) behind the review form. Same checks as submit."""
@@ -116,6 +134,10 @@ class ReviewController:
         flags = flag_reviews(rows)
         for row in rows:
             row['flags'] = flags.get(row['id'], [])
+            # C18: keep compact moderation and all existing integrity evidence compatible.
+            prefix = 'Wording is almost identical to review #'
+            row['duplicate_flags'] = [f for f in row['flags'] if f.startswith(prefix)]
+            row['other_flags'] = [f for f in row['flags'] if not f.startswith(prefix)]
             row['aspects_list'] = json.loads(row['aspects'] or '[]')
         rows.sort(key=lambda r: (-len(r['flags']), r['status'] == 'hidden'))
         return rows

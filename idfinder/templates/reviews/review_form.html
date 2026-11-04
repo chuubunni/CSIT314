@@ -9,9 +9,18 @@
 <p>Job: <strong>{{ job['title'] }}</strong> with
   <a href="{{ url_for('reviews.designer_profile', designer_id=job['designer_id']) }}">{{ job['designer_name'] }}</a></p>
 
+{% if existing and existing['status'] == 'hidden' %}
+  <p>This review was hidden by the platform manager and cannot be changed.</p>
+  <p>{{ existing['comment'] }}</p>
+{% elif existing and existing['edit_count'] >= max_edits %}
+  <p>This review has reached its limit of {{ max_edits }} edits and cannot be changed.</p>
+  <p>{{ existing['comment'] }}</p>
+{% else %}
 {% set current = form.get('rating', existing['rating'] if existing else '') %}
 <form method="post" class="rv-form">
   <input type="hidden" name="form_token" value="{{ form_token }}">
+  <input type="hidden" name="review_id" value="{{ existing['id'] if existing else '' }}">
+  <input type="hidden" name="review_revision" value="{{ existing['edit_count'] if existing else '' }}">
   <fieldset class="rv-rate">
     <legend>Your rating</legend>
     {# five radio buttons drawn as stars; they work with the keyboard too #}
@@ -29,4 +38,5 @@
     <a class="profile-button" href="{{ url_for('reviews.my_jobs') }}">Cancel</a>
   </div>
 </form>
+{% endif %}
 {% endblock %}

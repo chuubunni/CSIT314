@@ -12,11 +12,22 @@ def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(
             current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
+            detect_types=sqlite3.PARSE_DECLTYPES,
+            timeout=current_app.config.get('SQLITE_TIMEOUT', 1.0)  # bounded wait; busy requests receive 503
         )
         g.db.row_factory = sqlite3.Row
 
     return g.db
+
+
+def is_busy_error(error):
+    """Match SQLite BUSY/LOCKED codes, without hiding unrelated SQL errors."""
+    code = getattr(error, 'sqlite_errorcode', None)
+    if isinstance(code, int):
+        return code & 255 in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED)
+    message = str(error).lower()
+    return message.startswith(('database is locked', 'database table is locked',
+                               'database schema is locked', 'database is busy'))
 
 
 def close_db(e=None):

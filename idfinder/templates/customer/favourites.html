@@ -6,6 +6,41 @@
 {% endblock %}
 
 {% block content %}
+    {% if projects|length >= 2 %}
+    <form method="get"
+          action="{{ url_for('favourites.compare') }}">
+      <fieldset>
+        <legend>Compare your favourite projects</legend>
+
+        <p>Select two different projects.</p>
+
+        <label for="compare-first">First project</label>
+        <select id="compare-first" name="project_ids" required>
+          <option value="">Choose a project</option>
+          {% for project in projects %}
+            <option value="{{ project['id'] }}">
+              {{ project['title'] }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <label for="compare-second">Second project</label>
+        <select id="compare-second" name="project_ids" required>
+          <option value="">Choose another project</option>
+          {% for project in projects %}
+            <option value="{{ project['id'] }}">
+              {{ project['title'] }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <button type="submit">Compare projects</button>
+      </fieldset>
+    </form>
+  {% elif projects %}
+    <p>Save at least two projects to compare them.</p>
+  {% endif %}
+  
   {% for project in projects %}
     <article class="post">
       <header>

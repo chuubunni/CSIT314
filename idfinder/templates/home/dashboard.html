@@ -55,8 +55,8 @@
 <section id="charts-summary" class="chart-summary">
   {% if weekly_summary.available %}
   <div class="manager-stats">
-    <div class="manager-stat">Views (last 7 days)<strong>{{ weekly_summary.total_views }}</strong></div>
-    <div class="manager-stat">Shortlists (last 7 days)<strong>{{ weekly_summary.total_saves }}</strong></div>
+    <div class="manager-stat">Views (7 days to today, UTC)<strong>{{ weekly_summary.total_views }}</strong></div>
+    <div class="manager-stat">Shortlists (7 days to today, UTC)<strong>{{ weekly_summary.total_saves }}</strong></div>
     <div class="manager-stat">Most viewed category<strong>{{ category_summary.top_category or '&ndash;'|safe }}</strong></div>
   </div>
   {% else %}

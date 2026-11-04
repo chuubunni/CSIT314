@@ -1,0 +1,69 @@
+{
+  "base_commit": "db08b4d",
+  "preserved_tables": [
+    "user",
+    "platform",
+    "customer",
+    "company",
+    "designer",
+    "category",
+    "property_type",
+    "property_subtype",
+    "idp",
+    "idp_category",
+    "idp_media",
+    "idp_group",
+    "idp_group_member",
+    "favourite_idp",
+    "favourite_designer",
+    "idp_view",
+    "image_fingerprint",
+    "image_review_case",
+    "project_review_decision"
+  ],
+  "existing_jobs_and_reviews_preserved": true,
+  "source_repository_and_database_unchanged": true,
+  "integrity": "ok",
+  "foreign_key_errors": 0,
+  "jobs_by_status": {
+    "cancelled": 109,
+    "completed": 777,
+    "declined": 80,
+    "ongoing": 29,
+    "requested": 24
+  },
+  "reviews_by_month": {
+    "2026-07": 9,
+    "2026-08": 73,
+    "2026-09": 153,
+    "2026-10": 266,
+    "2026-11": 144
+  },
+  "reviews_by_rating": {
+    "1": 3,
+    "2": 29,
+    "3": 152,
+    "4": 247,
+    "5": 214
+  },
+  "idempotent_rerun": {
+    "jobs": 0,
+    "completed_jobs": 0,
+    "reviews": 0,
+    "replies": 0
+  },
+  "leaderboard_designers": 151,
+  "designers_with_completed_jobs": 139,
+  "smoke_pages": [
+    "/leaderboard",
+    "/leaderboard.json",
+    "/designers/31"
+  ],
+  "tests_passed": 342,
+  "subtests_passed": 84,
+  "browser_scoring_checks": "passed",
+  "sample_reviews": 645,
+  "designer_replies": 291,
+  "sample_jobs": 1019,
+  "database_sha256": "86606a9f0463093fa5feb9645164f34fc734bf3946b50afccf2c28b45fd2c4b9"
+}

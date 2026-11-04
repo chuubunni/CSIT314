@@ -21,10 +21,21 @@ class Leaderboard {
   }
 
   /* ----- RANKING: same rules as ranking.score() / ranking.rank() on the server ----- */
+  // C18: use the server's canonical defaults when every slider is zero.
+  effectiveWeights() {
+    const defaults = { rating: 40, sentiment: 15, interest: 15, reliability: 20, experience: 10 };
+    const weights = {};
+    this.data.components.forEach((c) => {
+      const value = Number(this.weights[c]);
+      weights[c] = Number.isFinite(value) && value >= 0 && value <= 100 ? value : defaults[c];
+    });
+    return this.data.components.some((c) => weights[c] > 0) ? weights : defaults;
+  }
+
   score(row) {
-    const total = this.data.components.reduce((s, c) => s + this.weights[c], 0);
-    if (!total) { return 0; }
-    const sum = this.data.components.reduce((s, c) => s + row.components[c] * this.weights[c], 0);
+    const weights = this.effectiveWeights();
+    const total = this.data.components.reduce((s, c) => s + weights[c], 0);
+    const sum = this.data.components.reduce((s, c) => s + row.components[c] * weights[c], 0);
     return Math.round(sum / total * 1000) / 10;
   }
 
@@ -101,14 +112,15 @@ class Leaderboard {
   /* a score number with a bar split into the five parts, so the reader sees WHY */
   scoreCell(r) {
     const td = document.createElement('td');
-    const total = this.data.components.reduce((s, c) => s + this.weights[c], 0) || 1;
+    const weights = this.effectiveWeights();
+    const total = this.data.components.reduce((s, c) => s + weights[c], 0);
     const bar = document.createElement('div'); bar.className = 'rv-stack';
     bar.title = this.data.components.map((c) =>
-      `${this.data.labels[c]}: ${(r.components[c] * this.weights[c] / total * 100).toFixed(1)} pts`).join('\n');
+      `${this.data.labels[c]}: ${(r.components[c] * weights[c] / total * 100).toFixed(1)} pts`).join('\n');
     this.data.components.forEach((c, i) => {
       const part = document.createElement('span');
       part.className = 'part part-' + i;
-      part.style.width = (r.components[c] * this.weights[c] / total * 100) + '%';
+      part.style.width = (r.components[c] * weights[c] / total * 100) + '%';
       bar.appendChild(part);
     });
     const label = document.createElement('strong'); label.textContent = r.live.toFixed(1);

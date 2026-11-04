@@ -39,6 +39,7 @@
 <section class="rv-grid">
   <div class="rv-card">
     <h2>Rating breakdown</h2>
+    {% if not stats['reviews'] %}<p class="muted">No visible customer reviews yet. The breakdown appears after a customer reviews a completed job.</p>{% endif %}
     {% set total = stats['reviews'] %}
     <div class="rv-bars" aria-label="Number of reviews per star rating">
       {% for star, count in distribution.items() %}
@@ -64,6 +65,10 @@
         <span class="muted">{{ (stats['components'][key] * 100)|round(0)|int }}</span>
       </div>
     {% endfor %}
+    <p class="muted small">Experience score: {{ (stats['components']['experience'] * 100)|round(0)|int }}/100
+      from {{ stats['completed_jobs'] }} completed job{{ '' if stats['completed_jobs'] == 1 else 's' }} recorded through this platform.
+      Uploaded portfolio projects do not count as completed hiring jobs.</p>
+    {% if not stats['completed_jobs'] %}<p class="muted">No completed jobs recorded yet. Experience increases when a designer completes an accepted customer request.</p>{% endif %}
     <p class="muted small">Ratings are adjusted so that a few reviews cannot beat a long track record, and recent reviews count more.
       <a href="{{ url_for('reviews.leaderboard') }}">See how scores are worked out</a>.</p>
   </div>
@@ -78,6 +83,11 @@
         {% set ns.dots = ns.dots + [(x, y, m['average'], m['count'])] %}
       {% endif %}
     {% endfor %}
+    {% if not ns.dots %}
+      <p class="muted">No visible reviews in the last six months. Ratings will appear here in the month each review was submitted.</p>
+    {% elif ns.dots|length == 1 %}
+      <p class="muted small">Ratings are available for one month only. More months with reviews are needed to show a trend line.</p>
+    {% endif %}
     <svg class="rv-trend" viewBox="0 0 300 100" role="img" aria-label="Average rating per month">
       <line x1="10" y1="10" x2="290" y2="10" class="grid"/><line x1="10" y1="40" x2="290" y2="40" class="grid"/><line x1="10" y1="70" x2="290" y2="70" class="grid"/>
       <text x="0" y="13" class="axis">5</text><text x="0" y="43" class="axis">3</text><text x="0" y="73" class="axis">1</text>

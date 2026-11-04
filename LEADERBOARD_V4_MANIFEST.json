@@ -1,0 +1,15 @@
+{
+  "sha256": {
+    "idfinder/controller/ranking.py": "a65e50af0c705165d710cfcc8d97a7da5d6ad296abacffd7ca76e24b55d7e240",
+    "idfinder/controller/review_controller.py": "48077c929e243a97801d6d708ffaf34d9f0758b2ec2c909947132c95f2a46ca2",
+    "idfinder/controller/review_integrity.py": "eae5f43c08e708eb3eb1982ded5cb3dc9cadb13419995305863af408801928ab",
+    "idfinder/static/leaderboard.js": "04dc4b4823bf2fa7c22287bd9b586dc9d60e1a3719b98ac8b7b7fd29323d2d03",
+    "idfinder/static/reviews.css": "56e70579837c14df9f4f233b97904de63624418fc8377f986c62e7a90f5acd71",
+    "idfinder/templates/reviews/leaderboard.html": "95c9e1f3aed4edc89d3c341f75a51897c1ec3236881021322bf73f349410cb8a",
+    "idfinder/templates/reviews/designer_profile.html": "d1ffb418dc1cb4249ca39afbfa1c209dff4ed008a8e2e1bdab6068d34f87b16f",
+    "idfinder/templates/platform/reviews.html": "1bbe1e5cc7ef2f0a458d17596560dd41b31fe20b9fd2813f38bcaa2a010d3241",
+    "tests/test_PM21_PM23/test_leaderboard_review_regressions.py": "18acd3b061aea9e94c14f830d2e8560d5c4a469aca035021c824819cfed46ef6",
+    "tests/test_PM21_PM23/test_moderation_flag_compatibility.py": "28a9eae0b0861040c89036375bce66bb1e971ae2e92c355b3c0f962ac5e6c5e0",
+    "tests/test_leaderboard_client.cjs": "c56d10b2018f8a51a6a4cb0de5e35f5a4f770117a87f3a806cc83fb9490c1c40"
+  }
+}

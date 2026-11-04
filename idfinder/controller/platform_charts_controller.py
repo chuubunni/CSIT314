@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta, timezone
+import logging
+from datetime import date, datetime, timedelta, timezone
 
 from idfinder.controller import forecasting
 from idfinder.controller.errors import ValidationError
@@ -65,13 +66,17 @@ class PlatformChartsController:
     @staticmethod
     def _parse_end_date(text, today):
         """Turn the text from the date picker into a date, or raise a friendly error."""
+        import re
         text = (text or '').strip()
-        if not text:
-            return today
         try:
-            end_date = datetime.strptime(text, '%Y-%m-%d').date()
-        except ValueError:
+            if text and not re.fullmatch(r'\d{4}-\d{2}-\d{2}', text):
+                raise ValueError('Invalid date format')
+            end_date = date.fromisoformat(text) if text else today
+        except (TypeError, ValueError):
             raise ValidationError('Please enter a valid date (YYYY-MM-DD).')
+        # All four dated charts use this guard before any date-window arithmetic.
+        if end_date < date(2000, 1, 1):
+            raise ValidationError('Please choose a date from 2000-01-01 onwards.')
         if end_date > today:
             raise ValidationError('The week cannot end in the future.')
         return end_date
@@ -320,7 +325,11 @@ class PlatformChartsController:
         try:
             week = self.weekly_activity(None, today)
             interest = self.interest_by_category()
-        except Exception:
+        except Exception as error:
+            from idfinder.db import is_busy_error
+            if is_busy_error(error):
+                raise
+            logging.getLogger(__name__).exception('Dashboard graph summary failed')
             return summary
         summary['weekly_views'] = week['totals']['views']
         summary['weekly_saves'] = week['totals']['favourites']

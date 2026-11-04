@@ -7,12 +7,16 @@ class Review:
     @staticmethod
     def create(engagement_id, customer_id, designer_id, rating, comment, sentiment, aspects_json):
         db = get_db()
-        cursor = db.execute(
-            'INSERT INTO review (engagement_id, customer_id, designer_id, rating, comment,'
-            ' sentiment, aspects) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (engagement_id, customer_id, designer_id, rating, comment, sentiment, aspects_json))
-        db.commit()
-        return cursor.lastrowid
+        try:
+            cursor = db.execute(
+                'INSERT INTO review (engagement_id, customer_id, designer_id, rating, comment,'
+                ' sentiment, aspects) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (engagement_id, customer_id, designer_id, rating, comment, sentiment, aspects_json))
+            db.commit()
+            return cursor.lastrowid
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def find(review_id):
@@ -30,19 +34,34 @@ class Review:
                                 (engagement_id,)).fetchone()
 
     @staticmethod
-    def update_content(review_id, rating, comment, sentiment, aspects_json):
+    def update_content(review_id, rating, comment, sentiment, aspects_json,
+                       expected_edit_count=None, max_edits=3, customer_id=None):
         db = get_db()
-        db.execute(
-            'UPDATE review SET rating = ?, comment = ?, sentiment = ?, aspects = ?,'
-            ' edit_count = edit_count + 1, updated = CURRENT_TIMESTAMP WHERE id = ?',
-            (rating, comment, sentiment, aspects_json, review_id))
-        db.commit()
+        try:
+            # Status, edit limit, owner and version are checked in the same write.
+            cursor = db.execute(
+                'UPDATE review SET rating=?, comment=?, sentiment=?, aspects=?,'
+                ' edit_count=edit_count+1, updated=CURRENT_TIMESTAMP'
+                " WHERE id=? AND status='visible' AND edit_count<?"
+                ' AND (? IS NULL OR edit_count=?) AND (? IS NULL OR customer_id=?)',
+                (rating, comment, sentiment, aspects_json, review_id, max_edits,
+                 expected_edit_count, expected_edit_count, customer_id, customer_id))
+            db.commit()
+            return cursor.rowcount == 1
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def delete(review_id):
         db = get_db()
-        db.execute('DELETE FROM review WHERE id = ?', (review_id,))
-        db.commit()
+        try:
+            cursor = db.execute("DELETE FROM review WHERE id=? AND status='visible'", (review_id,))
+            db.commit()
+            return cursor.rowcount == 1
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def set_reply(review_id, reply):

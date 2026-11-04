@@ -21,7 +21,6 @@
         <select name="type" id="type">
             <option value="customer" {{ 'selected' if request.form.get('type') == 'customer' }}>customer</option>
             <option value="designer" {{ 'selected' if request.form.get('type') == 'designer' }}>designer</option>
-            <option value="manager" {{ 'selected' if request.form.get('type') == 'manager' }}>manager</option>
         </select>
         
         <!-- Each section is only shown (and only submitted) for its own user type -->

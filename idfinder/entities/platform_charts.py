@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import timedelta
 
 from idfinder.db import get_db
@@ -51,9 +52,13 @@ class PlatformCharts:
         result = {'labels': labels}
         for key, table, column in PlatformCharts.ACTIVITY_SOURCES:
             # table and column come from the constant above, never from user input
+            # drafts / pending / rejected projects are not published, so they are not "new projects"
+            join = (" JOIN idp p ON p.id = s.idp_id AND p.approval_status = 'approved'"
+                    if table in ('idp_view', 'favourite_idp') else '')
+            published = " AND s.approval_status = 'approved'" if table == 'idp' else ''
             rows = db.execute(
-                f'SELECT date({column}) AS day, COUNT(*) AS n FROM "{table}" '
-                f'WHERE {column} >= ? AND {column} < ? GROUP BY day',
+                f'SELECT date(s.{column}) AS day, COUNT(*) AS n FROM "{table}" s{join} '
+                f'WHERE s.{column} >= ? AND s.{column} < ?{published} GROUP BY day',
                 (lower, upper),
             ).fetchall()
             per_day = {row['day']: row['n'] for row in rows}
@@ -91,7 +96,8 @@ class PlatformCharts:
             '       COALESCE(SUM(f.n), 0) AS favourites '
             'FROM category c '
             # LEFT JOIN keeps categories that have no projects (they show as 0)
-            'LEFT JOIN idp_category ic ON ic.category_id = c.id '
+            "LEFT JOIN idp_category ic ON ic.category_id = c.id "
+            "  AND ic.idp_id IN (SELECT id FROM idp WHERE approval_status = 'approved') "
             'LEFT JOIN (SELECT idp_id, COUNT(*) AS n FROM idp_view '
             '           GROUP BY idp_id) v ON v.idp_id = ic.idp_id '
             'LEFT JOIN (SELECT idp_id, COUNT(*) AS n FROM favourite_idp '
@@ -118,7 +124,8 @@ class PlatformCharts:
         rows = get_db().execute(
             "SELECT CAST(strftime('%w', datetime(viewed_at, ?)) AS INTEGER) AS dow,"
             " CAST(strftime('%H', datetime(viewed_at, ?)) AS INTEGER) AS hour, COUNT(*) AS n"
-            " FROM idp_view WHERE viewed_at >= ? AND viewed_at < ? GROUP BY dow, hour",
+            " FROM idp_view v JOIN idp p ON p.id = v.idp_id"
+            " WHERE p.approval_status = 'approved' AND viewed_at >= ? AND viewed_at < ? GROUP BY dow, hour",
             (modifier, modifier, start.isoformat(), (end + timedelta(days=1)).isoformat())).fetchall()
         grid = [[0] * 24 for _ in range(7)]
         for row in rows:
@@ -141,7 +148,8 @@ class PlatformCharts:
             " c.id, c.name, COUNT(*) AS n"
             " FROM idp_view v JOIN idp_category ic ON ic.idp_id = v.idp_id"
             " JOIN category c ON c.id = ic.category_id"
-            " WHERE v.viewed_at >= ? AND v.viewed_at < ? GROUP BY week, c.id",
+            " WHERE v.viewed_at >= ? AND v.viewed_at < ?"
+            " AND v.idp_id IN (SELECT id FROM idp WHERE approval_status = 'approved') GROUP BY week, c.id",
             (first_day.isoformat(), first_day.isoformat(), (last_day + timedelta(days=1)).isoformat())).fetchall()
         starts = [(first_day + timedelta(days=7 * i)) for i in range(weeks)]
         series = {}
@@ -160,6 +168,8 @@ class PlatformCharts:
         try:
             return [(r['rating'], r['created']) for r in get_db().execute(
                 "SELECT rating, created FROM review WHERE status = 'visible'")]
-        except Exception:
-            return []
+        except sqlite3.OperationalError as error:
+            if str(error).lower() == 'no such table: review':
+                return []
+            raise
 

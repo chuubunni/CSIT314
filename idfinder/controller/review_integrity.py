@@ -71,7 +71,9 @@ def flag_reviews(reviews):
                     for second in groups[second_text]:
                         flag_pair(first, second)
 
-    # bursts of reviews for one designer
+    # C18: keep only the largest qualifying 24-hour burst containing each review.
+    # Overlapping windows must not produce several warnings on the same review.
+    burst_counts = {}
     per_designer = {}
     for r in reviews:
         per_designer.setdefault(r['designer_id'], []).append(r)
@@ -82,9 +84,9 @@ def flag_reviews(reviews):
             window = [rid for t, rid in stamped[start_index:] if t - start <= BURST_WINDOW]
             if len(window) >= BURST_COUNT:
                 for rid in window:
-                    reason = f'{len(window)} reviews for this designer within 24 hours'
-                    if reason not in flags.get(rid, []):
-                        add(rid, reason)
+                    burst_counts[rid] = max(burst_counts.get(rid, 0), len(window))
+    for rid, count in burst_counts.items():
+        add(rid, f'{count} reviews for this designer within 24 hours')
 
     for r in reviews:
         created, joined = to_datetime(r['created']), to_datetime(r.get('customer_joined'))
@@ -98,4 +100,5 @@ def flag_reviews(reviews):
             add(r['id'], f"{r['rating']} stars but the text reads the opposite way")
         if r.get('reported_reason'):
             add(r['id'], 'Reported by the designer: ' + r['reported_reason'])
+    # C18: preserve every duplicate match; the moderation page collapses the evidence.
     return flags

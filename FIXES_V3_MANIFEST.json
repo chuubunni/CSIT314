@@ -1,0 +1,24 @@
+{
+  "base_commit": "b0e1a21da0e4c8304108b8fc7980c5a030eb2c95",
+  "input_v2_zip_sha256": "538968e41f1b2709dfc67737e059ed9449762e1a0dd31723e5f0958ab13b297d",
+  "sha256": {
+    "idfinder/db.py": "75971a04f62951ba73c6bc2097de45375984047319045953ce56b6d67149ffe6",
+    "idfinder/__init__.py": "4ebea9cfccbdaf4c97e56d930d1a7e6b04fb6262fa001f20140b65b3b72322b9",
+    "idfinder/boundaries/reviews.py": "8a7aa48ace721953118f91f1393c609293cce8514205955aad85594946fee418",
+    "idfinder/controller/auth_controller.py": "37c67083c4b4556b745254da76854e75ed5813ce5d06c4e89c136d44214613ab",
+    "idfinder/controller/engagement_controller.py": "95dabd488322bc4ce891d2f87fd9680596b40cbdd1d6213d53e05aaafc7d154a",
+    "idfinder/controller/platform_charts_controller.py": "5e05b1f215220dae0f05e7bdee5a0cad0b0eb846f75df000863653927b4f2629",
+    "idfinder/controller/review_controller.py": "90e58534644153da7c293cd7dea935d2463b0bf43dd63013900b47ee6037cca4",
+    "idfinder/controller/review_integrity.py": "e4fe941ac56869acf5669c3f072d5772b4f0adc553cabe471d0e8dedb2ff131c",
+    "idfinder/entities/engagement.py": "e75d4cf9eac38283693d6d61e92c5e944ba74d2d913f59fcc9717978d81f56e8",
+    "idfinder/entities/platform_charts.py": "19ef1180567c628781cc647eec3433500c2493b804c0f007f39fe4ec27156a94",
+    "idfinder/entities/platform_report.py": "e468be9577cd8a0a060905508060b557f3b71d96a58629d4190953918fd7b0d4",
+    "idfinder/entities/review.py": "f7bfe8cb758d864db72bbd35ff5f6c83ace529f25a4982261702d31629b5fb3d",
+    "idfinder/entities/review_schema.py": "9cf8b801a2804457429a2b7bdd4ded907d948ccb0bf487f616898687fff9c4f4",
+    "idfinder/templates/auth/register.html": "0e7c26ef16b08475eea8a67839987f1f4ae32f168b09fca3c4a9188b2d859db6",
+    "idfinder/templates/home/dashboard.html": "52ced45b0907e1a05b3849126de1fdfc54e4d9795321a08ccaacb9524dab1bf9",
+    "idfinder/templates/platform/dashboard.html": "d4ba5fea20f687b4cb56961100888f701a948eb785a799ec0e0a659618194b6a",
+    "idfinder/templates/reviews/review_form.html": "1e1f74e33c0f7401a7f4a9db71e8f2772b8cc77546d3cbcdcf00708771dd8602",
+    "tests/test_PM21_PM23/test_v3_route_regressions.py": "0c547f09455ceb6cfc2295aebe8c1aa4e301587f50cc6f99a50d15c3ba2dcf44"
+  }
+}

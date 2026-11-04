@@ -14,3 +14,8 @@ instance/config.py
 *.sqLite-wal
 *.sqLite-shm
 API Key.txt
+
+# Final push additions
+.ven/
+venv/
+*.bak

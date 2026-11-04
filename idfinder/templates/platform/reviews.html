@@ -25,8 +25,15 @@
     </header>
     {% if r['comment'] %}<p class="rv-comment">{{ r['comment'] }}</p>{% endif %}
     {% if r['aspects_list'] %}<p>{% for item in r['aspects_list'] %}{{ aspect_chip(item) }}{% endfor %}</p>{% endif %}
-    {% if r['flags'] %}
-      <ul class="rv-flags">{% for flag in r['flags'] %}<li>&#9888; {{ flag }}</li>{% endfor %}</ul>
+    {# C18: show one summary; managers can expand every match when needed. #}
+    {% if r['duplicate_flags'] %}
+      <details class="rv-duplicate-details">
+        <summary>Similar wording found in {{ r['duplicate_flags']|length }} other review{{ '' if r['duplicate_flags']|length == 1 else 's' }}. Show matches</summary>
+        <ul class="rv-flags rv-duplicate-matches">{% for flag in r['duplicate_flags'] %}<li>{{ flag }}</li>{% endfor %}</ul>
+      </details>
+    {% endif %}
+    {% if r['other_flags'] %}
+      <ul class="rv-flags">{% for flag in r['other_flags'] %}<li>&#9888; {{ flag }}</li>{% endfor %}</ul>
     {% endif %}
     {% if r['status'] == 'hidden' and r['hidden_reason'] %}<p class="muted">Hidden because: {{ r['hidden_reason'] }}</p>{% endif %}
     <div class="rv-actions">

@@ -69,3 +69,8 @@
 .rv-stack .part-0 { background: #377ba8; } .rv-stack .part-1 { background: #cc79a7; } .rv-stack .part-2 { background: #e69f00; }
 .rv-stack .part-3 { background: #009e73; } .rv-stack .part-4 { background: #8a94a0; }
 .rv-radar { position: relative; height: 300px; }
+
+/* C18: keep duplicate evidence compact and moderation controls within reach. */
+.rv-duplicate-details { margin: .6rem 0; padding: .6rem .8rem; border: 1px solid #e6c9a0; border-radius: 6px; background: #fff8ec; }
+.rv-duplicate-details summary { cursor: pointer; color: #794900; font-weight: bold; }
+.rv-duplicate-matches { max-height: 10rem; overflow-y: auto; overflow-wrap: anywhere; }

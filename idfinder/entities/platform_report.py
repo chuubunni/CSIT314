@@ -11,9 +11,9 @@ class PlatformReport:
         def count(sql):
             return db.execute(sql, (start,)).fetchone()[0]
         return {
-            'projects': count("SELECT COUNT(*) FROM idp WHERE created >= datetime('now', ?)"),
-            'views': count("SELECT COUNT(*) FROM idp_view WHERE viewed_at >= datetime('now', ?)"),
-            'favourites': count("SELECT COUNT(*) FROM favourite_idp WHERE created >= datetime('now', ?)"),
+            'projects': count("SELECT COUNT(*) FROM idp WHERE approval_status='approved' AND created >= datetime('now', ?)"),
+            'views': count("SELECT COUNT(*) FROM idp_view v JOIN idp p ON p.id=v.idp_id WHERE p.approval_status='approved' AND viewed_at >= datetime('now', ?)"),
+            'favourites': count("SELECT COUNT(*) FROM favourite_idp f JOIN idp p ON p.id=f.idp_id WHERE p.approval_status='approved' AND f.created >= datetime('now', ?)"),
             'users': count("SELECT COUNT(*) FROM user WHERE created >= datetime('now', ?)"),
         }
 
@@ -23,5 +23,5 @@ class PlatformReport:
             'SELECT p.id, p.title, '
             '(SELECT COUNT(*) FROM idp_view v WHERE v.idp_id=p.id) AS views, '
             '(SELECT COUNT(*) FROM favourite_idp f WHERE f.idp_id=p.id) AS favourites '
-            'FROM idp p ORDER BY views DESC, favourites DESC, p.id DESC'
+            "FROM idp p WHERE p.approval_status='approved' ORDER BY views DESC, favourites DESC, p.id DESC"
         ).fetchall()

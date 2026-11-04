@@ -143,7 +143,9 @@ def build_rows(designers, reviews, engagements, interest, replies, now):
             'components': {
                 'rating': round((bayes_rating - 1) / 4, 4),
                 'sentiment': round((bayes_sentiment + 1) / 2, 4),
-                'interest': round(conversion / (conversion + platform_conversion), 4),
+                # C18: no favourites anywhere means no comparative interest evidence yet.
+                'interest': round(conversion / (conversion + platform_conversion), 4)
+                            if conversion + platform_conversion else 0.5,
                 'reliability': round(0.4 * completion + 0.4 * acceptance + 0.2 * reply_rate, 4),
                 'experience': round(jobs['completed'] / (jobs['completed'] + 5), 4),
             },
@@ -152,15 +154,16 @@ def build_rows(designers, reviews, engagements, interest, replies, now):
 
 
 def clean_weights(weights=None):
-    """Weights as non-negative numbers for every component (missing/invalid -> the default).
+    """Weights from 0 to 100 for every component (missing/invalid -> the default).
     All zero would divide by zero, so that falls back to the defaults too."""
     result = {}
     for name in COMPONENTS:
         try:
             value = float((weights or {}).get(name, DEFAULT_WEIGHTS[name]))
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             value = DEFAULT_WEIGHTS[name]
-        result[name] = value if value >= 0 and math.isfinite(value) else DEFAULT_WEIGHTS[name]
+        # C18: match the slider range and prevent overflowing the weighted total.
+        result[name] = value if 0 <= value <= 100 and math.isfinite(value) else DEFAULT_WEIGHTS[name]
     if not any(result.values()):
         return dict(DEFAULT_WEIGHTS)
     return result
@@ -168,6 +171,7 @@ def clean_weights(weights=None):
 
 def score(components, weights):
     """Weighted average of the components, 0..100."""
+    weights = clean_weights(weights)
     total = sum(weights.values())
     return round(sum(components[c] * weights[c] for c in COMPONENTS) / total * 100, 1)
 
