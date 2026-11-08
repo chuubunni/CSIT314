@@ -74,7 +74,7 @@ def test_percent_change(current, previous, expected):
     assert ctrl.percent_change(current, previous) == expected
 
 
-# ===== PM23 START: tests for interest by design category (control) =====
+# ===== PM21 CATEGORY INTEREST: tests for interest by design category (control) =====
 def test_interest_has_data_flag(make):
     result = ctrl.interest_by_category()
     assert result['categories'] == [] and result['has_data'] is False

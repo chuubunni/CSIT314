@@ -1,3 +1,4 @@
+# C20: customer hiring and job tracking; ID20: designer request acceptance and completion.
 from idfinder.controller.errors import NotFoundError, PermissionDenied, ValidationError
 from idfinder.entities.engagement import Engagement
 from idfinder.entities.idp import IDP

@@ -1,4 +1,4 @@
-"""PlatformCharts entity: the SQL behind PM21 (daily_activity) and PM23 (interest_by_category)."""
+"""PlatformCharts entity: the SQL behind PM21 (daily_activity) and PM21 (interest_by_category)."""
 from datetime import date
 
 from idfinder.entities.platform_charts import PlatformCharts
@@ -62,7 +62,7 @@ def test_end_before_start_is_rejected(ctx):
         PlatformCharts.daily_activity(END, START)
 
 
-# ===== PM23 START: tests for interest by design category (entity) =====
+# ===== PM21 CATEGORY INTEREST: tests for interest by design category (entity) =====
 def _setup_categories(make):
     designer = make.user('designer')
     c1, c2 = make.user('customer'), make.user('customer')

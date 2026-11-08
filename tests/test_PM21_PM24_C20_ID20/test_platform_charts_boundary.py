@@ -1,5 +1,5 @@
 """BOUNDARY tests: the pages and JSON routes behind the graphs, and who may use them.
-PM21 = /platform/charts/weekly      PM23 = /platform/charts/categories
+PM21 weekly = /platform/charts/weekly; PM21 category interest = /platform/charts/categories
 Dashboard summary = /platform/ shows a summary and links to /platform/charts/"""
 
 
@@ -43,7 +43,7 @@ def test_manager_gets_error_for_bad_date(client, make):
     assert 'valid date' in response.get_json()['error']
 
 
-# ===== PM23 START: category route =====
+# ===== PM21 START: category route =====
 def test_manager_gets_category_json(client, make):
     make.user('manager')
     make.category('Modern')

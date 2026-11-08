@@ -1,6 +1,6 @@
-/* Platform manager graphs: PM21 (weekly activity), PM23 (interest by category) and the ratings overview.
+/* Platform manager graphs: PM21 (weekly activity and design category interest) and the ratings overview.
    Everything lives in classes. Each graph asks the boundary (boundaries/platform_charts.py) for JSON
-   and draws it with Chart.js. Search this file for "PM21 START", "PM23 START" or "RATINGS START". */
+   and draws it with Chart.js. Search this file for "PM21 START", "PM21 CATEGORY INTEREST START" or "PM24 RATINGS START". */
 'use strict';
 
 /* ---------------------------------------------------------------- shared settings */
@@ -372,7 +372,7 @@ class WeeklyActivityGraph {
 }
 /* PM21 END */
 
-/* =============================================================== PM23 START
+/* =============================================================== PM21 START
    Category interest: headline cards, insight sentences, bubble chart (views vs shortlist rate),
    stacked area (weekly views, top 5 + Other), diverging growth bars and a table. */
 class CategoryInterestGraph {
@@ -496,9 +496,9 @@ class CategoryInterestGraph {
     });
   }
 }
-/* PM23 END */
+/* PM21 END */
 
-/* =============================================================== RATINGS START
+/* =============================================================== PM24 RATINGS START
    Platform-wide review picture: how many reviews at each star level, and the average per month. */
 class RatingsOverviewGraph {
   constructor(root) {
@@ -545,7 +545,7 @@ class RatingsOverviewGraph {
         backgroundColor: GraphSettings.COLOURS.views, borderWidth: 2, pointRadius: 4, spanGaps: true, tension: 0.2 }] } });
   }
 }
-/* RATINGS END */
+/* PM24 RATINGS END */
 
 class PlatformGraphsPage {
   static start() {

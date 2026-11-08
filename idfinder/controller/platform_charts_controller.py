@@ -84,7 +84,7 @@ class PlatformChartsController:
     # PM21 END
 
     # ======================================================================
-    # PM23 START  -  Project interest by design category
+    # PM21 CATEGORY INTEREST START  -  Project interest by design category
     # ======================================================================
     def interest_by_category(self):
         """Interest per design category (most viewed first), plus the headline answers the manager
@@ -128,7 +128,7 @@ class PlatformChartsController:
         }
 
     # ------------------------------------------------------------------
-    # PM23 (extra): how each category's views changed week by week
+    # PM21 (extra): how each category's views changed week by week
     # ------------------------------------------------------------------
     TOP_CATEGORIES = 5          # the area chart shows this many categories, the rest become "Other"
     TREND_WEEKS = 8
@@ -310,14 +310,14 @@ class PlatformChartsController:
                 'average': round(sum(r for r, _ in ratings) / len(ratings), 2) if ratings else None,
                 'distribution': distribution, 'monthly': list(reversed(months))}
 
-    # PM23 END
+    # PM21 END
 
     # ======================================================================
-    # DASHBOARD SUMMARY (PM21 + PM23 together) - used by platform.py DashboardView
+    # DASHBOARD SUMMARY (PM21 together) - used by platform.py DashboardView
     # ======================================================================
     def get_dashboard_summary(self, today=None):
         """Small numbers for the dashboard: views and shortlists in the last 7 days
-        (PM21) and the most viewed design category (PM23).
+        (PM21) and the most viewed design category (PM21).
 
         Never raises: if something goes wrong 'available' is False, so the dashboard
         still opens and simply hides the summary."""

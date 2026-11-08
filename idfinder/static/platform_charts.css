@@ -1,4 +1,4 @@
-/* Platform manager graphs (PM21, PM23, ratings). Colours follow one fixed palette:
+/* Platform manager graphs (PM21, ratings). Colours follow one fixed palette:
    blue, orange, aqua, yellow for the four measures; blue -> red for growth / decline. */
 .chart-section { margin-bottom: 2.2rem; }
 .chart-intro { color: #52514e; }

@@ -1,3 +1,4 @@
+# C20: customer reviews; ID20: designer replies/reports; PM24: manager review moderation.
 import json
 import sqlite3
 from datetime import datetime, timezone

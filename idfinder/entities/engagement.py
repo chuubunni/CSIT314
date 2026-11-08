@@ -1,3 +1,4 @@
+# C20 / ID20: shared customer-designer hiring/job data model.
 from idfinder.db import get_db
 
 

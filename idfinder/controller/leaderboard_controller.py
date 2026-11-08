@@ -1,3 +1,4 @@
+# C20: customer designer discovery, configurable leaderboard rankings and profile analytics.
 import json
 from datetime import datetime, timezone
 

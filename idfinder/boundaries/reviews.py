@@ -16,7 +16,7 @@ from idfinder.entities.housing import Housing
 
 bp = Blueprint('reviews', __name__)
 
-# BOUNDARY for designer ratings: public profile + leaderboard, the customer's jobs and reviews,
+# BOUNDARY for C20 and ID20: public designer profiles + leaderboard, customer jobs and reviews,
 # the designer's requests and replies. Only reads the request, calls a controller and picks the
 # response. No SQL and no business rules in this file.
 
@@ -45,7 +45,7 @@ def _back(default_endpoint, **values):
 
 
 # ======================================================================
-# PUBLIC: a designer's profile with reviews, and the leaderboard
+# C20 (customer): designer profiles with reviews and performance leaderboard
 # ======================================================================
 @bp.route('/designers/<int:designer_id>')
 def designer_profile(designer_id):
@@ -91,7 +91,7 @@ def leaderboard_json():
 
 
 # ======================================================================
-# CUSTOMER: hire a designer, follow the job, write / edit / delete a review
+# C20 (customer): hire a designer, follow jobs, write / edit / delete reviews
 # ======================================================================
 @bp.route('/designers/<int:designer_id>/hire', methods=('POST',))
 @auth_boundary.login_required
@@ -173,7 +173,7 @@ def delete_review(review_id):
 
 
 # ======================================================================
-# DESIGNER: answer requests, reply to and report reviews
+# ID20 (interior designer): manage client requests, reply to and report reviews
 # ======================================================================
 @bp.route('/client-requests')
 @auth_boundary.login_required

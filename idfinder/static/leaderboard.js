@@ -1,3 +1,4 @@
+/* C20: customer-facing configurable designer leaderboard; also supports PM24 manager comparisons. */
 /* Designer leaderboard: live re-ranking with weight sliders + a radar chart to compare designers.
    Search this file for "RANKING" (the same maths as controller/ranking.py) or "RADAR".
    The numbers come from the page itself (<script id="leaderboard-data">), so the sliders never

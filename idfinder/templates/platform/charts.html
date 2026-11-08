@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block header %}<h1>{% block title %}Platform Graphs{% endblock %}</h1>{% endblock %}
+{% block header %}<h1>{% block title %}Platform Analytics and Reviews{% endblock %}</h1>{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='platform_charts.css') }}">
 
 {# This page is only the layout. platform_charts.js fills in the numbers, graphs and tables using
    the JSON routes in boundaries/platform_charts.py (weekly, trend, heatmap, categories,
-   category-trend, ratings). Search this page for "PM21 START", "PM23 START" or "RATINGS START". #}
+   category-trend, ratings). Search this page for "PM21 START", "PM21 CATEGORY INTEREST START" or "PM24 RATINGS START". #}
 
 <p><a href="{{ url_for('platform.dashboard') }}">&laquo; Back to Platform Management</a></p>
 <p class="chart-intro">How the platform is being used, what is likely to happen next, and which design categories earn the most attention.</p>
@@ -53,7 +53,7 @@
 </section>
 {# ========================= PM21 END ========================= #}
 
-{# ========================= PM23 START: project interest by design category ========================= #}
+{# ========================= PM21 CATEGORY INTEREST START: project interest by design category ========================= #}
 <section id="category-chart" class="chart-section" data-url="{{ url_for('platform_charts.categories') }}"
          data-trend-url="{{ url_for('platform_charts.category_trend') }}">
   <h2 class="chart-section-title">Project Interest by Design Category</h2>
@@ -87,9 +87,9 @@
     </table>
   </details>
 </section>
-{# ========================= PM23 END ========================= #}
+{# ========================= PM21 END ========================= #}
 
-{# ========================= RATINGS START: designer reviews at a glance ========================= #}
+{# ========================= PM24 RATINGS START: designer reviews at a glance ========================= #}
 <section id="ratings-chart" class="chart-section" data-url="{{ url_for('platform_charts.ratings') }}">
   <h2 class="chart-section-title">Designer Ratings</h2>
   <p class="chart-status" role="status" data-status></p>
@@ -107,7 +107,7 @@
   <p><a class="profile-button" href="{{ url_for('reviews.leaderboard') }}">Designer leaderboard &raquo;</a>
      <a class="profile-button" href="{{ url_for('platform_reviews.queue') }}">Review moderation &raquo;</a></p>
 </section>
-{# ========================= RATINGS END ========================= #}
+{# ========================= PM24 RATINGS END ========================= #}
 
 <script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
 <script src="{{ url_for('static', filename='platform_charts.js') }}"></script>

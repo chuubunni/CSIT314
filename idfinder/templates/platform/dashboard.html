@@ -52,7 +52,7 @@
   </tbody>
 </table>
 <h2>Platform Activity</h2>
-{# ===== PM21 + PM23 DASHBOARD SUMMARY START: brief numbers; the full graphs are on the next page ===== #}
+{# ===== PM21 DASHBOARD SUMMARY START: brief numbers; the full graphs are on the next page ===== #}
 <section id="charts-summary" class="chart-summary">
   {% if weekly_summary.available %}
   <div class="manager-stats">
@@ -64,9 +64,9 @@
   <p>Graph summary is not available right now.</p>
   {% endif %}
 </section>
-{# ===== PM21 + PM23 DASHBOARD SUMMARY END ===== #}
+{# ===== PM21 DASHBOARD SUMMARY END ===== #}
 <div class="review-alert"><strong>{{ pending_image_reviews }} pending project{{ '' if pending_image_reviews == 1 else 's' }} for image review</strong> <a href="{{ url_for('image_review.queue') }}">Open image review queue</a></div>
-<p><a class="profile-button" href="{{ url_for('platform_charts.page') }}">View Platform Graphs &raquo;</a>
+<p><a class="profile-button" href="{{ url_for('platform_charts.page') }}">View Platform Analytics and Reviews &raquo;</a>
    <a class="profile-button" href="{{ url_for('platform_reviews.queue') }}">Review Moderation &raquo;</a></p>
 <form method="get" action="{{ url_for('platform.dashboard') }}">
   <label for="period">Report period</label>

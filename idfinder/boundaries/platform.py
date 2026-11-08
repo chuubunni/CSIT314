@@ -45,7 +45,7 @@ class DashboardView(ManagerOnlyView):
             summary=controller.report(period),
             interest=controller.interest(),
             property_types=controller.property_types(),
-            # PM21 / PM23 widget data (always present, never undefined)
+            # PM21 widget data (always present, never undefined)
             weekly_summary={'total_views': summary['weekly_views'],
                             'total_saves': summary['weekly_saves'],
                             'available': summary['available']},

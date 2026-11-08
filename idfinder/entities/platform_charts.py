@@ -7,8 +7,8 @@ from idfinder.db import get_db
 class PlatformCharts:
     """ENTITY for the platform manager's graphs. SQL only, no business rules.
 
-    PM21 -> daily_activity()          counts per day over a date window
-    PM23 -> interest_by_category()    views and shortlists grouped by design category
+    PM21 weekly activity -> daily_activity()          counts per day over a date window
+    PM21 category interest -> interest_by_category()    views and shortlists grouped by design category
 
     Timestamps are stored by SQLite as UTC text ('YYYY-MM-DD HH:MM:SS'), so a "day"
     here is a UTC day, the same as the existing report on the dashboard.
@@ -73,7 +73,7 @@ class PlatformCharts:
     # ======================= PM21 END (entity part) =======================
 
     # ======================================================================
-    # PM23 START: project interest by design category (entity part)
+    # PM21 CATEGORY INTEREST START: project interest by design category (entity part)
     # ======================================================================
     @staticmethod
     def interest_by_category():
@@ -107,7 +107,7 @@ class PlatformCharts:
         ).fetchall()
         return [dict(row) for row in rows]
 
-    # ======================= PM23 END (entity part) =======================
+    # ======================= PM21 END (entity part) =======================
 
     # ======================================================================
     # PM21 (extra): when are projects viewed?  weekday x hour grid
@@ -133,14 +133,14 @@ class PlatformCharts:
         return grid
 
     # ======================================================================
-    # PM23 (extra): weekly views per category (for the area chart and the growth chart)
+    # PM21 category interest (extra): weekly views per category (for the area chart and the growth chart)
     # ======================================================================
     @staticmethod
     def weekly_category_views(last_day, weeks=8):
         """Views per category in each of the last `weeks` weeks; the last week ends on `last_day`.
 
         Returns (week_start_dates, {category_id: {'name': ..., 'weeks': [n, n, ...]}}).
-        A project in several categories counts towards each, like the rest of PM23.
+        A project in several categories counts towards each, like the rest of PM21.
         """
         first_day = last_day - timedelta(days=weeks * 7 - 1)
         rows = get_db().execute(

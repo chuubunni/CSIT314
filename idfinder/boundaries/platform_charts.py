@@ -4,7 +4,7 @@ from idfinder.boundaries.platform import ManagerOnlyView
 from idfinder.controller.errors import ValidationError
 from idfinder.controller.platform_charts_controller import PlatformChartsController
 
-# BOUNDARY for the manager's graphs (PM21, PM23): one page (/platform/charts/) that loads
+# BOUNDARY for the manager's graphs (PM21): one page (/platform/charts/) that loads
 # its data from two JSON routes, so the manager can change the week without reloading.
 # ManagerOnlyView (from platform.py) means only platform managers can open any of them.
 platform_charts_bp = Blueprint('platform_charts', __name__, url_prefix='/platform/charts')
@@ -20,7 +20,7 @@ class ChartsJsonView(ManagerOnlyView):
 
 
 # ======================================================================
-# PM21 + PM23: the page that shows both graphs (/platform/charts/)
+# PM21: the page that shows both graphs (/platform/charts/)
 # ======================================================================
 class ChartsPageView(ManagerOnlyView):
     def get(self):
@@ -43,16 +43,16 @@ class WeeklyActivityView(ChartsJsonView):
 
 
 # ======================================================================
-# PM23 START: project interest by design category (boundary part)
+# PM21 CATEGORY INTEREST START: project interest by design category (boundary part)
 # ======================================================================
 class CategoryInterestView(ChartsJsonView):
     def get(self):
         return jsonify(PlatformChartsController().interest_by_category())
 
-# ======================= PM23 END (boundary part) =====================
+# ======================= PM21 CATEGORY INTEREST END (boundary part) =====================
 
 # ======================================================================
-# PM21 / PM23 (extra graphs): trend + forecast, heatmap, category trend, ratings
+# PM21 and PM24 (extra graphs): trend + forecast, heatmap, category trend, ratings
 # ======================================================================
 class TrendView(ChartsJsonView):
     def get(self):
@@ -85,6 +85,7 @@ class CategoryTrendView(ChartsJsonView):
 
 class RatingsOverviewView(ChartsJsonView):
     def get(self):
+        # PM24: designer ratings overview for manager review monitoring.
         return jsonify(PlatformChartsController().ratings_overview())
 
 

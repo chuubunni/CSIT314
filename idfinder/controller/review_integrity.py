@@ -9,6 +9,7 @@ CHECKS
   rating_mismatch  stars and words disagree (5 stars but a very negative text, or the reverse)
   reported         the designer reported it (always shown)
 """
+# PM24: review-integrity indicators used for manager review monitoring and moderation.
 from datetime import timedelta
 from difflib import SequenceMatcher
 
