@@ -1,6 +1,6 @@
-How to run the website:
+# How to run the website:
 
-# On command prompt:
+For cmd
 
 '''
 py -3 -m venv .venv
