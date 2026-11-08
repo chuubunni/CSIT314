@@ -1,4 +1,7 @@
-How to run:
+How to run the website:
+
+On command prompt:
+
 py -3 -m venv .venv
 
 .venv\Scripts\activate
