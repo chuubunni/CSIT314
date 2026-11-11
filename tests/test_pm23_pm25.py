@@ -1,10 +1,10 @@
 """
-Regression tests for PM24 (update platform manager profile)
+Regression tests for PM23 (update platform manager profile)
 and PM25 (view platform manager profile).
 
 Run from the CSIT314 root:
 
-python -m unittest discover -s tests -p "test_pm24_pm25.py" -v
+python -m unittest discover -s tests -p "test_pm23_pm25.py" -v
 """
 
 import gc
@@ -28,7 +28,7 @@ from idfinder.controller.platform_controller import (
 from idfinder.entities.user import managers
 
 
-class PM24PM25Tests(unittest.TestCase):
+class PM23PM25Tests(unittest.TestCase):
 
     def setUp(self):
         # ignore_cleanup_errors: on Windows a still-open SQLite file cannot be deleted
@@ -38,7 +38,7 @@ class PM24PM25Tests(unittest.TestCase):
         self.app = create_app({
             'TESTING': True,
             'DEMO_DATA': False,
-            'SECRET_KEY': 'pm24-pm25-tests',
+            'SECRET_KEY': 'pm23-pm25-tests',
             'DATABASE': str(self.root / 'tests.sqlite'),
             'UPLOAD_FOLDER': str(self.root / 'uploads'),
             'REVIEW_EVIDENCE_FOLDER': str(
@@ -181,9 +181,9 @@ class PM24PM25Tests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    # ----- PM24: update platform manager profile -----
+    # ----- PM23: update platform manager profile -----
 
-    def test_pm24_edit_form_is_filled_with_current_details(self):
+    def test_pm23_edit_form_is_filled_with_current_details(self):
         self.login()
 
         response = self.client.get('/platform/profile/edit')
@@ -193,7 +193,7 @@ class PM24PM25Tests(unittest.TestCase):
         self.assertIn(b'value="User 1"', response.data)
         self.assertIn(b'value="1@test.com"', response.data)
 
-    def test_pm24_valid_update_is_saved(self):
+    def test_pm23_valid_update_is_saved(self):
         self.login()
 
         response = self.client.post(
@@ -217,7 +217,7 @@ class PM24PM25Tests(unittest.TestCase):
         self.assertIn(b'Profile updated.', page.data)
         self.assertIn(b'Manager One', page.data)
 
-    def test_pm24_values_are_trimmed(self):
+    def test_pm23_values_are_trimmed(self):
         self.ctrl.edit_profile(
             1,
             '  Manager One  ',
@@ -231,7 +231,7 @@ class PM24PM25Tests(unittest.TestCase):
         self.assertEqual(row['email'], 'manager.one@test.com')
         self.assertEqual(row['phone'], '91234567')
 
-    def test_pm24_blank_or_invalid_values_are_rejected(self):
+    def test_pm23_blank_or_invalid_values_are_rejected(self):
         cases = [
             ('name', '', 'Name is required.'),
             ('name', '   ', 'Name is required.'),
@@ -255,7 +255,7 @@ class PM24PM25Tests(unittest.TestCase):
         self.assertEqual(row['name'], 'User 1')
         self.assertEqual(row['email'], '1@test.com')
 
-    def test_pm24_invalid_form_is_shown_again_with_message(self):
+    def test_pm23_invalid_form_is_shown_again_with_message(self):
         self.login()
 
         response = self.client.post(
@@ -268,7 +268,7 @@ class PM24PM25Tests(unittest.TestCase):
         self.assertIn(b'value="manager.one@test.com"', response.data)
         self.assertEqual(self.stored()['name'], 'User 1')
 
-    def test_pm24_email_used_by_another_account_is_rejected(self):
+    def test_pm23_email_used_by_another_account_is_rejected(self):
         with self.assertRaises(ValidationError) as caught:
             self.ctrl.edit_profile(
                 1,
@@ -282,7 +282,7 @@ class PM24PM25Tests(unittest.TestCase):
 
         self.assertEqual(self.stored()['email'], '1@test.com')
 
-    def test_pm24_other_user_types_cannot_edit(self):
+    def test_pm23_other_user_types_cannot_edit(self):
         for user_id in (3, 4):
             with self.subTest(user_id=user_id):
                 self.login(user_id)
@@ -296,7 +296,7 @@ class PM24PM25Tests(unittest.TestCase):
 
         self.assertEqual(self.stored()['name'], 'User 1')
 
-    def test_pm24_entity_updates_only_that_manager(self):
+    def test_pm23_entity_updates_only_that_manager(self):
         managers.update_profile(
             1,
             'Manager One',
