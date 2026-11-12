@@ -33,7 +33,15 @@ flask --app idfinder index-images
 flask --app idfinder run
 ```
 
-NOTE: test data is already loaded inside the website by default.
+NOTE: test data is already loaded inside the website by default. The default password for all test accounts is 123. 
+
+Sample test accounts: 
+
+Designer: chloe.teo@mail.com
+
+Customer: jessica.chew@mail.com
+
+Manager: theo@mail.com
 
 
 
